@@ -25,32 +25,54 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    const systemPrompt = `Você é um assistente especializado em formatação de relatórios técnicos.
+    const systemPrompt = `Você é um assistente especializado em formatação de relatórios técnicos de incentivos fiscais brasileiros (Regime Automotivo, Lei de Informática, MOVER).
 
-Você receberá:
-1. Um documento técnico sem formatação adequada
-2. Um template de exemplo que mostra o padrão de formatação desejado
+Sua função é atuar como um COPILOTO DE FORMATAÇÃO, auxiliando analistas na padronização de documentos regulatórios.
 
-Sua tarefa é:
-- Analisar o template para entender o padrão de formatação (estrutura, seções, estilo)
-- Reformatar o documento seguindo exatamente o padrão do template
-- Manter todo o conteúdo técnico original
-- Aplicar a mesma estrutura de capítulos, seções e formatação
-- Garantir conformidade com as normas técnicas apresentadas no template
+CONTEXTO:
+- Relatórios de incentivos fiscais são documentos técnicos e regulatórios críticos
+- Garantem prestação de contas de investimentos em P&D e inovação
+- Devem seguir rigorosamente padrões formais dos programas
+- Qualquer não-conformidade pode comprometer benefícios fiscais
 
-IMPORTANTE: Retorne APENAS o documento formatado, sem comentários adicionais.`;
+TEMPLATE DE REFERÊNCIA:
+Este é o modelo aprovado pela empresa para o tipo de regime selecionado:
 
-    const userPrompt = `TEMPLATE DE REFERÊNCIA (${templateName}):
----
-${templateContent.substring(0, 8000)}
+${templateContent.substring(0, 6000)}
+
 ---
 
-DOCUMENTO PARA FORMATAR:
----
+SUA TAREFA:
+1. Analise a estrutura e formatação do template acima
+2. Formate o documento fornecido seguindo EXATAMENTE o padrão do template
+3. Mantenha TODO o conteúdo técnico original intacto
+4. Ajuste apenas: formatação, estrutura, padronização e terminologia
+5. NÃO invente nem adicione informações técnicas
+
+ASPECTOS A FORMATAR:
+- Estrutura de seções e hierarquia (seguir template)
+- Formatação de títulos e subtítulos (caps, negrito, numeração)
+- Espaçamento entre parágrafos e seções
+- Listas, numerações e marcadores
+- Terminologia técnica padronizada
+- Tabelas e formatação de dados
+- Normas ABNT se aplicáveis ao template
+
+VERIFICAÇÕES DE CONFORMIDADE:
+- Todas as seções obrigatórias do template estão presentes?
+- A terminologia está consistente com o template?
+- A numeração e hierarquia seguem o padrão?
+- Há informações críticas faltando (prazos, valores, responsáveis)?
+
+IMPORTANTE: Retorne APENAS o texto formatado, sem comentários ou explicações.`;
+
+    const userPrompt = `DOCUMENTO A SER FORMATADO:
+
 ${documentText.substring(0, 8000)}
+
 ---
 
-Formate o documento seguindo exatamente o padrão do template fornecido.`;
+Por favor, formate este documento seguindo rigorosamente o template de referência fornecido no prompt do sistema.`;
 
     console.log('Chamando Lovable AI para formatação...');
 
@@ -95,16 +117,22 @@ Formate o documento seguindo exatamente o padrão do template fornecido.`;
 
     // Gerar sugestões e alertas baseados na análise
     const sugestoes = [
-      `Documento formatado conforme template "${templateName}"`,
-      'Estrutura de capítulos e seções padronizada',
-      'Numeração e hierarquia ajustadas',
-      'Formatação de elementos técnicos aplicada',
+      'Formatação de títulos e hierarquia aplicada conforme template',
+      'Estrutura de seções reorganizada para conformidade',
+      'Terminologia técnica padronizada segundo glossário do programa',
+      'Espaçamento, margens e layout ajustados',
+      'Numeração de itens e listas corrigida',
+      'Padronização de tabelas e dados quantitativos (se aplicável)'
     ];
 
     const alertas = [
-      'Revise manualmente referências e citações',
-      'Verifique conformidade com normas regulatórias específicas',
-      'Confirme numeração de figuras e tabelas',
+      'CRÍTICO: Verificar se todas as seções obrigatórias do programa estão preenchidas',
+      'Validar datas no formato dd/mm/aaaa conforme exigido pela prestação de contas',
+      'Confirmar valores monetários e percentuais com documentação fonte',
+      'Revisar referências normativas (leis, portarias) quanto a numeração e vigência',
+      'Verificar siglas, abreviações e nomenclaturas técnicas conforme glossário oficial',
+      'Atenção: responsáveis e assinaturas devem estar identificados corretamente',
+      'Conferir prazos regulatórios e marcos do projeto'
     ];
 
     console.log('Formatação concluída com sucesso');

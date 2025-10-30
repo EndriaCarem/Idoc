@@ -1,15 +1,75 @@
-import { AlertCircle, CheckCircle, MessageSquare, Sparkles } from 'lucide-react';
+import { AlertCircle, CheckCircle, MessageSquare, Sparkles, Send } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface CopilotPanelProps {
   sugestoes: string[];
   alertas: string[];
+  documentoOriginal: string;
+  documentoFormatado: string;
 }
 
-const CopilotPanel = ({ sugestoes, alertas }: CopilotPanelProps) => {
+const CopilotPanel = ({ 
+  sugestoes, 
+  alertas,
+  documentoOriginal,
+  documentoFormatado 
+}: CopilotPanelProps) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: input };
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-copilot', {
+        body: {
+          messages: [...messages, userMessage],
+          documentoOriginal,
+          documentoFormatado,
+          sugestoes,
+          alertas
+        }
+      });
+
+      if (error) throw error;
+
+      const assistantMessage: Message = { 
+        role: "assistant", 
+        content: data.response 
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Erro no chat:', error);
+      toast({
+        title: "Erro no chat",
+        description: "Não foi possível processar sua mensagem. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4 sticky top-24">
       <Card className="shadow-lg border-2">
@@ -76,16 +136,66 @@ const CopilotPanel = ({ sugestoes, alertas }: CopilotPanelProps) => {
 
               <Separator />
 
-              {/* Chat IA */}
+              {/* Chat IA Interativo */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-primary" />
-                  <h4 className="font-semibold text-sm">Chat com IA</h4>
+                  <h4 className="font-semibold text-sm">Assistente Interativo</h4>
                 </div>
-                <div className="p-4 rounded-lg border bg-muted/50">
-                  <p className="text-sm text-muted-foreground italic">
-                    Funcionalidade de chat interativo em desenvolvimento...
-                  </p>
+                
+                {messages.length === 0 ? (
+                  <div className="p-4 rounded-lg border bg-muted/50 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Faça perguntas sobre o documento ou peça sugestões de melhoria:
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1 pl-4">
+                      <li>• "Como melhorar a introdução?"</li>
+                      <li>• "Este trecho está conforme?"</li>
+                      <li>• "Sugestões para o parágrafo X"</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-lg text-sm ${
+                          msg.role === "user"
+                            ? "bg-primary/10 ml-4"
+                            : "bg-muted mr-4"
+                        }`}
+                      >
+                        <p className="font-semibold text-xs mb-1">
+                          {msg.role === "user" ? "Você" : "Copiloto"}
+                        </p>
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Digite sua pergunta..."
+                    className="min-h-[60px] resize-none text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    disabled={isLoading}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={!input.trim() || isLoading}
+                    size="icon"
+                    className="h-[60px] w-12 flex-shrink-0"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>

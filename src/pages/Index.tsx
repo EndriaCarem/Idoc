@@ -74,6 +74,8 @@ const Index = () => {
                     <CopilotPanel 
                       sugestoes={copilotResult.sugestoes}
                       alertas={copilotResult.alertas}
+                      documentoOriginal={originalText}
+                      documentoFormatado={copilotResult.textoFormatado}
                     />
                   )}
                 </div>
