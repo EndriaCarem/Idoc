@@ -5,20 +5,20 @@ import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import { formatarComCopilot } from '@/services/geminiService';
 import { Loader2 } from 'lucide-react';
-import type { CopilotResult, Regime } from '@/types';
+import type { CopilotResult } from '@/types';
 
 const Index = () => {
   const [originalText, setOriginalText] = useState<string>('');
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedRegime, setSelectedRegime] = useState<Regime>('Regulatório');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  const handleFileUpload = async (text: string) => {
+  const handleFileUpload = async (text: string, templateId: string) => {
     setOriginalText(text);
     setIsProcessing(true);
     
     try {
-      const result = await formatarComCopilot(text, selectedRegime);
+      const result = await formatarComCopilot(text, templateId);
       setCopilotResult(result);
     } catch (error) {
       console.error('Erro ao processar documento:', error);
@@ -27,8 +27,8 @@ const Index = () => {
     }
   };
 
-  const handleRegimeChange = (regime: Regime) => {
-    setSelectedRegime(regime);
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
   };
 
   return (
@@ -49,8 +49,8 @@ const Index = () => {
             
             <DocumentInput 
               onFileUpload={handleFileUpload}
-              selectedRegime={selectedRegime}
-              onRegimeChange={handleRegimeChange}
+              selectedTemplateId={selectedTemplateId}
+              onTemplateChange={handleTemplateChange}
             />
           </div>
         ) : (

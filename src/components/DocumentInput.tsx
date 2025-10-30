@@ -1,21 +1,59 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Upload, File, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import type { Regime } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-interface DocumentInputProps {
-  onFileUpload: (text: string) => void;
-  selectedRegime: Regime;
-  onRegimeChange: (regime: Regime) => void;
+interface Template {
+  id: string;
+  name: string;
 }
 
-const DocumentInput = ({ onFileUpload, selectedRegime, onRegimeChange }: DocumentInputProps) => {
+interface DocumentInputProps {
+  onFileUpload: (text: string, templateId: string) => void;
+  selectedTemplateId: string | null;
+  onTemplateChange: (templateId: string) => void;
+}
+
+const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: DocumentInputProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('id, name')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+      
+      if (!selectedTemplateId && data && data.length > 0) {
+        onTemplateChange(data[0].id);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar templates:', error);
+      toast.error('Erro ao carregar templates');
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -53,27 +91,29 @@ const DocumentInput = ({ onFileUpload, selectedRegime, onRegimeChange }: Documen
     }
 
     setSelectedFile(file);
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      onFileUpload(text);
-      toast.success('Documento carregado', {
-        description: `${file.name} foi carregado com sucesso`
-      });
-    };
-    reader.readAsText(file);
+    toast.success('Documento selecionado', {
+      description: `${file.name} pronto para processamento`
+    });
   };
 
   const handleSubmit = () => {
-    if (selectedFile) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        onFileUpload(text);
-      };
-      reader.readAsText(selectedFile);
+    if (!selectedFile) {
+      toast.error('Selecione um arquivo');
+      return;
     }
+
+    if (!selectedTemplateId) {
+      toast.error('Selecione um template');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      onFileUpload(text, selectedTemplateId);
+      toast.success('Processando documento...');
+    };
+    reader.readAsText(selectedFile);
   };
 
   return (
@@ -86,41 +126,35 @@ const DocumentInput = ({ onFileUpload, selectedRegime, onRegimeChange }: Documen
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-3">
-          <Label className="text-base font-semibold">Tipo de Regime</Label>
-          <RadioGroup
-            value={selectedRegime}
-            onValueChange={(value) => onRegimeChange(value as Regime)}
-            className="grid grid-cols-2 gap-4"
-          >
-            <Label
-              htmlFor="regulatorio"
-              className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                selectedRegime === 'Regulatório' 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-border hover:border-primary/50'
-              }`}
+          <Label className="text-base font-semibold">Selecione o Template</Label>
+          {isLoadingTemplates ? (
+            <p className="text-sm text-muted-foreground">Carregando templates...</p>
+          ) : templates.length === 0 ? (
+            <div className="border-2 border-dashed rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Nenhum template disponível.
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Crie um template na página de gerenciamento.
+              </p>
+            </div>
+          ) : (
+            <Select 
+              value={selectedTemplateId || undefined} 
+              onValueChange={onTemplateChange}
             >
-              <RadioGroupItem value="Regulatório" id="regulatorio" />
-              <div>
-                <div className="font-semibold">Regulatório</div>
-                <div className="text-xs text-muted-foreground">REN/ANEEL</div>
-              </div>
-            </Label>
-            <Label
-              htmlFor="hibrido"
-              className={`flex items-center space-x-2 border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                selectedRegime === 'Híbrido' 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-border hover:border-primary/50'
-              }`}
-            >
-              <RadioGroupItem value="Híbrido" id="hibrido" />
-              <div>
-                <div className="font-semibold">Híbrido</div>
-                <div className="text-xs text-muted-foreground">P&D/PD&I</div>
-              </div>
-            </Label>
-          </RadioGroup>
+              <SelectTrigger>
+                <SelectValue placeholder="Escolha um template de formatação" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div
@@ -151,7 +185,11 @@ const DocumentInput = ({ onFileUpload, selectedRegime, onRegimeChange }: Documen
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              <Button onClick={handleSubmit} className="w-full">
+              <Button 
+                onClick={handleSubmit} 
+                className="w-full"
+                disabled={!selectedTemplateId}
+              >
                 Processar Documento
               </Button>
             </div>
