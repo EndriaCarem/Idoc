@@ -25,15 +25,6 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarContent className="gap-0">
-        {/* Logo area in sidebar */}
-        <div className="flex h-16 items-center border-b px-6">
-          {open && (
-            <span className="font-semibold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Menu
-            </span>
-          )}
-        </div>
-        
         <SidebarGroup className="px-2 py-4">
           <SidebarGroupContent>
             <SidebarMenu>
