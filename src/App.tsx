@@ -24,8 +24,8 @@ const App = () => (
           <div className="min-h-screen flex w-full">
             <AppSidebar />
             <div className="flex-1 flex flex-col">
-              <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-3">
+              <header className="border-b bg-background sticky top-0 z-50">
+                <div className="px-6 py-4">
                   <Header />
                 </div>
               </header>
