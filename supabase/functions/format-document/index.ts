@@ -115,25 +115,69 @@ Por favor, formate este documento seguindo rigorosamente o template de referênc
     const aiData = await response.json();
     const textoFormatado = aiData.choices[0].message.content;
 
-    // Gerar sugestões e alertas baseados na análise
+    // Detectar tipo de regime baseado no nome do template
+    const tipoRegime = templateName?.toLowerCase() || '';
+    
+    // Gerar sugestões contextualizadas
     const sugestoes = [
-      'Formatação de títulos e hierarquia aplicada conforme template',
-      'Estrutura de seções reorganizada para conformidade',
-      'Terminologia técnica padronizada segundo glossário do programa',
-      'Espaçamento, margens e layout ajustados',
-      'Numeração de itens e listas corrigida',
-      'Padronização de tabelas e dados quantitativos (se aplicável)'
+      '✓ Formatação de títulos e hierarquia aplicada conforme template oficial',
+      '✓ Estrutura de seções reorganizada para total conformidade regulatória',
+      '✓ Terminologia técnica padronizada segundo glossário do programa',
+      '✓ Espaçamento, margens e layout ajustados para documento profissional',
+      '✓ Numeração de itens e listas corrigida conforme ABNT (quando aplicável)',
+      '✓ Padronização de tabelas, gráficos e dados quantitativos',
+      '✓ Revisão ortográfica e gramatical automatizada aplicada'
     ];
 
-    const alertas = [
-      'CRÍTICO: Verificar se todas as seções obrigatórias do programa estão preenchidas',
-      'Validar datas no formato dd/mm/aaaa conforme exigido pela prestação de contas',
-      'Confirmar valores monetários e percentuais com documentação fonte',
-      'Revisar referências normativas (leis, portarias) quanto a numeração e vigência',
-      'Verificar siglas, abreviações e nomenclaturas técnicas conforme glossário oficial',
-      'Atenção: responsáveis e assinaturas devem estar identificados corretamente',
-      'Conferir prazos regulatórios e marcos do projeto'
-    ];
+    // Alertas específicos por tipo de regime
+    let alertas: string[] = [];
+    
+    if (tipoRegime.includes('automotivo') || tipoRegime.includes('ra')) {
+      alertas = [
+        '⚠️ REGIME AUTOMOTIVO - Verificar seções obrigatórias: Objetivos, Metodologia, Resultados, Investimentos',
+        '⚠️ Validar datas de início e fim do projeto no formato dd/mm/aaaa',
+        '⚠️ Confirmar valores de investimentos em P&D discriminados por categoria (RH, equipamentos, insumos)',
+        '⚠️ Revisar classificação das atividades como Pesquisa Básica, Aplicada ou Desenvolvimento',
+        '⚠️ Verificar enquadramento nos percentuais mínimos de investimento em P&D',
+        '⚠️ Conferir nomenclatura de veículos e componentes conforme glossário MDIC',
+        '⚠️ Atenção: documentos comprobatórios (notas fiscais, contratos) devem estar anexados',
+        '⚠️ Validar indicadores de inovação tecnológica e registro de propriedade intelectual'
+      ];
+    } else if (tipoRegime.includes('informática') || tipoRegime.includes('ppb') || tipoRegime.includes('lei de informática')) {
+      alertas = [
+        '⚠️ LEI DE INFORMÁTICA/PPB - Verificar descrição detalhada das atividades de P&D realizadas',
+        '⚠️ Validar percentual de faturamento investido em P&D (mínimo 5% conforme lei)',
+        '⚠️ Confirmar convênios com ICTs (Instituições Científicas e Tecnológicas) quando aplicável',
+        '⚠️ Revisar processo de certificação PPB e validade do certificado',
+        '⚠️ Verificar atendimento aos requisitos de conteúdo local e processo produtivo básico',
+        '⚠️ Conferir metas de exportação e indicadores de desempenho do projeto',
+        '⚠️ Atenção: relatórios de auditorias e avaliações técnicas devem estar incluídos',
+        '⚠️ Validar registro de patentes, softwares e inovações geradas pelo projeto'
+      ];
+    } else if (tipoRegime.includes('mover')) {
+      alertas = [
+        '⚠️ PROGRAMA MOVER - Verificar alinhamento com metas de descarbonização e eficiência energética',
+        '⚠️ Validar investimentos em eletrificação, hibridização e tecnologias de baixa emissão',
+        '⚠️ Confirmar indicadores de redução de emissões de CO2 e eficiência energética',
+        '⚠️ Revisar projetos de P&D em mobilidade sustentável e veículos elétricos',
+        '⚠️ Verificar conformidade com requisitos ambientais e certificações (PROCONVE, PROMOT)',
+        '⚠️ Conferir cronograma de implantação e marcos de inovação tecnológica',
+        '⚠️ Atenção: estudos de impacto ambiental e avaliações de ciclo de vida devem estar presentes',
+        '⚠️ Validar parcerias estratégicas para desenvolvimento de tecnologias limpas'
+      ];
+    } else {
+      // Alertas genéricos para outros casos
+      alertas = [
+        '⚠️ CRÍTICO: Verificar se todas as seções obrigatórias do programa estão preenchidas',
+        '⚠️ Validar datas no formato dd/mm/aaaa conforme exigido pela prestação de contas',
+        '⚠️ Confirmar valores monetários e percentuais com documentação fonte',
+        '⚠️ Revisar referências normativas (leis, portarias, decretos) quanto a numeração e vigência',
+        '⚠️ Verificar siglas, abreviações e nomenclaturas técnicas conforme glossário oficial',
+        '⚠️ Atenção: responsáveis técnicos e assinaturas devem estar identificados corretamente',
+        '⚠️ Conferir prazos regulatórios, marcos do projeto e cronograma de execução',
+        '⚠️ Validar anexos obrigatórios (comprovantes, relatórios, certificações)'
+      ];
+    }
 
     console.log('Formatação concluída com sucesso');
 

@@ -107,20 +107,28 @@ const DocumentPreview = ({ originalText, formattedText }: DocumentPreviewProps) 
 
           <TabsContent value="comparison" className="m-0">
             <ScrollArea className="h-[600px]">
-              <div className="p-6 grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold mb-3 text-sm text-muted-foreground">Original</h4>
-                  <div className="prose prose-sm">
-                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
-                      {originalText.substring(0, 500)}...
+              <div className="p-6 grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b">
+                    <div className="w-3 h-3 rounded-full bg-muted-foreground/30"></div>
+                    <h4 className="font-semibold text-sm text-muted-foreground">Documento Original</h4>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-4 border">
+                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-muted-foreground">
+                      {originalText.substring(0, 1500)}
+                      {originalText.length > 1500 && '\n\n[...continuação do documento...]'}
                     </pre>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold mb-3 text-sm text-primary">Formatado</h4>
-                  <div className="prose prose-sm">
-                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
-                      {formattedText.substring(0, 500)}...
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 pb-2 border-b border-primary/30">
+                    <div className="w-3 h-3 rounded-full bg-primary"></div>
+                    <h4 className="font-semibold text-sm text-primary">Documento Formatado ✓</h4>
+                  </div>
+                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-foreground">
+                      {formattedText.substring(0, 1500)}
+                      {formattedText.length > 1500 && '\n\n[...continuação do documento...]'}
                     </pre>
                   </div>
                 </div>

@@ -144,15 +144,20 @@ const CopilotPanel = ({
                 </div>
                 
                 {messages.length === 0 ? (
-                  <div className="p-4 rounded-lg border bg-muted/50 space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Faça perguntas sobre o documento ou peça sugestões de melhoria:
+                  <div className="p-4 rounded-lg border bg-gradient-to-br from-primary/5 to-secondary/5 space-y-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      💬 Pergunte ao Copiloto Técnico:
                     </p>
-                    <ul className="text-xs text-muted-foreground space-y-1 pl-4">
-                      <li>• "Como melhorar a introdução?"</li>
-                      <li>• "Este trecho está conforme?"</li>
-                      <li>• "Sugestões para o parágrafo X"</li>
+                    <ul className="text-xs text-muted-foreground space-y-2 pl-1">
+                      <li className="flex gap-2"><span className="text-primary">•</span> "Como melhorar a seção de objetivos para atender aos requisitos?"</li>
+                      <li className="flex gap-2"><span className="text-secondary">•</span> "Este parágrafo sobre investimentos está conforme?"</li>
+                      <li className="flex gap-2"><span className="text-primary">•</span> "Revisar a nomenclatura técnica da seção de metodologia"</li>
+                      <li className="flex gap-2"><span className="text-secondary">•</span> "Quais documentos comprobatórios devo anexar?"</li>
+                      <li className="flex gap-2"><span className="text-primary">•</span> "Sugestões para tabela de investimentos em P&D"</li>
                     </ul>
+                    <p className="text-xs text-muted-foreground italic pt-2 border-t">
+                      💡 Dica: Copie e cole trechos específicos do documento para análise detalhada
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto">
