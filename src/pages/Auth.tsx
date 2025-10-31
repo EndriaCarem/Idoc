@@ -137,7 +137,7 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6 shadow-2xl">
         <div className="text-center space-y-2">
-          <div className="w-64 h-64 flex items-center justify-center mx-auto -mb-4">
+          <div className="w-64 h-64 flex items-center justify-center mx-auto">
             <img 
               src={loginIcon} 
               alt="Idoc" 
@@ -145,10 +145,6 @@ export default function Auth() {
               style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
             />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Idoc</h1>
-          <p className="text-muted-foreground">
-            {isLogin ? 'Entre na sua conta' : 'Crie sua conta'}
-          </p>
         </div>
 
         {biometricAvailable && isLogin && (
