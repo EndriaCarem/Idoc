@@ -303,7 +303,7 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
                 id="file-upload"
               />
               <label htmlFor="file-upload">
-                <Button asChild variant="secondary">
+                <Button asChild className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-foreground">
                   <span>Selecionar Arquivo</span>
                 </Button>
               </label>
