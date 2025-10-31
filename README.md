@@ -1,8 +1,9 @@
 <p align="center">
   <a href="https://stec.cx/idoc" target="_blank" rel="noopener noreferrer">
-    <img src="https://stec.cx/idoc.png" alt="IDoc — capa do projeto" width="820" />
+    <img src="https://stec.cx/idoc.png" alt="IDoc — logo" width="128" />
   </a>
 </p>
+
 
 # Welcome to your project
 
