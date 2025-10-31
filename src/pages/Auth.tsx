@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Fingerprint, Mail, Lock, User, Briefcase } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import loginIcon from '@/assets/login-icon.png';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -136,8 +137,8 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6 shadow-2xl">
         <div className="text-center space-y-2">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mx-auto shadow-lg">
-            <Fingerprint className="w-8 h-8 text-primary-foreground" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+            <img src={loginIcon} alt="Idoc" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-3xl font-bold">Idoc</h1>
           <p className="text-muted-foreground">
