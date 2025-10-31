@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Fingerprint, Mail, Lock, User, Briefcase } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import loginIcon from '@/assets/idoc-logo.png';
+import loginIcon from '@/assets/idoc-logo-new.png';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -138,7 +138,12 @@ export default function Auth() {
       <Card className="w-full max-w-md p-8 space-y-6 shadow-2xl">
         <div className="text-center space-y-2">
           <div className="w-48 h-48 flex items-center justify-center mx-auto -mb-4">
-            <img src={loginIcon} alt="Idoc" className="w-48 h-48 object-contain" />
+            <img 
+              src={loginIcon} 
+              alt="Idoc" 
+              className="w-48 h-48 object-contain !border-0 !outline-none !ring-0 !shadow-none" 
+              style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+            />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Idoc</h1>
           <p className="text-muted-foreground">
