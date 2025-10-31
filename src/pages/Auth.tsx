@@ -143,7 +143,7 @@ export default function Auth() {
             className="w-72 h-72 object-contain !border-0 !outline-none !ring-0 !shadow-none" 
             style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
           />
-          <p className="text-base text-muted-foreground text-center font-medium -mt-4">
+          <p className="text-base text-muted-foreground text-center font-medium -mt-12">
             Gestão Inteligente de Documentos
           </p>
         </div>
