@@ -13,6 +13,7 @@ import Templates from "./pages/Templates";
 import Historico from "./pages/Historico";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ function AppContent() {
                 <Route path="/historico" element={<Historico />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/templates" element={<Templates />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
