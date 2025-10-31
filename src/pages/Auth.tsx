@@ -137,8 +137,8 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6 shadow-2xl">
         <div className="text-center space-y-2">
-          <div className="w-32 h-32 flex items-center justify-center mx-auto">
-            <img src={loginIcon} alt="Idoc" className="w-32 h-32 object-contain" />
+          <div className="w-48 h-48 flex items-center justify-center mx-auto">
+            <img src={loginIcon} alt="Idoc" className="w-48 h-48 object-contain" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Idoc</h1>
           <p className="text-muted-foreground">
