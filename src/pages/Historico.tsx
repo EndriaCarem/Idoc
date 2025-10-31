@@ -34,7 +34,7 @@ const Historico = () => {
         .limit(50);
 
       if (error) throw error;
-      setDocuments(data || []);
+      setDocuments((data as any) || []);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
       toast.error('Erro ao carregar histórico de documentos');

@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      processed_documents: {
+        Row: {
+          alerts_count: number | null
+          created_at: string
+          formatted_text: string | null
+          id: string
+          original_filename: string
+          original_text: string | null
+          processed_at: string
+          suggestions_count: number | null
+          template_name: string
+        }
+        Insert: {
+          alerts_count?: number | null
+          created_at?: string
+          formatted_text?: string | null
+          id?: string
+          original_filename: string
+          original_text?: string | null
+          processed_at?: string
+          suggestions_count?: number | null
+          template_name: string
+        }
+        Update: {
+          alerts_count?: number | null
+          created_at?: string
+          formatted_text?: string | null
+          id?: string
+          original_filename?: string
+          original_text?: string | null
+          processed_at?: string
+          suggestions_count?: number | null
+          template_name?: string
+        }
+        Relationships: []
+      }
       templates: {
         Row: {
           content: string

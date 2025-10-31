@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
@@ -15,10 +16,25 @@ const Index = () => {
   const handleFileUpload = async (text: string, templateId: string) => {
     setOriginalText(text);
     setIsProcessing(true);
+    setSelectedTemplateId(templateId);
     
     try {
       const result = await formatarComCopilot(text, templateId);
       setCopilotResult(result);
+      
+      // Salvar no histórico
+      const { error } = await supabase
+        .from('processed_documents')
+        .insert({
+          template_name: templateId,
+          original_filename: 'Documento.txt',
+          original_text: text,
+          formatted_text: result.textoFormatado,
+          alerts_count: result.alertas.length,
+          suggestions_count: result.sugestoes.length,
+        });
+      
+      if (error) console.error('Erro ao salvar no histórico:', error);
     } catch (error) {
       console.error('Erro ao processar documento:', error);
     } finally {

@@ -31,7 +31,7 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      const documents = data || [];
+      const documents: any[] = data || [];
       const templateCounts: { [key: string]: number } = {};
       
       let totalAlerts = 0;
