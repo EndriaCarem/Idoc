@@ -25,54 +25,94 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    const systemPrompt = `Você é um assistente especializado em formatação de relatórios técnicos de incentivos fiscais brasileiros (Regime Automotivo, Lei de Informática, MOVER).
+    const systemPrompt = `Você é um FORMATTER REGULATÓRIO especializado em RDA (Relatório Descritivo Anual) e relatórios de incentivos fiscais brasileiros.
 
-Sua função é atuar como um COPILOTO DE FORMATAÇÃO, auxiliando analistas na padronização de documentos regulatórios.
+Sua missão: TRANSFORMAR rascunhos em relatórios profissionais e conformes, com estrutura clara, tabelas padronizadas e validações de conformidade.
 
-CONTEXTO:
-- Relatórios de incentivos fiscais são documentos técnicos e regulatórios críticos
-- Garantem prestação de contas de investimentos em P&D e inovação
-- Devem seguir rigorosamente padrões formais dos programas
-- Qualquer não-conformidade pode comprometer benefícios fiscais
+=== TEMPLATE DE REFERÊNCIA ===
+${templateContent.substring(0, 4000)}
 
-TEMPLATE DE REFERÊNCIA:
-Este é o modelo aprovado pela empresa para o tipo de regime selecionado:
+=== REGRAS DE FORMATAÇÃO OBRIGATÓRIAS ===
 
-${templateContent.substring(0, 6000)}
+📋 ESTRUTURA DE SEÇÕES (nesta ordem exata):
+1. IDENTIFICAÇÃO E QUALIFICAÇÃO
+2. PERFIL DE INVESTIMENTOS EM P&D (TABELA OBRIGATÓRIA)
+3. PROJETOS DE P,D&I EXECUTADOS (TABELA OBRIGATÓRIA)
+4. INDICADORES E RESULTADOS TECNOLÓGICOS (TABELA OBRIGATÓRIA)
+5. CONFORMIDADES E VEDAÇÕES
+6. ANEXOS E DOCUMENTOS COMPROBATÓRIOS
 
----
+📊 TABELAS OBRIGATÓRIAS:
 
-SUA TAREFA:
-1. Analise a estrutura e formatação do template acima
-2. Formate o documento fornecido seguindo EXATAMENTE o padrão do template
-3. Mantenha TODO o conteúdo técnico original intacto
-4. Ajuste apenas: formatação, estrutura, padronização e terminologia
-5. NÃO invente nem adicione informações técnicas
+**Tabela 1: Perfil de Investimentos em P&D**
+| Rubrica | Valor (R$) |
+|---------|-----------|
+| [Extrair do texto] | [Valores] |
+| **TOTAL** | **[Soma calculada]** |
 
-ASPECTOS A FORMATAR:
-- Estrutura de seções e hierarquia (seguir template)
-- Formatação de títulos e subtítulos (caps, negrito, numeração)
-- Espaçamento entre parágrafos e seções
-- Listas, numerações e marcadores
-- Terminologia técnica padronizada
-- Tabelas e formatação de dados
-- Normas ABNT se aplicáveis ao template
+**Tabela 2: Projetos de P,D&I**
+| Código | Título | Tipo P,D&I | Parceiros | TRL Inicial | TRL Alvo | Dispêndio (R$) |
+|--------|--------|------------|-----------|-------------|----------|----------------|
+| [Ex: P-001] | [Título] | [Pesquisa/Desenvolvimento/Inovação] | [ICTs/Empresas] | [0-9] | [0-9] | [Valor] |
 
-VERIFICAÇÕES DE CONFORMIDADE:
-- Todas as seções obrigatórias do template estão presentes?
-- A terminologia está consistente com o template?
-- A numeração e hierarquia seguem o padrão?
-- Há informações críticas faltando (prazos, valores, responsáveis)?
+**Tabela 3: Indicadores de Resultados**
+| Indicador | Resultado Alcançado | Unidade |
+|-----------|-------------------|---------|
+| [Patentes depositadas] | [Número] | [un.] |
+| [Publicações científicas] | [Número] | [un.] |
 
-IMPORTANTE: Retorne APENAS o texto formatado, sem comentários ou explicações.`;
+🔍 VALIDAÇÕES AUTOMÁTICAS (incluir na seção Conformidades):
 
-    const userPrompt = `DOCUMENTO A SER FORMATADO:
+✅ SOMA DO PERFIL vs SOMA DOS PROJETOS
+- Se divergir: "⚠️ ALERTA: Soma do Perfil de Investimentos (R$ X) DIFERE da soma dos Dispêndios dos Projetos (R$ Y). Diferença: R$ Z"
 
-${documentText.substring(0, 8000)}
+✅ EVOLUÇÃO TRL
+- Para cada projeto: TRL_Alvo DEVE ser ≥ TRL_Inicial
+- Se não: "⚠️ ALERTA: Projeto [código] apresenta TRL alvo MENOR que TRL inicial"
 
----
+✅ SERVIÇOS DE TERCEIROS
+- Se houver esta rubrica: EXIGIR parágrafo justificando necessidade técnica
 
-Por favor, formate este documento seguindo rigorosamente o template de referência fornecido no prompt do sistema.`;
+✅ PERCENTUAL DE P&D
+- Calcular: (Total P&D / Faturamento) × 100
+- Validar se atinge mínimo regulatório
+
+📝 REGRAS DE REDAÇÃO:
+- Títulos: CAIXA ALTA + numeração (1., 1.1, 1.1.1)
+- Parágrafos: texto justificado, espaçamento 1,5 linhas
+- Linguagem: técnica, objetiva, voz ativa
+- Números: formato brasileiro (1.234,56)
+- Datas: dd/mm/aaaa
+
+⚠️ O QUE NÃO FAZER:
+- NÃO inventar dados numéricos
+- NÃO omitir informações do rascunho
+- NÃO criar projetos ou rubricas inexistentes
+- NÃO alterar valores financeiros
+
+🎯 FORMATO DE SAÍDA:
+Retorne o documento formatado em Markdown bem estruturado, com:
+- Títulos hierárquicos (# ## ###)
+- Tabelas completas e alinhadas
+- Listas numeradas/marcadas
+- Negrito para destaques críticos
+- Seção final "VALIDAÇÕES E CONFORMIDADE" com todos os alertas
+
+IMPORTANTE: Use APENAS dados presentes no rascunho. Se faltar informação crítica, marque com **[PENDENTE: descrição]**`;
+
+    const userPrompt = `=== RASCUNHO A SER TRANSFORMADO ===
+
+${documentText.substring(0, 10000)}
+
+=== INSTRUÇÕES DE EXECUÇÃO ===
+
+1. EXTRAIA todos os dados numéricos (valores, TRLs, datas, percentuais)
+2. ORGANIZE em tabelas conforme especificado no sistema
+3. CALCULE somas e valide conformidades
+4. FORMATE com hierarquia clara de seções
+5. ADICIONE seção "VALIDAÇÕES E CONFORMIDADE" ao final com todos os alertas encontrados
+
+Retorne o relatório completo formatado em Markdown, com tabelas, validações e alertas.`;
 
     console.log('Chamando Lovable AI para formatação...');
 
@@ -118,20 +158,52 @@ Por favor, formate este documento seguindo rigorosamente o template de referênc
     // Detectar tipo de regime baseado no nome do template
     const tipoRegime = templateName?.toLowerCase() || '';
     
-    // Gerar sugestões contextualizadas
-    const sugestoes = [
-      '✓ Formatação de títulos e hierarquia aplicada conforme template oficial',
-      '✓ Estrutura de seções reorganizada para total conformidade regulatória',
-      '✓ Terminologia técnica padronizada segundo glossário do programa',
-      '✓ Espaçamento, margens e layout ajustados para documento profissional',
-      '✓ Numeração de itens e listas corrigida conforme ABNT (quando aplicável)',
-      '✓ Padronização de tabelas, gráficos e dados quantitativos',
-      '✓ Revisão ortográfica e gramatical automatizada aplicada'
-    ];
+    // Análise inteligente do texto formatado para gerar sugestões contextualizadas
+    const sugestoes: string[] = [];
+    
+    if (textoFormatado.includes('| ')) {
+      sugestoes.push('✓ Dados financeiros organizados em tabelas estruturadas para melhor legibilidade');
+    }
+    if (textoFormatado.includes('TOTAL') || textoFormatado.includes('Total')) {
+      sugestoes.push('✓ Totalizações calculadas e destacadas nas tabelas de investimentos');
+    }
+    if (textoFormatado.includes('TRL')) {
+      sugestoes.push('✓ Níveis TRL (Technology Readiness Level) padronizados para todos os projetos');
+    }
+    if (textoFormatado.includes('##') || textoFormatado.includes('###')) {
+      sugestoes.push('✓ Hierarquia de seções e títulos formatada com numeração automática');
+    }
+    if (textoFormatado.match(/\d{1,3}\.\d{3},\d{2}/)) {
+      sugestoes.push('✓ Valores monetários padronizados no formato brasileiro (R$ 1.234,56)');
+    }
+    if (textoFormatado.match(/\d{2}\/\d{2}\/\d{4}/)) {
+      sugestoes.push('✓ Datas normalizadas para formato dd/mm/aaaa');
+    }
+    if (textoFormatado.includes('VALIDAÇÕES') || textoFormatado.includes('CONFORMIDADE')) {
+      sugestoes.push('✓ Seção de validações e conformidade regulatória adicionada');
+    }
+    
+    // Garantir sempre algumas sugestões base
+    if (sugestoes.length < 3) {
+      sugestoes.push('✓ Estrutura de seções reorganizada conforme template regulatório oficial');
+      sugestoes.push('✓ Terminologia técnica padronizada segundo glossário do programa');
+      sugestoes.push('✓ Documento formatado para apresentação profissional e auditável');
+    }
 
-    // Alertas específicos por tipo de regime
+    // Análise inteligente para gerar alertas específicos baseados no conteúdo
     let alertas: string[] = [];
     
+    // Extrair alertas da seção de validações se existir
+    const validacoesMatch = textoFormatado.match(/VALIDAÇÕES E CONFORMIDADE[\s\S]*?(?=\n#|$)/i);
+    if (validacoesMatch) {
+      const validacoesTexto = validacoesMatch[0];
+      const alertasExtraidos = validacoesTexto.match(/⚠️[^\n]+/g);
+      if (alertasExtraidos) {
+        alertas = alertasExtraidos.map((a: string) => a.trim());
+      }
+    }
+    
+    // Alertas específicos por tipo de regime (complementares)
     if (tipoRegime.includes('automotivo') || tipoRegime.includes('ra')) {
       alertas = [
         '⚠️ REGIME AUTOMOTIVO - Verificar seções obrigatórias: Objetivos, Metodologia, Resultados, Investimentos',
