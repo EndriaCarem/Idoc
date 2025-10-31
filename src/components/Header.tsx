@@ -1,5 +1,5 @@
 import { UserMenu } from "./UserMenu";
-import logoImage from "@/assets/favicon.png";
+import logoImage from "@/assets/idoc-logo-new.png";
 
 const Header = () => {
   return (
