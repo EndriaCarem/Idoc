@@ -25,9 +25,6 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
-        <div className="p-2">
-          <SidebarTrigger />
-        </div>
         
         <SidebarGroup>
           <SidebarGroupContent>
