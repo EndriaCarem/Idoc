@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -147,11 +146,8 @@ const Templates = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <Button
@@ -262,10 +258,9 @@ const Templates = () => {
                   </Card>
                 ))}
               </div>
-            )}
-          </div>
+          )}
         </div>
-      </main>
+      </div>
 
       {/* Dialog para nomear o template */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
