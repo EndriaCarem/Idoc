@@ -1,73 +1,233 @@
-# Welcome to your Lovable project
+<div align="center">
+  <img src="src/assets/logo-idoc.png" alt="iDoc Logo" width="200"/>
+  
+  # iDoc - Processador Inteligente de Documentos
+  
+  ### Transforme seus documentos com o poder da Inteligência Artificial
+  
+  [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+  [![Vite](https://img.shields.io/badge/Vite-5.x-646CFF.svg)](https://vitejs.dev/)
+  [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC.svg)](https://tailwindcss.com/)
+  
+</div>
 
-## Project info
+---
 
-**URL**: https://lovable.dev/projects/09c8e4dd-c01c-45f9-8ad5-7b9b2623bd62
+## 📋 Sobre o Projeto
 
-## How can I edit this code?
+**iDoc** é uma plataforma moderna e inteligente para processamento e formatação de documentos utilizando Inteligência Artificial. Com uma interface intuitiva e recursos poderosos, o iDoc permite que você processe, formate e organize seus documentos de forma eficiente e automatizada.
 
-There are several ways of editing your application.
+### ✨ Principais Funcionalidades
 
-**Use Lovable**
+- 🤖 **Copiloto IA**: Assistente inteligente para processar e formatar documentos
+- 📄 **Processamento de Documentos**: Upload e processamento automático de diversos formatos
+- 🎨 **Templates Personalizáveis**: Biblioteca de templates para diferentes tipos de documentos
+- 📊 **Dashboard Analítico**: Visualize estatísticas e métricas dos seus documentos
+- 📜 **Histórico Completo**: Acompanhe todo o histórico de processamento
+- 👤 **Autenticação Segura**: Sistema completo de login e gerenciamento de perfil
+- 🌓 **Tema Escuro/Claro**: Interface adaptável às suas preferências
+- 📱 **Design Responsivo**: Funciona perfeitamente em desktop, tablet e mobile
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/09c8e4dd-c01c-45f9-8ad5-7b9b2623bd62) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Tecnologias Utilizadas
 
-**Use your preferred IDE**
+### Frontend
+- **React 18.3** - Biblioteca JavaScript para interfaces
+- **TypeScript** - Superset tipado de JavaScript
+- **Vite** - Build tool moderna e rápida
+- **TailwindCSS** - Framework CSS utility-first
+- **shadcn/ui** - Componentes de UI modernos e acessíveis
+- **React Router** - Roteamento para aplicações React
+- **React Query** - Gerenciamento de estado assíncrono
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Backend & Serviços
+- **Lovable Cloud** - Plataforma backend completa
+- **Edge Functions** - Funções serverless para lógica de negócio
+- **Autenticação** - Sistema completo de auth
+- **Banco de Dados** - PostgreSQL gerenciado
+- **Storage** - Armazenamento de arquivos
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### IA & Processamento
+- **Gemini AI** - Processamento inteligente de documentos
+- **Chat Copilot** - Assistente conversacional
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 📦 Instalação e Configuração
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Pré-requisitos
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Node.js 18+ 
+- npm ou yarn
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Passo a Passo
+
+1. **Clone o repositório**
+```bash
+git clone <seu-repositorio>
+cd <nome-do-projeto>
+```
+
+2. **Instale as dependências**
+```bash
+npm install
+```
+
+3. **Configure as variáveis de ambiente**
+
+As variáveis de ambiente já estão pré-configuradas no arquivo `.env` (gerenciado automaticamente pelo Lovable Cloud).
+
+4. **Inicie o servidor de desenvolvimento**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. **Acesse a aplicação**
+```
+http://localhost:8080
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+## 🏗️ Estrutura do Projeto
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```
+src/
+├── assets/              # Imagens e recursos estáticos
+├── components/          # Componentes React reutilizáveis
+│   ├── ui/             # Componentes de interface (shadcn)
+│   ├── AppSidebar.tsx  # Barra lateral de navegação
+│   ├── CopilotPanel.tsx # Painel do copiloto IA
+│   ├── DocumentInput.tsx # Input de documentos
+│   └── ...
+├── pages/              # Páginas da aplicação
+│   ├── Auth.tsx        # Página de autenticação
+│   ├── Dashboard.tsx   # Dashboard principal
+│   ├── Historico.tsx   # Histórico de documentos
+│   ├── Index.tsx       # Página de processamento
+│   ├── Profile.tsx     # Perfil do usuário
+│   └── Templates.tsx   # Gerenciamento de templates
+├── services/           # Serviços e integrações
+│   └── geminiService.ts # Integração com IA
+├── types/              # Definições de tipos TypeScript
+├── integrations/       # Integrações externas
+│   └── supabase/       # Cliente e tipos do backend
+└── main.tsx           # Ponto de entrada da aplicação
 
-## What technologies are used for this project?
+supabase/
+└── functions/          # Edge Functions
+    ├── chat-copilot/   # Função do chat com IA
+    └── format-document/ # Função de formatação
+```
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🎯 Como Usar
 
-## How can I deploy this project?
+### 1. Fazer Login
+Acesse a página de autenticação e crie sua conta ou faça login.
 
-Simply open [Lovable](https://lovable.dev/projects/09c8e4dd-c01c-45f9-8ad5-7b9b2623bd62) and click on Share -> Publish.
+### 2. Processar Documentos
+- Navegue até a página "Processar"
+- Faça upload do seu documento
+- Selecione um template
+- Clique em processar e aguarde a IA fazer a mágica!
 
-## Can I connect a custom domain to my Lovable project?
+### 3. Gerenciar Templates
+- Acesse a página "Templates"
+- Crie, edite ou exclua templates personalizados
+- Configure as regras de formatação
 
-Yes, you can!
+### 4. Visualizar Histórico
+- Acesse "Histórico" para ver todos os documentos processados
+- Busque, filtre e organize seus documentos
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### 5. Acompanhar Métricas
+- No Dashboard, visualize estatísticas e gráficos
+- Acompanhe o uso e a produtividade
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+## 🛠️ Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build para produção
+npm run build
+
+# Preview da build de produção
+npm run preview
+
+# Lint do código
+npm run lint
+```
+
+---
+
+## 🌐 Deploy
+
+### Deploy via Lovable
+
+1. Acesse seu projeto no Lovable
+2. Clique em **Publish** (canto superior direito)
+3. Seu app estará disponível em `seuapp.lovable.app`
+
+### Deploy em outras plataformas
+
+O projeto pode ser deployado em qualquer serviço que suporte aplicações Vite:
+- Vercel
+- Netlify
+- Cloudflare Pages
+- GitHub Pages
+
+---
+
+## 🔒 Segurança
+
+- ✅ Autenticação robusta com email
+- ✅ Row Level Security (RLS) no banco de dados
+- ✅ Proteção de rotas no frontend
+- ✅ Validação de dados no backend
+- ✅ Secrets gerenciados de forma segura
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Sinta-se à vontade para:
+
+1. Fazer um Fork do projeto
+2. Criar uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abrir um Pull Request
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+---
+
+## 📞 Contato
+
+Para dúvidas, sugestões ou suporte:
+
+- 📧 Email: seu-email@example.com
+- 🌐 Website: https://seu-site.com
+- 💼 LinkedIn: [Seu Perfil](https://linkedin.com/in/seu-perfil)
+
+---
+
+<div align="center">
+  
+  **Desenvolvido com ❤️ usando [Lovable](https://lovable.dev)**
+  
+  ⭐ Se este projeto foi útil, considere dar uma estrela!
+  
+</div>
