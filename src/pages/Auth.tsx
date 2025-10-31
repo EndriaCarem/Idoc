@@ -140,7 +140,7 @@ export default function Auth() {
           <div className="w-48 h-48 flex items-center justify-center mx-auto">
             <img src={loginIcon} alt="Idoc" className="w-48 h-48 object-contain" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mt-6">Idoc</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mt-2">Idoc</h1>
           <p className="text-muted-foreground">
             {isLogin ? 'Entre na sua conta' : 'Crie sua conta'}
           </p>
