@@ -23,10 +23,18 @@ export function AppSidebar() {
   const { open } = useSidebar();
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarContent className="gap-0">
+        {/* Logo area in sidebar */}
+        <div className="flex h-16 items-center border-b px-6">
+          {open && (
+            <span className="font-semibold text-lg bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Menu
+            </span>
+          )}
+        </div>
         
-        <SidebarGroup>
+        <SidebarGroup className="px-2 py-4">
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -38,7 +46,7 @@ export function AppSidebar() {
                       className={({ isActive }) => 
                         isActive 
                           ? 'bg-primary/10 text-primary font-medium' 
-                          : 'hover:bg-accent'
+                          : 'hover:bg-accent transition-colors'
                       }
                     >
                       <item.icon className="h-5 w-5" />

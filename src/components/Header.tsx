@@ -4,13 +4,14 @@ import logoImage from '@/assets/idoc-logo-new.png';
 
 const Header = () => {
   return (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex items-center gap-3">
-        <SidebarTrigger className="hover:bg-accent transition-colors" />
+    <div className="flex items-center justify-between w-full h-16">
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="hover:bg-accent/50 transition-all duration-200 rounded-md" />
+        <div className="h-10 w-px bg-border" />
         <img 
           src={logoImage} 
           alt="Idoc Logo" 
-          className="h-16 w-auto !border-0 !outline-none !ring-0 !shadow-none transition-transform hover:scale-105"
+          className="h-12 w-auto !border-0 !outline-none !ring-0 !shadow-none transition-transform hover:scale-105"
           style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
         />
       </div>
