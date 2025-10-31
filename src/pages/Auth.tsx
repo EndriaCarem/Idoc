@@ -241,7 +241,7 @@ export default function Auth() {
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-[#2da7c0] hover:bg-[#2596ab] text-white"
             disabled={loading}
           >
             {loading ? 'Processando...' : isLogin ? 'Entrar' : 'Criar Conta'}
