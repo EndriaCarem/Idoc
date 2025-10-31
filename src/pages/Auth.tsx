@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Fingerprint, Mail, Lock, User, Briefcase } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import loginIcon from '@/assets/login-icon.png';
+import loginIcon from '@/assets/idoc-logo.png';
 
 export default function Auth() {
   const navigate = useNavigate();
