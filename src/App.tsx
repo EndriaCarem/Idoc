@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Header from "@/components/Header";
 import Index from "./pages/Index";
@@ -25,8 +25,7 @@ const App = () => (
             <AppSidebar />
             <div className="flex-1 flex flex-col">
               <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-3 flex items-center gap-3">
-                  <SidebarTrigger />
+                <div className="container mx-auto px-4 py-3">
                   <Header />
                 </div>
               </header>

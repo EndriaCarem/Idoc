@@ -1,4 +1,4 @@
-import { FileText, History, LayoutDashboard, FileStack, LogOut } from 'lucide-react';
+import { FileText, History, LayoutDashboard, FileStack } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
 
@@ -24,6 +25,10 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+        <div className="p-2 border-b">
+          <SidebarTrigger className="w-full" />
+        </div>
+        
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
