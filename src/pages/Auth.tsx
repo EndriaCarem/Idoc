@@ -135,16 +135,14 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6 shadow-2xl">
-        <div className="text-center space-y-2">
-          <div className="w-64 h-64 flex items-center justify-center mx-auto">
-            <img 
-              src={loginIcon} 
-              alt="Idoc" 
-              className="w-64 h-64 object-contain !border-0 !outline-none !ring-0 !shadow-none" 
-              style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
-            />
-          </div>
+      <Card className="w-full max-w-md p-8 space-y-8 shadow-2xl">
+        <div className="flex items-center justify-center">
+          <img 
+            src={loginIcon} 
+            alt="Idoc" 
+            className="w-48 h-48 object-contain !border-0 !outline-none !ring-0 !shadow-none" 
+            style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+          />
         </div>
 
         {biometricAvailable && isLogin && (
