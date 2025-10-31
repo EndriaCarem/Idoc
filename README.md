@@ -9,7 +9,7 @@
 
 ## Project info
 
-**URL**: [https://stec.cx/idoc](https://idoc.lovable.app/auth)
+**URL**: https://stec.cx/idoc
 
 ## How can I edit this code?
 
