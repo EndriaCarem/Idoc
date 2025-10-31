@@ -7,7 +7,7 @@ const Header = () => {
       <img 
         src={logoImage} 
         alt="Idoc Logo" 
-        className="h-24 w-auto"
+        className="h-24 w-auto border-0 outline-none ring-0"
       />
       <UserMenu />
     </div>
