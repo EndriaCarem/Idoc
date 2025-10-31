@@ -15,10 +15,7 @@ const Header = () => {
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md">
               <FileText className="w-6 h-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Idoc</h1>
-              <p className="text-xs text-muted-foreground">VIRTUS-CC Desafio 1/2025</p>
-            </div>
+            <h1 className="text-xl font-bold text-foreground">Idoc</h1>
           </div>
           
           {!isTemplatesPage && (
