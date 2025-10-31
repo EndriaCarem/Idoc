@@ -25,6 +25,9 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarContent>
+        <div className="p-2">
+          <SidebarTrigger className="hover:bg-accent/50 transition-all duration-200 rounded-md" />
+        </div>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
