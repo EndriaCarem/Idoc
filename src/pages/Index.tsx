@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Header from '@/components/Header';
 import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
@@ -32,10 +31,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8 space-y-8">
         {!originalText ? (
           <div className="max-w-4xl mx-auto">
             <DocumentInput 
@@ -74,7 +70,6 @@ const Index = () => {
             )}
           </>
         )}
-      </main>
     </div>
   );
 };
