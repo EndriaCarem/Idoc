@@ -4,7 +4,7 @@ import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import { formatarComCopilot } from '@/services/geminiService';
-import { Loader2, Sparkles, CheckCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { CopilotResult } from '@/types';
 
 const Index = () => {
@@ -38,37 +38,6 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 space-y-8">
         {!originalText ? (
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12 space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Powered by AI</span>
-              </div>
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-transparent leading-tight">
-                Copiloto de Formatação
-                <br />
-                <span className="text-3xl md:text-4xl">para Relatórios Técnicos</span>
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Automatize a formatação e padronização de relatórios de incentivos fiscais 
-                <strong className="text-foreground"> (RA, PPB, MOVER)</strong> com inteligência artificial.
-                Economize tempo e garanta conformidade regulatória.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground pt-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-secondary" />
-                  <span>Formatação automática</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-secondary" />
-                  <span>Alertas de conformidade</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-secondary" />
-                  <span>Assistente interativo</span>
-                </div>
-              </div>
-            </div>
-            
             <DocumentInput 
               onFileUpload={handleFileUpload}
               selectedTemplateId={selectedTemplateId}
