@@ -136,14 +136,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-8 shadow-2xl">
-        <div className="flex flex-col items-center justify-center gap-3">
+        <div className="flex flex-col items-center justify-center gap-1">
           <img 
             src={loginIcon} 
             alt="Idoc" 
             className="w-56 h-56 object-contain !border-0 !outline-none !ring-0 !shadow-none" 
             style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
           />
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-muted-foreground text-center -mt-2">
             Gestão Inteligente de Documentos
           </p>
         </div>
