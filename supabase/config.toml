@@ -1,1 +1,7 @@
 project_id = "piwhxhyntxsbcwdsncdc"
+
+[functions.format-document]
+verify_jwt = false
+
+[functions.chat-copilot]
+verify_jwt = false
