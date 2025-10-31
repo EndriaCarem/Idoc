@@ -24,8 +24,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r">
-      <SidebarContent className="gap-0">
-        <SidebarGroup className="px-2 py-4">
+      <SidebarContent>
+        <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
@@ -40,8 +40,8 @@ export function AppSidebar() {
                           : 'hover:bg-accent transition-colors'
                       }
                     >
-                      <item.icon className="h-5 w-5" />
-                      {open && <span>{item.title}</span>}
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
