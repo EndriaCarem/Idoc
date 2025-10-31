@@ -41,7 +41,7 @@ export function AppSidebar() {
                       }
                     >
                       <item.icon className="h-5 w-5 shrink-0" />
-                      <span>{item.title}</span>
+                      {open && <span className="ml-2">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
