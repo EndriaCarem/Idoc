@@ -1,5 +1,5 @@
 import { UserMenu } from "./UserMenu";
-import logoImage from "@/assets/idoc-logo-new.png";
+import logoImage from "@/assets/logo-idoc.png";
 
 const Header = () => {
   return (
@@ -8,8 +8,7 @@ const Header = () => {
         <img
           src={logoImage}
           alt="Idoc Logo"
-          className="h-12 w-auto !border-0 !outline-none !ring-0 !shadow-none transition-transform hover:scale-105"
-          style={{ border: "none", outline: "none", boxShadow: "none" }}
+          className="h-12 w-auto transition-transform hover:scale-105"
         />
       </div>
       <UserMenu />
