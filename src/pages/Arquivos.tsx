@@ -191,37 +191,119 @@ const Arquivos = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar com pastas */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Pastas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-2">
-                <Button
-                  variant={selectedFolder === null ? "default" : "ghost"}
-                  className="w-full justify-start"
-                  onClick={() => setSelectedFolder(null)}
-                >
-                  <Folder className="mr-2 h-4 w-4" />
-                  Todos os arquivos
-                </Button>
-                {folders.map((folder) => (
-                  <Button
-                    key={folder.id}
-                    variant={selectedFolder === folder.id ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setSelectedFolder(folder.id)}
+        {/* Sidebar com pastas estilo gaveta */}
+        <div className="lg:col-span-1 relative">
+          <Card className="overflow-visible bg-gradient-to-br from-background to-accent/5 border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Folder className="h-5 w-5 text-primary" />
+                Pastas
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pr-0">
+              <ScrollArea className="h-[600px] pr-4">
+                <div className="space-y-3">
+                  {/* Pasta "Todos os arquivos" */}
+                  <div
+                    className={`
+                      relative group cursor-pointer
+                      transition-all duration-300 ease-out
+                      hover:translate-x-2
+                      ${selectedFolder === null ? 'translate-x-4' : 'translate-x-0'}
+                    `}
+                    onClick={() => setSelectedFolder(null)}
                   >
-                    <Folder className="mr-2 h-4 w-4" />
-                    {folder.name}
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                    <div
+                      className={`
+                        flex items-center gap-3 p-4 rounded-l-lg
+                        border-l-4 border-y border-r-0
+                        transition-all duration-300
+                        ${selectedFolder === null 
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-lg scale-105' 
+                          : 'bg-gradient-to-r from-gray-500 to-gray-600 border-gray-700 hover:from-gray-600 hover:to-gray-700'
+                        }
+                      `}
+                    >
+                      <Folder className={`h-5 w-5 transition-transform duration-300 ${selectedFolder === null ? 'rotate-12' : 'group-hover:rotate-6'}`} style={{ color: 'white' }} />
+                      <span className="font-medium text-white">Todos</span>
+                    </div>
+                    {/* Tab da gaveta */}
+                    <div
+                      className={`
+                        absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
+                        w-8 h-12 rounded-r-lg
+                        flex items-center justify-center
+                        transition-all duration-300
+                        ${selectedFolder === null 
+                          ? 'bg-blue-600 shadow-md' 
+                          : 'bg-gray-600 group-hover:bg-gray-700'
+                        }
+                      `}
+                    >
+                      <div className="w-1 h-6 bg-white/30 rounded"></div>
+                    </div>
+                  </div>
+
+                  {/* Pastas do usuário */}
+                  {folders.map((folder, index) => {
+                    const colors = [
+                      { from: 'from-purple-500', to: 'to-purple-600', border: 'border-purple-700', hover: 'hover:from-purple-600 hover:to-purple-700' },
+                      { from: 'from-pink-500', to: 'to-pink-600', border: 'border-pink-700', hover: 'hover:from-pink-600 hover:to-pink-700' },
+                      { from: 'from-green-500', to: 'to-green-600', border: 'border-green-700', hover: 'hover:from-green-600 hover:to-green-700' },
+                      { from: 'from-orange-500', to: 'to-orange-600', border: 'border-orange-700', hover: 'hover:from-orange-600 hover:to-orange-700' },
+                      { from: 'from-red-500', to: 'to-red-600', border: 'border-red-700', hover: 'hover:from-red-600 hover:to-red-700' },
+                      { from: 'from-indigo-500', to: 'to-indigo-600', border: 'border-indigo-700', hover: 'hover:from-indigo-600 hover:to-indigo-700' },
+                    ];
+                    const color = colors[index % colors.length];
+                    const isSelected = selectedFolder === folder.id;
+
+                    return (
+                      <div
+                        key={folder.id}
+                        className={`
+                          relative group cursor-pointer
+                          transition-all duration-300 ease-out
+                          hover:translate-x-2
+                          ${isSelected ? 'translate-x-4' : 'translate-x-0'}
+                        `}
+                        onClick={() => setSelectedFolder(folder.id)}
+                      >
+                        <div
+                          className={`
+                            flex items-center gap-3 p-4 rounded-l-lg
+                            border-l-4 border-y border-r-0
+                            bg-gradient-to-r ${color.from} ${color.to} ${color.border}
+                            transition-all duration-300
+                            ${isSelected ? 'shadow-lg scale-105' : `${color.hover}`}
+                          `}
+                        >
+                          <Folder 
+                            className={`h-5 w-5 transition-transform duration-300 ${isSelected ? 'rotate-12' : 'group-hover:rotate-6'}`} 
+                            style={{ color: 'white' }} 
+                          />
+                          <span className="font-medium text-white truncate">{folder.name}</span>
+                        </div>
+                        {/* Tab da gaveta */}
+                        <div
+                          className={`
+                            absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
+                            w-8 h-12 rounded-r-lg
+                            flex items-center justify-center
+                            transition-all duration-300
+                            ${color.from.replace('from-', 'bg-')}
+                            ${isSelected ? 'shadow-md' : ''}
+                          `}
+                        >
+                          <div className="w-1 h-6 bg-white/30 rounded"></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Upload e lista de documentos */}
         <div className="lg:col-span-3 space-y-6">
