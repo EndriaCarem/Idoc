@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { FolderPlus, File, Folder, Share2, Trash2, Download, Upload, Edit, Bold, Italic, Underline, List, ListOrdered, Undo, Redo, ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface SavedDocument {
   id: string;
@@ -30,17 +32,20 @@ const Arquivos = () => {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
-  const [editingDocument, setEditingDocument] = useState<SavedDocument | null>(null);
-  const [editedText, setEditedText] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadFolders();
-    loadDocuments();
+    loadData();
   }, [selectedFolder]);
+
+  const loadData = async () => {
+    setLoading(true);
+    await Promise.all([loadFolders(), loadDocuments()]);
+    setLoading(false);
+  };
 
   const loadFolders = async () => {
     const { data, error } = await supabase
@@ -180,266 +185,191 @@ const Arquivos = () => {
     toast.success('Download iniciado!');
   };
 
-  const handleEditDocument = (doc: SavedDocument) => {
-    setEditingDocument(doc);
-    setEditedText(doc.formatted_text);
-    setShowEditDialog(true);
-  };
+  const currentFolderName = selectedFolder 
+    ? folders.find(f => f.id === selectedFolder)?.name 
+    : null;
 
-  const handleSaveEdit = async () => {
-    if (!editingDocument) return;
-
-    const { error } = await supabase
-      .from('saved_documents')
-      .update({ formatted_text: editedText })
-      .eq('id', editingDocument.id);
-
-    if (error) {
-      console.error('Erro ao salvar documento:', error);
-      toast.error('Erro ao salvar documento');
-      return;
-    }
-
-    toast.success('Documento salvo com sucesso!');
-    setShowEditDialog(false);
-    setEditingDocument(null);
-    loadDocuments();
-  };
-
-  const insertFormatting = (before: string, after: string = '') => {
-    const textarea = document.getElementById('edit-textarea') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = editedText.substring(start, end);
-    const newText = editedText.substring(0, start) + before + selectedText + after + editedText.substring(end);
-    
-    setEditedText(newText);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, end + before.length);
-    }, 0);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Meus Arquivos</h1>
-          <p className="text-muted-foreground">Gerencie seus documentos formatados</p>
+          <p className="text-muted-foreground mt-1">Gerencie seus documentos formatados</p>
         </div>
-        <Button onClick={() => setShowNewFolderDialog(true)}>
+        <Button onClick={() => setShowNewFolderDialog(true)} className="w-full sm:w-auto">
           <FolderPlus className="mr-2 h-4 w-4" />
           Nova Pasta
         </Button>
       </div>
 
+      {/* Breadcrumb */}
+      {currentFolderName && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <button 
+            onClick={() => setSelectedFolder(null)}
+            className="hover:text-foreground transition-colors"
+          >
+            Todos os Arquivos
+          </button>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground font-medium">{currentFolderName}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar com pastas estilo gaveta */}
+        {/* Sidebar - Pastas */}
         <div className="lg:col-span-1">
-          <Card className="bg-gradient-to-br from-background to-accent/5 border-2">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Folder className="h-4 w-4 text-primary" />
-                  Pastas
-                </CardTitle>
-                {selectedFolder && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFolder(null)}
-                    className="text-xs gap-1 h-7"
-                  >
-                    <ArrowLeft className="h-3 w-3" />
-                    Voltar
-                  </Button>
-                )}
-              </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Folder className="h-5 w-5" />
+                Pastas
+              </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 pb-3">
-              <div className="space-y-2 max-h-[600px] overflow-y-auto overflow-x-visible pr-2">
-                  {/* Pasta "Todos os arquivos" */}
-                  <button
-                    className={`
-                      w-full text-left p-3 rounded-lg
-                      transition-all duration-300 ease-out
-                      flex items-center gap-3
-                      ${selectedFolder === null 
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-[1.02]' 
-                        : 'bg-muted hover:bg-muted/80 text-foreground'
-                      }
-                    `}
-                    onClick={() => setSelectedFolder(null)}
-                  >
-                    <Folder 
-                      className={`h-4 w-4 transition-transform duration-300 ${
-                        selectedFolder === null ? 'scale-110' : ''
-                      }`}
-                    />
-                    <span className="font-medium text-sm">Todos os Arquivos</span>
-                  </button>
+            <CardContent className="space-y-2">
+              {/* Todos os Arquivos */}
+              <button
+                onClick={() => setSelectedFolder(null)}
+                className={`
+                  w-full text-left px-4 py-3 rounded-lg transition-all
+                  flex items-center gap-3 group
+                  ${selectedFolder === null
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'hover:bg-accent'
+                  }
+                `}
+              >
+                <FileText className="h-4 w-4" />
+                <span className="font-medium text-sm">Todos os Arquivos</span>
+              </button>
 
-                  {/* Pastas do usuário */}
-                  {folders.map((folder, index) => {
-                    const colors = [
-                      { from: 'from-purple-500', to: 'to-purple-600', text: 'text-white' },
-                      { from: 'from-pink-500', to: 'to-pink-600', text: 'text-white' },
-                      { from: 'from-green-500', to: 'to-green-600', text: 'text-white' },
-                      { from: 'from-orange-500', to: 'to-orange-600', text: 'text-white' },
-                      { from: 'from-red-500', to: 'to-red-600', text: 'text-white' },
-                      { from: 'from-indigo-500', to: 'to-indigo-600', text: 'text-white' },
-                    ];
-                    const color = colors[index % colors.length];
-                    const isSelected = selectedFolder === folder.id;
-
-                    return (
-                      <button
-                        key={folder.id}
-                        className={`
-                          w-full text-left p-3 rounded-lg
-                          transition-all duration-300 ease-out
-                          flex items-center gap-3
-                          bg-gradient-to-r ${color.from} ${color.to} ${color.text}
-                          ${isSelected ? 'shadow-lg scale-[1.02]' : 'opacity-90 hover:opacity-100'}
-                        `}
-                        onClick={() => setSelectedFolder(folder.id)}
-                      >
-                        <Folder 
-                          className={`h-4 w-4 transition-transform duration-300 ${
-                            isSelected ? 'scale-110' : ''
-                          }`}
-                        />
-                        <span className="font-medium text-sm truncate">{folder.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Lista de Pastas */}
+              {folders.map((folder) => (
+                <button
+                  key={folder.id}
+                  onClick={() => setSelectedFolder(folder.id)}
+                  className={`
+                    w-full text-left px-4 py-3 rounded-lg transition-all
+                    flex items-center gap-3 group
+                    ${selectedFolder === folder.id
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'hover:bg-accent'
+                    }
+                  `}
+                >
+                  <Folder className="h-4 w-4" />
+                  <span className="font-medium text-sm truncate">{folder.name}</span>
+                </button>
+              ))}
             </CardContent>
           </Card>
         </div>
 
-        {/* Upload e lista de documentos */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Área de upload */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="border-2 border-dashed rounded-xl p-12 text-center transition-all hover:border-primary/50">
-                <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-semibold mb-2">
-                  Arraste seu documento aqui
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  ou clique para selecionar
-                </p>
-                <input
-                  type="file"
-                  accept=".txt,.docx,.pdf"
-                  className="hidden"
-                  id="file-upload-arquivos"
-                />
-                <label htmlFor="file-upload-arquivos">
-                  <Button asChild>
-                    <span className="text-primary-foreground">Selecionar Arquivo</span>
-                  </Button>
-                </label>
-                <p className="text-xs text-muted-foreground mt-4">
-                  Formatos suportados: TXT, DOCX, PDF
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Lista de documentos */}
+        {/* Main Content - Documentos */}
+        <div className="lg:col-span-3">
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">
-                {selectedFolder 
-                  ? folders.find(f => f.id === selectedFolder)?.name 
-                  : 'Todos os Documentos'}
-              </CardTitle>
-              <CardDescription className="text-base">
-                {documents.length} documento(s) encontrado(s)
-              </CardDescription>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-xl">
+                    {currentFolderName || 'Todos os Documentos'}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    {documents.length} documento(s) encontrado(s)
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[500px]">
+              {documents.length === 0 ? (
+                <div className="text-center py-16">
+                  <File className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground text-lg">Nenhum documento nesta pasta</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Comece processando um documento na página inicial
+                  </p>
+                </div>
+              ) : (
                 <div className="space-y-3">
-                  {documents.length === 0 ? (
-                    <div className="text-center py-12">
-                      <File className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">Nenhum documento nesta pasta</p>
-                    </div>
-                  ) : (
-                    documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <File className="h-5 w-5 text-primary" />
-                          <div>
-                            <p className="font-medium">{doc.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {doc.template_name} • {new Date(doc.created_at).toLocaleDateString('pt-BR')}
-                            </p>
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-all"
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <FileText className="h-5 w-5 text-primary" />
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditDocument(doc)}
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDownloadDocument(doc)}
-                            title="Baixar"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedDocId(doc.id);
-                              setShowShareDialog(true);
-                            }}
-                            title="Compartilhar"
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteDocument(doc.id)}
-                            title="Excluir"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{doc.name}</p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant="secondary" className="text-xs">
+                              {doc.template_name}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(doc.created_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    ))
-                  )}
+                      
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownloadDocument(doc)}
+                          title="Baixar"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedDocId(doc.id);
+                            setShowShareDialog(true);
+                          }}
+                          title="Compartilhar"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteDocument(doc.id)}
+                          title="Excluir"
+                          className="hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </ScrollArea>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Dialog para criar nova pasta */}
+      {/* Dialog Nova Pasta */}
       <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Criar Nova Pasta</DialogTitle>
             <DialogDescription>
-              Digite um nome para a nova pasta
+              Digite um nome para organizar seus documentos
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -450,6 +380,7 @@ const Arquivos = () => {
                 placeholder="Ex: Relatórios 2024"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
                 autoFocus
               />
             </div>
@@ -463,7 +394,7 @@ const Arquivos = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog para compartilhar documento */}
+      {/* Dialog Compartilhar */}
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent>
           <DialogHeader>
@@ -480,6 +411,7 @@ const Arquivos = () => {
                 placeholder="Digite o nome ou email do usuário"
                 value={shareEmail}
                 onChange={(e) => setShareEmail(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleShareDocument()}
                 autoFocus
               />
             </div>
@@ -489,88 +421,6 @@ const Arquivos = () => {
               Cancelar
             </Button>
             <Button onClick={handleShareDocument}>Compartilhar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog para editar documento */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>Editar Documento: {editingDocument?.name}</DialogTitle>
-            <DialogDescription>
-              Use a barra de ferramentas para formatar o texto
-            </DialogDescription>
-          </DialogHeader>
-          
-          {/* Barra de ferramentas de formatação */}
-          <div className="flex flex-wrap gap-1 p-3 bg-muted/50 rounded-lg border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertFormatting('**', '**')}
-              title="Negrito"
-              className="h-8 w-8 p-0"
-            >
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertFormatting('_', '_')}
-              title="Itálico"
-              className="h-8 w-8 p-0"
-            >
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertFormatting('<u>', '</u>')}
-              title="Sublinhado"
-              className="h-8 w-8 p-0"
-            >
-              <Underline className="h-4 w-4" />
-            </Button>
-            <div className="w-px h-8 bg-border mx-1" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertFormatting('• ', '')}
-              title="Lista com marcadores"
-              className="h-8 w-8 p-0"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => insertFormatting('1. ', '')}
-              title="Lista numerada"
-              className="h-8 w-8 p-0"
-            >
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Editor de texto */}
-          <div className="space-y-4 py-2">
-            <textarea
-              id="edit-textarea"
-              value={editedText}
-              onChange={(e) => setEditedText(e.target.value)}
-              className="w-full h-[400px] p-4 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
-              placeholder="Digite ou edite o texto aqui..."
-            />
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveEdit}>
-              Salvar Alterações
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
