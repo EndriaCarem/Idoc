@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Download, Trash2, Users, Sparkles, Loader2, MoreVertical } from 'lucide-react';
+import { FileText, Download, Trash2, Users, Sparkles, Loader2, MoreVertical, Save, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,6 +17,7 @@ import { formatarComCopilot } from '@/services/geminiService';
 import type { CopilotResult } from '@/types';
 import CopilotPanel from '@/components/CopilotPanel';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { SaveDocumentDialog } from '@/components/SaveDocumentDialog';
 
 interface SharedDocument {
   id: string;
@@ -56,6 +57,7 @@ const Compartilhado = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
   const isMobile = useIsMobile();
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   useEffect(() => {
     loadSharedDocuments();
@@ -234,6 +236,8 @@ const Compartilhado = () => {
       }
       
       setCopilotResult(result);
+      // Atualizar o texto editável com o resultado formatado
+      setEditableText(result.textoFormatado);
       toast.success("✅ Documento revisado com sucesso!");
     } catch (error) {
       console.error('Erro ao processar documento:', error);
@@ -241,6 +245,33 @@ const Compartilhado = () => {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleCopyText = async () => {
+    try {
+      await navigator.clipboard.writeText(editableText);
+      toast.success('Texto copiado', {
+        description: 'O texto foi copiado para a área de transferência'
+      });
+    } catch (error) {
+      toast.error('Erro ao copiar', {
+        description: 'Não foi possível copiar o texto'
+      });
+    }
+  };
+
+  const handleDownloadText = () => {
+    const blob = new Blob([editableText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedDocument?.name || 'documento'}-editado.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Download iniciado');
   };
 
   if (loading) {
@@ -486,43 +517,76 @@ const Compartilhado = () => {
               </div>
             </div>
 
-            {/* Preview do Documento */}
-            <div className="space-y-2">
-              <Label>Documento Original (editável)</Label>
+            {/* Área de Edição do Documento */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Área de Edição</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyText}
+                    disabled={!editableText}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copiar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownloadText}
+                    disabled={!editableText}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setShowSaveDialog(true)}
+                    disabled={!editableText}
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Salvar Cópia
+                  </Button>
+                </div>
+              </div>
               <Textarea
                 value={editableText}
                 onChange={(e) => setEditableText(e.target.value)}
-                rows={10}
+                rows={15}
                 className="font-mono text-sm resize-none"
-                placeholder="O conteúdo do documento aparecerá aqui..."
+                placeholder="O conteúdo do documento aparecerá aqui após processar com IA..."
               />
             </div>
 
             {/* Resultados do Copilot */}
             {copilotResult && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2">
-                  <Label>Texto Formatado</Label>
-                  <Textarea
-                    value={copilotResult.textoFormatado}
-                    readOnly
-                    rows={15}
-                    className="font-mono text-sm resize-none mt-2"
-                  />
-                </div>
-                <div className="lg:col-span-1">
-                  <CopilotPanel
-                    sugestoes={copilotResult.sugestoes}
-                    alertas={copilotResult.alertas}
-                    documentoOriginal={editableText}
-                    documentoFormatado={copilotResult.textoFormatado}
-                  />
-                </div>
+              <div className="mt-4">
+                <CopilotPanel
+                  sugestoes={copilotResult.sugestoes}
+                  alertas={copilotResult.alertas}
+                  documentoOriginal={selectedDocument?.formatted_text || ''}
+                  documentoFormatado={editableText}
+                />
               </div>
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Salvar Documento */}
+      <SaveDocumentDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        documentData={{
+          originalText: selectedDocument?.formatted_text || '',
+          formattedText: editableText,
+          templateName: templates.find(t => t.id === selectedTemplateId)?.name || '',
+          alertsCount: copilotResult?.alertas.length || 0,
+          suggestionsCount: copilotResult?.sugestoes.length || 0,
+        }}
+      />
     </div>
   );
 };
