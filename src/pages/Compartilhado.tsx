@@ -44,6 +44,7 @@ const Compartilhado = () => {
   const [loading, setLoading] = useState(true);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<SharedDocument['document'] | null>(null);
+  const [editableText, setEditableText] = useState<string>('');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -182,13 +183,14 @@ const Compartilhado = () => {
 
   const handleReviewWithCopilot = (doc: SharedDocument['document']) => {
     setSelectedDocument(doc);
+    setEditableText(doc.formatted_text);
     setCopilotResult(null);
     setShowReviewDialog(true);
   };
 
   const handleProcessDocument = async () => {
-    if (!selectedDocument || !selectedTemplateId) {
-      toast.error('Selecione um template');
+    if (!editableText || !selectedTemplateId) {
+      toast.error('Selecione um template e verifique se há texto');
       return;
     }
 
@@ -197,7 +199,7 @@ const Compartilhado = () => {
     try {
       toast.loading("📄 Processando documento com IA...", { id: "processing" });
       
-      const result = await formatarComCopilot(selectedDocument.formatted_text, selectedTemplateId);
+      const result = await formatarComCopilot(editableText, selectedTemplateId);
       
       toast.dismiss("processing");
       
@@ -390,12 +392,13 @@ const Compartilhado = () => {
 
             {/* Preview do Documento */}
             <div className="space-y-2">
-              <Label>Documento Original</Label>
+              <Label>Documento Original (editável)</Label>
               <Textarea
-                value={selectedDocument?.formatted_text || ''}
-                readOnly
+                value={editableText}
+                onChange={(e) => setEditableText(e.target.value)}
                 rows={10}
                 className="font-mono text-sm resize-none"
+                placeholder="O conteúdo do documento aparecerá aqui..."
               />
             </div>
 
@@ -415,7 +418,7 @@ const Compartilhado = () => {
                   <CopilotPanel
                     sugestoes={copilotResult.sugestoes}
                     alertas={copilotResult.alertas}
-                    documentoOriginal={selectedDocument?.formatted_text || ''}
+                    documentoOriginal={editableText}
                     documentoFormatado={copilotResult.textoFormatado}
                   />
                 </div>
