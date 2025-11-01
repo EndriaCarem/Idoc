@@ -110,7 +110,7 @@ const Compartilhado = () => {
             id: 'doc-2',
             name: 'Relatório de Análise Técnica Q1 2024',
             formatted_text: 'Conteúdo do relatório...',
-            template_name: 'Formato Profissional',
+            template_name: 'RA',
             created_at: new Date(Date.now() - 86400000).toISOString(),
           },
           shared_by: {
