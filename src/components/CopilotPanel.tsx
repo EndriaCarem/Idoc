@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle, MessageSquare, Sparkles, Send, ChevronDown } from 'lucide-react';
+import { AlertCircle, CheckCircle, MessageSquare, Sparkles, Send, ChevronDown, Bot } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -33,7 +33,34 @@ const CopilotPanel = ({
   const [isLoading, setIsLoading] = useState(false);
   const [alertasOpen, setAlertasOpen] = useState(true);
   const [sugestoesOpen, setSugestoesOpen] = useState(true);
+  const [typingText, setTypingText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, typingText]);
+
+  const typeMessage = (text: string) => {
+    setIsTyping(true);
+    setTypingText("");
+    let index = 0;
+    
+    const interval = setInterval(() => {
+      if (index < text.length) {
+        setTypingText(prev => prev + text[index]);
+        index++;
+      } else {
+        clearInterval(interval);
+        setIsTyping(false);
+        setMessages(prev => [...prev, { role: "assistant", content: text }]);
+        setTypingText("");
+      }
+    }, 20);
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -56,11 +83,7 @@ const CopilotPanel = ({
 
       if (error) throw error;
 
-      const assistantMessage: Message = { 
-        role: "assistant", 
-        content: data.response 
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+      typeMessage(data.response);
     } catch (error) {
       console.error('Erro no chat:', error);
       toast({
@@ -177,7 +200,7 @@ const CopilotPanel = ({
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  <div ref={scrollRef} className="space-y-2 max-h-[300px] overflow-y-auto">
                     {messages.map((msg, idx) => (
                       <div
                         key={idx}
@@ -187,12 +210,24 @@ const CopilotPanel = ({
                             : "bg-muted mr-4"
                         }`}
                       >
-                        <p className="font-semibold text-xs mb-1">
-                          {msg.role === "user" ? "Você" : "Copiloto"}
-                        </p>
+                        <div className="flex items-center gap-2 mb-1">
+                          {msg.role === "assistant" && <Bot className="w-3.5 h-3.5 text-primary" />}
+                          <p className="font-semibold text-xs">
+                            {msg.role === "user" ? "Você" : "Copiloto"}
+                          </p>
+                        </div>
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       </div>
                     ))}
+                    {isTyping && (
+                      <div className="p-3 rounded-lg text-sm bg-muted mr-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Bot className="w-3.5 h-3.5 text-primary animate-pulse" />
+                          <p className="font-semibold text-xs">Copiloto</p>
+                        </div>
+                        <p className="whitespace-pre-wrap">{typingText}<span className="animate-pulse">▊</span></p>
+                      </div>
+                    )}
                   </div>
                 )}
 
