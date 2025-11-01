@@ -56,7 +56,7 @@ const Compartilhado = () => {
           },
           shared_by: {
             full_name: 'Dr. Carlos Silva',
-            avatar_url: null,
+            avatar_url: 'https://i.pravatar.cc/150?img=12',
           },
         },
         {
@@ -73,7 +73,7 @@ const Compartilhado = () => {
           },
           shared_by: {
             full_name: 'Ana Paula Costa',
-            avatar_url: null,
+            avatar_url: 'https://i.pravatar.cc/150?img=47',
           },
         },
       ];
