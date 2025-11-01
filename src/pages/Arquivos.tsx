@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FolderPlus, File, Folder, Share2, Trash2, Download } from 'lucide-react';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SavedDocument {
@@ -223,77 +223,109 @@ const Arquivos = () => {
           </CardContent>
         </Card>
 
-        {/* Lista de documentos */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>
-              {selectedFolder 
-                ? folders.find(f => f.id === selectedFolder)?.name 
-                : 'Todos os Documentos'}
-            </CardTitle>
-            <CardDescription>
-              {documents.length} documento(s) encontrado(s)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[500px]">
-              <div className="space-y-3">
-                {documents.length === 0 ? (
-                  <div className="text-center py-12">
-                    <File className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Nenhum documento nesta pasta</p>
-                  </div>
-                ) : (
-                  documents.map((doc) => (
-                    <div
-                      key={doc.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3 flex-1">
-                        <File className="h-5 w-5 text-primary" />
-                        <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {doc.template_name} • {new Date(doc.created_at).toLocaleDateString('pt-BR')}
-                          </p>
+        {/* Upload e lista de documentos */}
+        <div className="lg:col-span-3 space-y-6">
+          {/* Área de upload */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="border-2 border-dashed rounded-xl p-12 text-center transition-all hover:border-primary/50">
+                <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-lg font-semibold mb-2">
+                  Arraste seu documento aqui
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  ou clique para selecionar
+                </p>
+                <input
+                  type="file"
+                  accept=".txt,.docx,.pdf"
+                  className="hidden"
+                  id="file-upload-arquivos"
+                />
+                <label htmlFor="file-upload-arquivos">
+                  <Button asChild>
+                    <span className="text-primary-foreground">Selecionar Arquivo</span>
+                  </Button>
+                </label>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Formatos suportados: TXT, DOCX, PDF
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Lista de documentos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {selectedFolder 
+                  ? folders.find(f => f.id === selectedFolder)?.name 
+                  : 'Todos os Documentos'}
+              </CardTitle>
+              <CardDescription>
+                {documents.length} documento(s) encontrado(s)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[500px]">
+                <div className="space-y-3">
+                  {documents.length === 0 ? (
+                    <div className="text-center py-12">
+                      <File className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">Nenhum documento nesta pasta</p>
+                    </div>
+                  ) : (
+                    documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1">
+                          <File className="h-5 w-5 text-primary" />
+                          <div>
+                            <p className="font-medium">{doc.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {doc.template_name} • {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownloadDocument(doc)}
+                            title="Baixar"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedDocId(doc.id);
+                              setShowShareDialog(true);
+                            }}
+                            title="Compartilhar"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownloadDocument(doc)}
-                          title="Baixar"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedDocId(doc.id);
-                            setShowShareDialog(true);
-                          }}
-                          title="Compartilhar"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Dialog para criar nova pasta */}
