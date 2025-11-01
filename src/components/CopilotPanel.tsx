@@ -76,7 +76,7 @@ const CopilotPanel = ({
         <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            <CardTitle>Assistente IA</CardTitle>
+            <CardTitle>Copilot</CardTitle>
           </div>
           <CardDescription>
             Análise e sugestões do copiloto

@@ -108,6 +108,9 @@ const Index = () => {
                   <DocumentPreview 
                     originalText={originalText}
                     formattedText={copilotResult?.textoFormatado || ''}
+                    templateName={selectedTemplateId || ''}
+                    alertsCount={copilotResult?.alertas.length || 0}
+                    suggestionsCount={copilotResult?.sugestoes.length || 0}
                   />
                 </div>
                 

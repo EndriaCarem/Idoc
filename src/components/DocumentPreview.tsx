@@ -1,16 +1,29 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Copy } from 'lucide-react';
+import { Download, Copy, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SaveDocumentDialog } from './SaveDocumentDialog';
 
 interface DocumentPreviewProps {
   originalText: string;
   formattedText: string;
+  templateName?: string;
+  alertsCount?: number;
+  suggestionsCount?: number;
 }
 
-const DocumentPreview = ({ originalText, formattedText }: DocumentPreviewProps) => {
+const DocumentPreview = ({ 
+  originalText, 
+  formattedText,
+  templateName = '',
+  alertsCount = 0,
+  suggestionsCount = 0,
+}: DocumentPreviewProps) => {
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -46,6 +59,14 @@ const DocumentPreview = ({ originalText, formattedText }: DocumentPreviewProps) 
         <CardTitle className="flex items-center justify-between">
           <span>Visualização do Documento</span>
           <div className="flex gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowSaveDialog(true)}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -137,6 +158,18 @@ const DocumentPreview = ({ originalText, formattedText }: DocumentPreviewProps) 
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      <SaveDocumentDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        documentData={{
+          originalText,
+          formattedText,
+          templateName,
+          alertsCount,
+          suggestionsCount,
+        }}
+      />
     </Card>
   );
 };

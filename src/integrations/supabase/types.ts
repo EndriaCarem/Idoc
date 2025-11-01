@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      folders: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_folder_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processed_documents: {
         Row: {
           alerts_count: number | null
@@ -85,6 +120,126 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      saved_documents: {
+        Row: {
+          alerts_count: number | null
+          created_at: string
+          folder_id: string | null
+          formatted_text: string
+          id: string
+          name: string
+          original_text: string | null
+          suggestions_count: number | null
+          template_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alerts_count?: number | null
+          created_at?: string
+          folder_id?: string | null
+          formatted_text: string
+          id?: string
+          name: string
+          original_text?: string | null
+          suggestions_count?: number | null
+          template_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alerts_count?: number | null
+          created_at?: string
+          folder_id?: string | null
+          formatted_text?: string
+          id?: string
+          name?: string
+          original_text?: string | null
+          suggestions_count?: number | null
+          template_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_documents: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          permission: string | null
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          permission?: string | null
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          permission?: string | null
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "saved_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_folders: {
+        Row: {
+          created_at: string
+          folder_id: string
+          id: string
+          permission: string | null
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          folder_id: string
+          id?: string
+          permission?: string | null
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Update: {
+          created_at?: string
+          folder_id?: string
+          id?: string
+          permission?: string | null
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_folders_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       templates: {
         Row: {

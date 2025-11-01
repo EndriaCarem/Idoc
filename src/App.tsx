@@ -14,6 +14,7 @@ import Historico from "./pages/Historico";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
+import Arquivos from "./pages/Arquivos";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ function AppContent() {
             <main className="flex-1 bg-gradient-to-br from-background via-background to-accent/5">
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/arquivos" element={<Arquivos />} />
                 <Route path="/historico" element={<Historico />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/templates" element={<Templates />} />

@@ -1,4 +1,4 @@
-import { FileText, History, LayoutDashboard, FileStack } from 'lucide-react';
+import { FileText, History, LayoutDashboard, FileStack, FolderOpen } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   Sidebar,
@@ -14,6 +14,7 @@ import {
 
 const menuItems = [
   { title: 'Processar', url: '/', icon: FileText },
+  { title: 'Arquivos', url: '/arquivos', icon: FolderOpen },
   { title: 'Histórico', url: '/historico', icon: History },
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Templates', url: '/templates', icon: FileStack },
