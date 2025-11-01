@@ -165,19 +165,38 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
     }
 
     try {
+      toast.loading("📥 Lendo arquivo...", { id: "saving-template" });
+      
       const text = await newTemplateFile.text();
       
-      const { error } = await supabase
+      // Validar que o conteúdo não está vazio
+      if (!text || text.trim().length === 0) {
+        toast.dismiss("saving-template");
+        toast.error('Arquivo vazio', {
+          description: 'O arquivo do template não pode estar vazio.'
+        });
+        return;
+      }
+      
+      toast.loading("💾 Salvando template...", { id: "saving-template" });
+      
+      const { data, error } = await supabase
         .from('templates')
         .insert({
           name: newTemplateName.trim(),
           content: text,
           file_name: newTemplateFile.name,
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao salvar template:', error);
+        throw error;
+      }
 
-      toast.success('Template salvo!', {
+      toast.dismiss("saving-template");
+      toast.success('✅ Template salvo!', {
         description: `Template "${newTemplateName}" foi adicionado com sucesso.`
       });
 
@@ -187,11 +206,24 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
       setNewTemplateFile(null);
       
       // Recarregar templates
-      loadTemplates();
-    } catch (error) {
+      await loadTemplates();
+      
+      // Selecionar automaticamente o novo template
+      if (data) {
+        onTemplateChange(data.id);
+      }
+    } catch (error: any) {
       console.error('Erro ao salvar template:', error);
-      toast.error('Erro ao salvar', {
-        description: 'Não foi possível salvar o template.'
+      toast.dismiss("saving-template");
+      
+      let errorMessage = 'Não foi possível salvar o template.';
+      if (error.message) {
+        errorMessage += ` Detalhes: ${error.message}`;
+      }
+      
+      toast.error('❌ Erro ao salvar', {
+        description: errorMessage,
+        duration: 5000
       });
     }
   };
