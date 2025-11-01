@@ -348,9 +348,9 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all ${
+          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all backdrop-blur-xl bg-white/40 dark:bg-card/40 ${
             isDragging 
-              ? 'border-primary bg-primary/5 scale-105' 
+              ? 'border-primary bg-primary/10 scale-105' 
               : 'border-border hover:border-primary/50'
           }`}
         >

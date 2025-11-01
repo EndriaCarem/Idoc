@@ -4,12 +4,17 @@ import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import { formatarComCopilot } from '@/services/geminiService';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CopilotResult } from '@/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Index = () => {
   const [originalText, setOriginalText] = useState<string>('');
+  const [editableText, setEditableText] = useState<string>('');
   const [originalFilename, setOriginalFilename] = useState<string>('');
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -17,6 +22,7 @@ const Index = () => {
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string) => {
     setOriginalText(text);
+    setEditableText(text);
     setOriginalFilename(filename);
     setIsProcessing(true);
     setSelectedTemplateId(templateId);
@@ -87,6 +93,39 @@ const Index = () => {
     setSelectedTemplateId(templateId);
   };
 
+  const handleReprocess = async () => {
+    if (!editableText || !selectedTemplateId) {
+      toast.error('Texto ou template não selecionado');
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      toast.loading("📄 Reprocessando documento com IA...", { id: "reprocessing" });
+      
+      const result = await formatarComCopilot(editableText, selectedTemplateId);
+      
+      toast.dismiss("reprocessing");
+      
+      if (result.alertas && result.alertas.length > 0) {
+        toast.warning(`⚠️ ${result.alertas.length} alertas de conformidade encontrados`, { duration: 4000 });
+      }
+      
+      if (result.sugestoes && result.sugestoes.length > 0) {
+        toast.info(`💡 ${result.sugestoes.length} sugestões de formatação aplicadas`, { duration: 3000 });
+      }
+      
+      setCopilotResult(result);
+      toast.success("✅ Documento reprocessado com sucesso!");
+    } catch (error) {
+      console.error('Erro ao reprocessar documento:', error);
+      toast.error("❌ Erro ao reprocessar documento. Tente novamente.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!originalText ? (
@@ -107,6 +146,35 @@ const Index = () => {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                  {/* Editor de Texto */}
+                  <Card className="backdrop-blur-xl bg-white/40 dark:bg-card/40 border-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>Editar Documento Original</span>
+                        <Button 
+                          onClick={handleReprocess}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Reprocessar
+                        </Button>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <Label>Documento Original (editável)</Label>
+                        <Textarea
+                          value={editableText}
+                          onChange={(e) => setEditableText(e.target.value)}
+                          rows={12}
+                          className="font-mono text-sm resize-none backdrop-blur-sm bg-white/60 dark:bg-background/60"
+                          placeholder="O conteúdo do documento aparecerá aqui..."
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
                   <DocumentPreview 
                     originalText={originalText}
                     formattedText={copilotResult?.textoFormatado || ''}
@@ -121,7 +189,7 @@ const Index = () => {
                     <CopilotPanel 
                       sugestoes={copilotResult.sugestoes}
                       alertas={copilotResult.alertas}
-                      documentoOriginal={originalText}
+                      documentoOriginal={editableText}
                       documentoFormatado={copilotResult.textoFormatado}
                     />
                   )}
