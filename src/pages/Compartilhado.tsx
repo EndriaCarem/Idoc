@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Download, Trash2, Users, Sparkles, Loader2, MoreVertical, Save, Copy } from 'lucide-react';
+import { FileText, Download, Trash2, Users, Sparkles, Loader2, MoreVertical, Save, Copy, Edit, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -599,23 +599,43 @@ Assinatura: Ana Paula Costa`,
 
             {/* Área de Edição do Documento */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Área de Edição</Label>
-                <div className="flex gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Label className="flex items-center gap-2">
+                    <Edit className="w-4 h-4 text-primary" />
+                    Área de Edição
+                  </Label>
+                  <Badge variant="secondary" className="text-xs">
+                    Editável
+                  </Badge>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditableText(selectedDocument?.formatted_text || '')}
+                    disabled={!selectedDocument?.formatted_text}
+                    title="Restaurar conteúdo original"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Restaurar
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCopyText}
                     disabled={!editableText}
+                    title="Copiar todo o texto"
                   >
                     <Copy className="w-4 h-4 mr-2" />
-                    Copiar
+                    Copiar Tudo
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleDownloadText}
                     disabled={!editableText}
+                    title="Baixar como arquivo de texto"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Baixar
@@ -625,19 +645,27 @@ Assinatura: Ana Paula Costa`,
                     size="sm"
                     onClick={() => setShowSaveDialog(true)}
                     disabled={!editableText}
+                    title="Salvar uma cópia no sistema"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Salvar Cópia
                   </Button>
                 </div>
               </div>
-              <Textarea
-                value={editableText}
-                onChange={(e) => setEditableText(e.target.value)}
-                rows={15}
-                className="font-mono text-sm resize-none"
-                placeholder="O conteúdo do documento aparecerá aqui..."
-              />
+              <div className="relative">
+                <Textarea
+                  value={editableText}
+                  onChange={(e) => setEditableText(e.target.value)}
+                  rows={15}
+                  className="font-mono text-sm resize-none border-2 focus:border-primary"
+                  placeholder="O conteúdo do documento aparecerá aqui..."
+                />
+                {editableText && (
+                  <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+                    {editableText.length} caracteres
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Resultados do Copilot */}
