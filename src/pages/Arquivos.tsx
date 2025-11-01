@@ -7,10 +7,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile } from 'lucide-react';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile, MoreVertical, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -27,6 +28,7 @@ interface FolderType {
   id: string;
   name: string;
   created_at: string;
+  color?: string;
 }
 
 interface UploadedFile {
@@ -56,7 +58,11 @@ const Arquivos = () => {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showNewTagDialog, setShowNewTagDialog] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showRenameFolderDialog, setShowRenameFolderDialog] = useState(false);
+  const [showColorPickerDialog, setShowColorPickerDialog] = useState(false);
+  const [selectedFolderForAction, setSelectedFolderForAction] = useState<FolderType | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
+  const [renameFolderName, setRenameFolderName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
@@ -320,6 +326,69 @@ const Arquivos = () => {
     loadFolders();
   };
 
+  const handleDeleteFolder = async (folderId: string) => {
+    const { error } = await supabase
+      .from('folders')
+      .delete()
+      .eq('id', folderId);
+
+    if (error) {
+      console.error('Erro ao excluir pasta:', error);
+      toast.error('Erro ao excluir pasta');
+      return;
+    }
+
+    toast.success('Pasta excluída com sucesso!');
+    if (selectedFolder === folderId) {
+      setSelectedFolder(null);
+    }
+    loadFolders();
+  };
+
+  const handleRenameFolder = async () => {
+    if (!renameFolderName.trim() || !selectedFolderForAction) {
+      toast.error('Digite um nome para a pasta');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('folders')
+      .update({ name: renameFolderName.trim() })
+      .eq('id', selectedFolderForAction.id);
+
+    if (error) {
+      console.error('Erro ao renomear pasta:', error);
+      toast.error('Erro ao renomear pasta');
+      return;
+    }
+
+    toast.success('Pasta renomeada com sucesso!');
+    setShowRenameFolderDialog(false);
+    setRenameFolderName('');
+    setSelectedFolderForAction(null);
+    loadFolders();
+  };
+
+  const handleUpdateFolderColor = async (color: string) => {
+    if (!selectedFolderForAction) return;
+
+    const { error } = await supabase
+      .from('folders')
+      .update({ color })
+      .eq('id', selectedFolderForAction.id);
+
+    if (error) {
+      console.error('Erro ao atualizar cor da pasta:', error);
+      toast.error('Erro ao atualizar cor da pasta');
+      return;
+    }
+
+    toast.success('Cor da pasta atualizada!');
+    setShowColorPickerDialog(false);
+    setSelectedFolderForAction(null);
+    loadFolders();
+  };
+
   const handleDeleteDocument = async (docId: string) => {
     const { error } = await supabase
       .from('saved_documents')
@@ -520,21 +589,69 @@ const Arquivos = () => {
 
               {/* Lista de Pastas */}
               {folders.map((folder) => (
-                <button
+                <div
                   key={folder.id}
-                  onClick={() => setSelectedFolder(folder.id)}
                   className={`
-                    w-full text-left px-4 py-3 rounded-lg transition-all
-                    flex items-center gap-3 group
+                    w-full px-4 py-3 rounded-lg transition-all
+                    flex items-center gap-3 group relative
                     ${selectedFolder === folder.id
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'hover:bg-accent'
                     }
                   `}
+                  style={{
+                    backgroundColor: selectedFolder === folder.id ? folder.color || '#4F86F7' : undefined
+                  }}
                 >
-                  <Folder className="h-4 w-4" />
-                  <span className="font-medium text-sm truncate">{folder.name}</span>
-                </button>
+                  <button
+                    onClick={() => setSelectedFolder(folder.id)}
+                    className="flex items-center gap-3 flex-1 text-left"
+                  >
+                    <Folder className="h-4 w-4" />
+                    <span className="font-medium text-sm truncate">{folder.name}</span>
+                  </button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedFolderForAction(folder);
+                          setRenameFolderName(folder.name);
+                          setShowRenameFolderDialog(true);
+                        }}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        Renomear
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setSelectedFolderForAction(folder);
+                          setShowColorPickerDialog(true);
+                        }}
+                      >
+                        <Palette className="mr-2 h-4 w-4" />
+                        Mudar Cor
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteFolder(folder.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))}
             </CardContent>
           </Card>
@@ -893,6 +1010,70 @@ const Arquivos = () => {
             <Button onClick={handleCreateTag}>
               <Tag className="mr-2 h-4 w-4" />
               Criar Etiqueta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para renomear pasta */}
+      <Dialog open={showRenameFolderDialog} onOpenChange={setShowRenameFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Pasta</DialogTitle>
+            <DialogDescription>
+              Digite o novo nome para a pasta
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="rename-folder">Nome da Pasta</Label>
+              <Input
+                id="rename-folder"
+                placeholder="Digite o novo nome"
+                value={renameFolderName}
+                onChange={(e) => setRenameFolderName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRenameFolder()}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameFolderDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRenameFolder}>
+              <Edit className="mr-2 h-4 w-4" />
+              Renomear
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para escolher cor da pasta */}
+      <Dialog open={showColorPickerDialog} onOpenChange={setShowColorPickerDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mudar Cor da Pasta</DialogTitle>
+            <DialogDescription>
+              Escolha uma cor para a pasta "{selectedFolderForAction?.name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-5 gap-3">
+              {['#4F86F7', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'].map((color) => (
+                <button
+                  key={color}
+                  onClick={() => handleUpdateFolderColor(color)}
+                  className="w-full h-12 rounded-lg border-2 border-border hover:border-foreground transition-all hover:scale-105"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowColorPickerDialog(false)}>
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
