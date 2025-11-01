@@ -339,12 +339,12 @@ const Arquivos = () => {
           {/* Lista de documentos */}
           <Card>
             <CardHeader>
-              <CardTitle>
+              <CardTitle className="text-2xl">
                 {selectedFolder 
                   ? folders.find(f => f.id === selectedFolder)?.name 
                   : 'Todos os Documentos'}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-base">
                 {documents.length} documento(s) encontrado(s)
               </CardDescription>
             </CardHeader>
