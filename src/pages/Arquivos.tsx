@@ -265,9 +265,9 @@ const Arquivos = () => {
                   <div
                     className={`
                       relative group cursor-pointer
-                      transition-all duration-500 ease-out
-                      hover:translate-x-2
-                      ${selectedFolder === null ? 'translate-x-4 animate-scale-in' : 'translate-x-0'}
+                      transition-all duration-700 ease-out
+                      hover:translate-x-3
+                      ${selectedFolder === null ? 'translate-x-8 animate-scale-in' : 'translate-x-0'}
                     `}
                     onClick={() => setSelectedFolder(null)}
                   >
@@ -275,35 +275,35 @@ const Arquivos = () => {
                       className={`
                         flex items-center gap-3 p-4 rounded-l-lg
                         border-l-4 border-y border-r-0
-                        transition-all duration-500
+                        transition-all duration-700
                         ${selectedFolder === null 
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-2xl scale-105 ring-2 ring-blue-400/50' 
+                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-[0_20px_60px_-15px_rgba(59,130,246,0.8)] scale-[1.15] ring-4 ring-blue-400/50 brightness-110' 
                           : 'bg-gradient-to-r from-gray-500 to-gray-600 border-gray-700 hover:from-gray-600 hover:to-gray-700 hover:shadow-lg'
                         }
                       `}
                     >
                       <Folder 
-                        className={`h-5 w-5 transition-all duration-500 ${
-                          selectedFolder === null ? 'rotate-12 scale-110' : 'group-hover:rotate-6'
+                        className={`h-5 w-5 transition-all duration-700 ${
+                          selectedFolder === null ? 'rotate-[20deg] scale-125 drop-shadow-lg' : 'group-hover:rotate-6'
                         }`} 
                         style={{ color: 'white' }} 
                       />
-                      <span className="font-medium text-white">Todos</span>
+                      <span className={`font-medium text-white ${selectedFolder === null ? 'font-bold tracking-wide' : ''}`}>Todos</span>
                     </div>
-                    {/* Tab da gaveta com animação */}
+                    {/* Tab da gaveta com animação aprimorada */}
                     <div
                       className={`
                         absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
-                        w-8 h-12 rounded-r-lg
+                        w-10 h-14 rounded-r-lg
                         flex items-center justify-center
-                        transition-all duration-500
+                        transition-all duration-700
                         ${selectedFolder === null 
-                          ? 'bg-blue-600 shadow-lg scale-110' 
+                          ? 'bg-blue-600 shadow-[8px_0_20px_rgba(59,130,246,0.6)] scale-125 brightness-110' 
                           : 'bg-gray-600 group-hover:bg-gray-700 group-hover:scale-105'
                         }
                       `}
                     >
-                      <div className="w-1 h-6 bg-white/30 rounded"></div>
+                      <div className={`w-1.5 h-8 bg-white/40 rounded ${selectedFolder === null ? 'animate-pulse' : ''}`}></div>
                     </div>
                   </div>
 
@@ -325,9 +325,9 @@ const Arquivos = () => {
                         key={folder.id}
                         className={`
                           relative group cursor-pointer
-                          transition-all duration-500 ease-out
-                          hover:translate-x-2
-                          ${isSelected ? 'translate-x-4 animate-scale-in' : 'translate-x-0'}
+                          transition-all duration-700 ease-out
+                          hover:translate-x-3
+                          ${isSelected ? 'translate-x-8 animate-scale-in' : 'translate-x-0'}
                         `}
                         onClick={() => setSelectedFolder(folder.id)}
                       >
@@ -336,30 +336,38 @@ const Arquivos = () => {
                             flex items-center gap-3 p-4 rounded-l-lg
                             border-l-4 border-y border-r-0
                             bg-gradient-to-r ${color.from} ${color.to} ${color.border}
-                            transition-all duration-500
-                            ${isSelected ? 'shadow-2xl scale-105 ring-2 ring-white/50' : `${color.hover} hover:shadow-lg`}
+                            transition-all duration-700
+                            ${isSelected ? 'shadow-[0_20px_60px_-15px] scale-[1.15] ring-4 ring-white/50 brightness-110' : `${color.hover} hover:shadow-lg`}
                           `}
+                          style={isSelected ? { 
+                            boxShadow: `0 20px 60px -15px ${color.from.includes('purple') ? 'rgba(168,85,247,0.8)' : 
+                                                             color.from.includes('pink') ? 'rgba(236,72,153,0.8)' : 
+                                                             color.from.includes('green') ? 'rgba(34,197,94,0.8)' : 
+                                                             color.from.includes('orange') ? 'rgba(251,146,60,0.8)' : 
+                                                             color.from.includes('red') ? 'rgba(239,68,68,0.8)' : 
+                                                             'rgba(99,102,241,0.8)'}` 
+                          } : {}}
                         >
                           <Folder 
-                            className={`h-5 w-5 transition-all duration-500 ${
-                              isSelected ? 'rotate-12 scale-110' : 'group-hover:rotate-6'
+                            className={`h-5 w-5 transition-all duration-700 ${
+                              isSelected ? 'rotate-[20deg] scale-125 drop-shadow-lg' : 'group-hover:rotate-6'
                             }`} 
                             style={{ color: 'white' }} 
                           />
-                          <span className="font-medium text-white truncate">{folder.name}</span>
+                          <span className={`font-medium text-white truncate ${isSelected ? 'font-bold tracking-wide' : ''}`}>{folder.name}</span>
                         </div>
                         {/* Tab da gaveta com animação aprimorada */}
                         <div
                           className={`
                             absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
-                            w-8 h-12 rounded-r-lg
+                            w-10 h-14 rounded-r-lg
                             flex items-center justify-center
-                            transition-all duration-500
+                            transition-all duration-700
                             ${color.from.replace('from-', 'bg-')}
-                            ${isSelected ? 'shadow-lg scale-110' : 'group-hover:scale-105'}
+                            ${isSelected ? 'shadow-[8px_0_20px] scale-125 brightness-110' : 'group-hover:scale-105'}
                           `}
                         >
-                          <div className="w-1 h-6 bg-white/30 rounded"></div>
+                          <div className={`w-1.5 h-8 bg-white/40 rounded ${isSelected ? 'animate-pulse' : ''}`}></div>
                         </div>
                       </div>
                     );
