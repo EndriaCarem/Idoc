@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import mammoth from 'mammoth';
 import {
   Select,
   SelectContent,
@@ -104,7 +105,7 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedFile) {
       toast.error('Selecione um arquivo');
       return;
@@ -115,13 +116,39 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
+    try {
+      let text = '';
+
+      // Processar arquivo DOCX com Mammoth
+      if (selectedFile.name.endsWith('.docx')) {
+        const arrayBuffer = await selectedFile.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        text = result.value;
+      } else {
+        // Para arquivos TXT, ler normalmente
+        const arrayBuffer = await selectedFile.arrayBuffer();
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        text = decoder.decode(arrayBuffer);
+      }
+
+      // Sanitizar o texto
+      text = text.replace(/\0/g, '').trim();
+
+      if (!text) {
+        toast.error('Arquivo vazio', {
+          description: 'O arquivo não contém texto válido.'
+        });
+        return;
+      }
+
       onFileUpload(text, selectedTemplateId);
       toast.success('Processando documento...');
-    };
-    reader.readAsText(selectedFile);
+    } catch (error) {
+      console.error('Erro ao processar arquivo:', error);
+      toast.error('Erro ao ler arquivo', {
+        description: 'Não foi possível processar o arquivo.'
+      });
+    }
   };
 
   // Funções para o modal de template
@@ -167,26 +194,34 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
     try {
       toast.loading("📥 Lendo arquivo...", { id: "saving-template" });
       
-      // Ler o arquivo como ArrayBuffer primeiro
-      const arrayBuffer = await newTemplateFile.arrayBuffer();
-      const decoder = new TextDecoder('utf-8', { fatal: false });
-      let text = decoder.decode(arrayBuffer);
+      let text = '';
+
+      // Processar arquivo DOCX com Mammoth
+      if (newTemplateFile.name.endsWith('.docx')) {
+        const arrayBuffer = await newTemplateFile.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        text = result.value;
+      } else {
+        // Para arquivos TXT, ler normalmente
+        const arrayBuffer = await newTemplateFile.arrayBuffer();
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        text = decoder.decode(arrayBuffer);
+      }
+      
+      // Sanitizar o texto para evitar problemas de Unicode
+      text = text.replace(/\0/g, '').trim();
       
       console.log('Arquivo lido, tamanho:', text.length);
       console.log('Primeiros 100 caracteres:', text.substring(0, 100));
       
       // Validar que o conteúdo não está vazio
-      if (!text || text.trim().length === 0) {
+      if (!text || text.length === 0) {
         toast.dismiss("saving-template");
         toast.error('Arquivo vazio', {
           description: 'O arquivo do template não pode estar vazio.'
         });
         return;
       }
-      
-      // Sanitizar o texto para evitar problemas de Unicode
-      // Remove null bytes e outros caracteres problemáticos
-      text = text.replace(/\0/g, '');
       
       toast.loading("💾 Salvando template...", { id: "saving-template" });
       

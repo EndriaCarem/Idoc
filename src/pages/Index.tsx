@@ -49,13 +49,18 @@ const Index = () => {
       
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
+      
+      // Sanitizar textos antes de salvar
+      const sanitizedOriginalText = text.replace(/\0/g, '').trim();
+      const sanitizedFormattedText = result.textoFormatado.replace(/\0/g, '').trim();
+      
       const { error } = await supabase
         .from('processed_documents')
         .insert({
           template_name: templateId,
           original_filename: 'Documento.txt',
-          original_text: text,
-          formatted_text: result.textoFormatado,
+          original_text: sanitizedOriginalText,
+          formatted_text: sanitizedFormattedText,
           alerts_count: result.alertas.length,
           suggestions_count: result.sugestoes.length,
         });
