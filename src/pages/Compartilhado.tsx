@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { FileText, Download, Trash2, Users } from 'lucide-react';
+import { FileText, Download, Trash2, Users, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -30,6 +31,7 @@ interface SharedDocument {
 const Compartilhado = () => {
   const [sharedDocuments, setSharedDocuments] = useState<SharedDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadSharedDocuments();
@@ -142,6 +144,17 @@ const Compartilhado = () => {
     loadSharedDocuments();
   };
 
+  const handleReviewWithCopilot = (doc: SharedDocument['document']) => {
+    // Armazenar o documento no sessionStorage para ser processado na página principal
+    sessionStorage.setItem('documentToReview', JSON.stringify({
+      text: doc.formatted_text,
+      name: doc.name
+    }));
+    
+    toast.success('Redirecionando para o Copilot...');
+    navigate('/');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -227,6 +240,15 @@ const Compartilhado = () => {
 
                   {/* Ações */}
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleReviewWithCopilot(share.document)}
+                      title="Revisar com Copilot"
+                      className="hover:bg-primary/10 hover:text-primary"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
