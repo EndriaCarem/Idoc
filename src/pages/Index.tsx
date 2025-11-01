@@ -5,6 +5,7 @@ import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import { formatarComCopilot } from '@/services/geminiService';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { CopilotResult } from '@/types';
 
 const Index = () => {
@@ -19,10 +20,35 @@ const Index = () => {
     setSelectedTemplateId(templateId);
     
     try {
+      toast.info("🔄 Iniciando processamento do documento...");
+      
+      toast.loading("📄 Analisando documento com IA...", { id: "processing" });
+      
       const result = await formatarComCopilot(text, templateId);
+      
+      toast.dismiss("processing");
+      
+      // Mostrar alertas encontrados em tempo real
+      if (result.alertas && result.alertas.length > 0) {
+        toast.warning(`⚠️ ${result.alertas.length} alertas de conformidade encontrados`, { duration: 4000 });
+        result.alertas.forEach((alerta, index) => {
+          setTimeout(() => {
+            toast.warning(alerta, { duration: 6000 });
+          }, (index + 1) * 800);
+        });
+      }
+      
+      // Mostrar sugestões encontradas
+      if (result.sugestoes && result.sugestoes.length > 0) {
+        setTimeout(() => {
+          toast.info(`💡 ${result.sugestoes.length} sugestões de formatação aplicadas`, { duration: 3000 });
+        }, result.alertas.length * 800);
+      }
+      
       setCopilotResult(result);
       
       // Salvar no histórico
+      toast.loading("💾 Salvando no histórico...", { id: "saving" });
       const { error } = await supabase
         .from('processed_documents')
         .insert({
@@ -34,9 +60,17 @@ const Index = () => {
           suggestions_count: result.sugestoes.length,
         });
       
-      if (error) console.error('Erro ao salvar no histórico:', error);
+      toast.dismiss("saving");
+      
+      if (error) {
+        console.error('Erro ao salvar no histórico:', error);
+        toast.error("⚠️ Erro ao salvar no histórico");
+      } else {
+        toast.success("✅ Documento processado e salvo com sucesso!");
+      }
     } catch (error) {
       console.error('Erro ao processar documento:', error);
+      toast.error("❌ Erro ao processar documento. Tente novamente.");
     } finally {
       setIsProcessing(false);
     }
