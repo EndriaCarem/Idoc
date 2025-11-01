@@ -167,7 +167,13 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
     try {
       toast.loading("📥 Lendo arquivo...", { id: "saving-template" });
       
-      const text = await newTemplateFile.text();
+      // Ler o arquivo como ArrayBuffer primeiro
+      const arrayBuffer = await newTemplateFile.arrayBuffer();
+      const decoder = new TextDecoder('utf-8', { fatal: false });
+      let text = decoder.decode(arrayBuffer);
+      
+      console.log('Arquivo lido, tamanho:', text.length);
+      console.log('Primeiros 100 caracteres:', text.substring(0, 100));
       
       // Validar que o conteúdo não está vazio
       if (!text || text.trim().length === 0) {
@@ -178,7 +184,17 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
         return;
       }
       
+      // Sanitizar o texto para evitar problemas de Unicode
+      // Remove null bytes e outros caracteres problemáticos
+      text = text.replace(/\0/g, '');
+      
       toast.loading("💾 Salvando template...", { id: "saving-template" });
+      
+      console.log('Tentando salvar template:', {
+        name: newTemplateName.trim(),
+        contentLength: text.length,
+        fileName: newTemplateFile.name
+      });
       
       const { data, error } = await supabase
         .from('templates')
@@ -191,10 +207,17 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
         .single();
 
       if (error) {
-        console.error('Erro ao salvar template:', error);
+        console.error('Erro detalhado do Supabase:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
 
+      console.log('Template salvo com sucesso:', data);
+      
       toast.dismiss("saving-template");
       toast.success('✅ Template salvo!', {
         description: `Template "${newTemplateName}" foi adicionado com sucesso.`
@@ -218,12 +241,12 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
       
       let errorMessage = 'Não foi possível salvar o template.';
       if (error.message) {
-        errorMessage += ` Detalhes: ${error.message}`;
+        errorMessage = error.message;
       }
       
       toast.error('❌ Erro ao salvar', {
         description: errorMessage,
-        duration: 5000
+        duration: 6000
       });
     }
   };
