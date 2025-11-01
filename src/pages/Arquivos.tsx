@@ -237,12 +237,12 @@ const Arquivos = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar com pastas estilo gaveta */}
-        <div className="lg:col-span-1 relative">
-          <Card className="overflow-visible bg-gradient-to-br from-background to-accent/5 border-2">
-            <CardHeader className="pb-4">
+        <div className="lg:col-span-1">
+          <Card className="bg-gradient-to-br from-background to-accent/5 border-2">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Folder className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Folder className="h-4 w-4 text-primary" />
                   Pastas
                 </CardTitle>
                 {selectedFolder && (
@@ -250,7 +250,7 @@ const Arquivos = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedFolder(null)}
-                    className="text-xs gap-1 hover-scale"
+                    className="text-xs gap-1 h-7"
                   >
                     <ArrowLeft className="h-3 w-3" />
                     Voltar
@@ -258,122 +258,64 @@ const Arquivos = () => {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="pr-0 overflow-visible">
-              <div className="h-[600px] pr-4 overflow-visible">
-                <div className="space-y-3 relative overflow-visible">
+            <CardContent className="px-3 pb-3">
+              <div className="space-y-2 max-h-[600px] overflow-y-auto overflow-x-visible pr-2">
                   {/* Pasta "Todos os arquivos" */}
-                  <div
+                  <button
                     className={`
-                      relative group cursor-pointer
-                      transition-all duration-700 ease-out
-                      hover:translate-x-3 hover:-translate-y-1
-                      ${selectedFolder === null ? 'translate-x-8 -translate-y-3 z-[100]' : 'translate-x-0 translate-y-0 z-[1]'}
+                      w-full text-left p-3 rounded-lg
+                      transition-all duration-300 ease-out
+                      flex items-center gap-3
+                      ${selectedFolder === null 
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-[1.02]' 
+                        : 'bg-muted hover:bg-muted/80 text-foreground'
+                      }
                     `}
                     onClick={() => setSelectedFolder(null)}
                   >
-                    <div
-                      className={`
-                        flex items-center gap-3 p-4 rounded-l-lg
-                        border-l-4 border-y border-r-0
-                        transition-all duration-700
-                        ${selectedFolder === null 
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-600 border-blue-700 shadow-[0_20px_60px_-15px_rgba(59,130,246,0.8)] scale-[1.15] ring-4 ring-blue-400/50 brightness-110' 
-                          : 'bg-gradient-to-r from-gray-500 to-gray-600 border-gray-700 hover:from-gray-600 hover:to-gray-700 hover:shadow-lg'
-                        }
-                      `}
-                    >
-                      <Folder 
-                        className={`h-5 w-5 transition-all duration-700 ${
-                          selectedFolder === null ? 'rotate-[20deg] scale-125 drop-shadow-lg' : 'group-hover:rotate-6'
-                        }`} 
-                        style={{ color: 'white' }} 
-                      />
-                      <span className={`font-medium text-white ${selectedFolder === null ? 'font-bold tracking-wide' : ''}`}>Todos</span>
-                    </div>
-                    {/* Tab da gaveta com animação aprimorada */}
-                    <div
-                      className={`
-                        absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
-                        w-10 h-14 rounded-r-lg
-                        flex items-center justify-center
-                        transition-all duration-700
-                        ${selectedFolder === null 
-                          ? 'bg-blue-600 shadow-[8px_0_20px_rgba(59,130,246,0.6)] scale-125 brightness-110' 
-                          : 'bg-gray-600 group-hover:bg-gray-700 group-hover:scale-105'
-                        }
-                      `}
-                    >
-                      <div className={`w-1.5 h-8 bg-white/40 rounded ${selectedFolder === null ? 'animate-pulse' : ''}`}></div>
-                    </div>
-                  </div>
+                    <Folder 
+                      className={`h-4 w-4 transition-transform duration-300 ${
+                        selectedFolder === null ? 'scale-110' : ''
+                      }`}
+                    />
+                    <span className="font-medium text-sm">Todos os Arquivos</span>
+                  </button>
 
                   {/* Pastas do usuário */}
                   {folders.map((folder, index) => {
                     const colors = [
-                      { from: 'from-purple-500', to: 'to-purple-600', border: 'border-purple-700', hover: 'hover:from-purple-600 hover:to-purple-700' },
-                      { from: 'from-pink-500', to: 'to-pink-600', border: 'border-pink-700', hover: 'hover:from-pink-600 hover:to-pink-700' },
-                      { from: 'from-green-500', to: 'to-green-600', border: 'border-green-700', hover: 'hover:from-green-600 hover:to-green-700' },
-                      { from: 'from-orange-500', to: 'to-orange-600', border: 'border-orange-700', hover: 'hover:from-orange-600 hover:to-orange-700' },
-                      { from: 'from-red-500', to: 'to-red-600', border: 'border-red-700', hover: 'hover:from-red-600 hover:to-red-700' },
-                      { from: 'from-indigo-500', to: 'to-indigo-600', border: 'border-indigo-700', hover: 'hover:from-indigo-600 hover:to-indigo-700' },
+                      { from: 'from-purple-500', to: 'to-purple-600', text: 'text-white' },
+                      { from: 'from-pink-500', to: 'to-pink-600', text: 'text-white' },
+                      { from: 'from-green-500', to: 'to-green-600', text: 'text-white' },
+                      { from: 'from-orange-500', to: 'to-orange-600', text: 'text-white' },
+                      { from: 'from-red-500', to: 'to-red-600', text: 'text-white' },
+                      { from: 'from-indigo-500', to: 'to-indigo-600', text: 'text-white' },
                     ];
                     const color = colors[index % colors.length];
                     const isSelected = selectedFolder === folder.id;
 
                     return (
-                      <div
+                      <button
                         key={folder.id}
                         className={`
-                          relative group cursor-pointer
-                          transition-all duration-700 ease-out
-                          hover:translate-x-3 hover:-translate-y-1
-                          ${isSelected ? 'translate-x-8 -translate-y-3 z-[100]' : 'translate-x-0 translate-y-0 z-[1]'}
+                          w-full text-left p-3 rounded-lg
+                          transition-all duration-300 ease-out
+                          flex items-center gap-3
+                          bg-gradient-to-r ${color.from} ${color.to} ${color.text}
+                          ${isSelected ? 'shadow-lg scale-[1.02]' : 'opacity-90 hover:opacity-100'}
                         `}
                         onClick={() => setSelectedFolder(folder.id)}
                       >
-                        <div
-                          className={`
-                            flex items-center gap-3 p-4 rounded-l-lg
-                            border-l-4 border-y border-r-0
-                            bg-gradient-to-r ${color.from} ${color.to} ${color.border}
-                            transition-all duration-700
-                            ${isSelected ? 'shadow-[0_20px_60px_-15px] scale-[1.15] ring-4 ring-white/50 brightness-110' : `${color.hover} hover:shadow-lg`}
-                          `}
-                          style={isSelected ? { 
-                            boxShadow: `0 20px 60px -15px ${color.from.includes('purple') ? 'rgba(168,85,247,0.8)' : 
-                                                             color.from.includes('pink') ? 'rgba(236,72,153,0.8)' : 
-                                                             color.from.includes('green') ? 'rgba(34,197,94,0.8)' : 
-                                                             color.from.includes('orange') ? 'rgba(251,146,60,0.8)' : 
-                                                             color.from.includes('red') ? 'rgba(239,68,68,0.8)' : 
-                                                             'rgba(99,102,241,0.8)'}` 
-                          } : {}}
-                        >
-                          <Folder 
-                            className={`h-5 w-5 transition-all duration-700 ${
-                              isSelected ? 'rotate-[20deg] scale-125 drop-shadow-lg' : 'group-hover:rotate-6'
-                            }`} 
-                            style={{ color: 'white' }} 
-                          />
-                          <span className={`font-medium text-white truncate ${isSelected ? 'font-bold tracking-wide' : ''}`}>{folder.name}</span>
-                        </div>
-                        {/* Tab da gaveta com animação aprimorada */}
-                        <div
-                          className={`
-                            absolute right-0 top-1/2 -translate-y-1/2 translate-x-full
-                            w-10 h-14 rounded-r-lg
-                            flex items-center justify-center
-                            transition-all duration-700
-                            ${color.from.replace('from-', 'bg-')}
-                            ${isSelected ? 'shadow-[8px_0_20px] scale-125 brightness-110' : 'group-hover:scale-105'}
-                          `}
-                        >
-                          <div className={`w-1.5 h-8 bg-white/40 rounded ${isSelected ? 'animate-pulse' : ''}`}></div>
-                        </div>
-                      </div>
+                        <Folder 
+                          className={`h-4 w-4 transition-transform duration-300 ${
+                            isSelected ? 'scale-110' : ''
+                          }`}
+                        />
+                        <span className="font-medium text-sm truncate">{folder.name}</span>
+                      </button>
                     );
                   })}
                 </div>
-              </div>
             </CardContent>
           </Card>
         </div>
