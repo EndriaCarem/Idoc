@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +13,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -60,7 +62,12 @@ const Arquivos = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showRenameFolderDialog, setShowRenameFolderDialog] = useState(false);
   const [showColorPickerDialog, setShowColorPickerDialog] = useState(false);
+  const [showFolderActionsSheet, setShowFolderActionsSheet] = useState(false);
+  const [showFileActionsSheet, setShowFileActionsSheet] = useState(false);
+  const [showDocActionsSheet, setShowDocActionsSheet] = useState(false);
   const [selectedFolderForAction, setSelectedFolderForAction] = useState<FolderType | null>(null);
+  const [selectedFileForAction, setSelectedFileForAction] = useState<UploadedFile | null>(null);
+  const [selectedDocForAction, setSelectedDocForAction] = useState<SavedDocument | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [renameFolderName, setRenameFolderName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
@@ -72,6 +79,7 @@ const Arquivos = () => {
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadData();
@@ -520,19 +528,19 @@ const Arquivos = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Meus Arquivos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie seus documentos e arquivos</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">Meus Arquivos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">Gerencie seus documentos e arquivos</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none">
+          <Button onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none h-10 sm:h-10">
             <Upload className="mr-2 h-4 w-4" />
             Upload
           </Button>
-          <Button onClick={() => setShowNewFolderDialog(true)} className="flex-1 sm:flex-none" variant="outline">
+          <Button onClick={() => setShowNewFolderDialog(true)} className="flex-1 sm:flex-none h-10 sm:h-10" variant="outline">
             <FolderPlus className="mr-2 h-4 w-4" />
             Nova Pasta
           </Button>

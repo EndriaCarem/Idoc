@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { InstallPWA } from "@/components/InstallPWA";
 import Header from "@/components/Header";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -71,6 +72,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InstallPWA />
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>

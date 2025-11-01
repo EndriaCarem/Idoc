@@ -5,16 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Download, Trash2, Users, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, Download, Trash2, Users, Sparkles, Loader2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatarComCopilot } from '@/services/geminiService';
 import type { CopilotResult } from '@/types';
 import CopilotPanel from '@/components/CopilotPanel';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SharedDocument {
   id: string;
@@ -45,12 +47,15 @@ const Compartilhado = () => {
   const [sharedDocuments, setSharedDocuments] = useState<SharedDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<SharedDocument['document'] | null>(null);
+  const [selectedShare, setSelectedShare] = useState<SharedDocument | null>(null);
   const [editableText, setEditableText] = useState<string>('');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadSharedDocuments();
@@ -62,13 +67,26 @@ const Compartilhado = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Dados fictícios para demonstração
+      // Dados fictícios para demonstração com nomes variados
+      const randomNames = [
+        { name: 'Dr. Carlos Silva', avatar: 'https://i.pravatar.cc/150?img=12' },
+        { name: 'Ana Paula Costa', avatar: 'https://i.pravatar.cc/150?img=47' },
+        { name: 'Roberto Mendes', avatar: 'https://i.pravatar.cc/150?img=33' },
+        { name: 'Mariana Santos', avatar: 'https://i.pravatar.cc/150?img=25' },
+        { name: 'João Pedro Oliveira', avatar: 'https://i.pravatar.cc/150?img=68' },
+      ];
+
+      const randomPerson1 = randomNames[Math.floor(Math.random() * randomNames.length)];
+      const randomPerson2 = randomNames[Math.floor(Math.random() * randomNames.length)];
+
       const mockData: SharedDocument[] = [
         {
           id: 'mock-1',
           document_id: 'doc-1',
           shared_by_user_id: 'user-1',
           created_at: new Date().toISOString(),
+          tag_emoji: '📄',
+          tag_name: 'Jurídico',
           document: {
             id: 'doc-1',
             name: 'Contrato de Prestação de Serviços - Revisado',
@@ -77,8 +95,8 @@ const Compartilhado = () => {
             created_at: new Date().toISOString(),
           },
           shared_by: {
-            full_name: 'Dr. Carlos Silva',
-            avatar_url: 'https://i.pravatar.cc/150?img=12',
+            full_name: randomPerson1.name,
+            avatar_url: randomPerson1.avatar,
           },
         },
         {
@@ -86,6 +104,8 @@ const Compartilhado = () => {
           document_id: 'doc-2',
           shared_by_user_id: 'user-2',
           created_at: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+          tag_emoji: '📊',
+          tag_name: 'Relatório',
           document: {
             id: 'doc-2',
             name: 'Relatório de Análise Técnica Q1 2024',
@@ -94,8 +114,8 @@ const Compartilhado = () => {
             created_at: new Date(Date.now() - 86400000).toISOString(),
           },
           shared_by: {
-            full_name: 'Ana Paula Costa',
-            avatar_url: 'https://i.pravatar.cc/150?img=47',
+            full_name: randomPerson2.name,
+            avatar_url: randomPerson2.avatar,
           },
         },
       ];
@@ -232,14 +252,14 @@ const Compartilhado = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Users className="h-8 w-8 text-primary" />
+        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+          <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
           Compartilhado Comigo
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           Documentos que outras pessoas compartilharam com você
         </p>
       </div>
@@ -247,19 +267,19 @@ const Compartilhado = () => {
       {/* Lista de documentos compartilhados */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Documentos Recebidos</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Documentos Recebidos</CardTitle>
+          <CardDescription className="text-sm">
             {sharedDocuments.length} documento(s) compartilhado(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
           {sharedDocuments.length === 0 ? (
-            <div className="text-center py-16">
-              <Users className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground text-lg">
+            <div className="text-center py-12 sm:py-16">
+              <Users className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground text-base sm:text-lg">
                 Nenhum documento compartilhado ainda
               </p>
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                 Quando alguém compartilhar um documento com você, ele aparecerá aqui
               </p>
             </div>
@@ -268,90 +288,157 @@ const Compartilhado = () => {
               {sharedDocuments.map((share) => (
                 <div
                   key={share.id}
-                  className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-all"
+                  className="group flex items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-all active:bg-accent touch-manipulation"
                 >
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        {/* Avatar do usuário que compartilhou */}
-                        <Avatar className="h-10 w-10 border-2 border-primary/20">
-                          <AvatarImage src={share.shared_by.avatar_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                            {share.shared_by.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                    {/* Avatar do usuário que compartilhou */}
+                    <Avatar className="h-10 w-10 sm:h-10 sm:w-10 border-2 border-primary/20 flex-shrink-0 mt-1 sm:mt-0">
+                      <AvatarImage src={share.shared_by.avatar_url || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                        {share.shared_by.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
 
-                        {/* Informações do documento */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {share.tag_emoji && (
-                              <span className="text-lg">{share.tag_emoji}</span>
-                            )}
-                            <FileText className="h-4 w-4 text-primary flex-shrink-0" />
-                            <p className="font-semibold truncate">{share.document.name}</p>
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm text-muted-foreground">
-                              Compartilhado por{' '}
-                              <span className="font-medium text-foreground">
-                                {share.shared_by.full_name}
-                              </span>
-                            </p>
-                            <span className="text-muted-foreground">•</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {share.document.template_name}
-                            </Badge>
-                            {share.tag_name && (
-                              <>
-                                <span className="text-muted-foreground">•</span>
-                                <Badge variant="outline" className="text-xs">
-                                  {share.tag_emoji} {share.tag_name}
-                                </Badge>
-                              </>
-                            )}
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-xs text-muted-foreground">
-                              {format(new Date(share.created_at), "dd 'de' MMMM, yyyy", {
-                                locale: ptBR,
-                              })}
-                            </span>
-                          </div>
-                        </div>
+                    {/* Informações do documento */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {share.tag_emoji && (
+                          <span className="text-base sm:text-lg flex-shrink-0">{share.tag_emoji}</span>
+                        )}
+                        <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                        <p className="font-semibold truncate text-sm sm:text-base">{share.document.name}</p>
                       </div>
-
-                  {/* Ações */}
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleReviewWithCopilot(share.document)}
-                      title="Revisar com Copilot"
-                      className="hover:bg-primary/10 hover:text-primary"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDownloadDocument(share.document)}
-                      title="Baixar documento"
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveShare(share.id)}
-                      title="Remover da lista"
-                      className="hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
+                        <p className="text-muted-foreground">
+                          Compartilhado por{' '}
+                          <span className="font-medium text-foreground">
+                            {share.shared_by.full_name}
+                          </span>
+                        </p>
+                        <span className="text-muted-foreground hidden sm:inline">•</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {share.document.template_name}
+                        </Badge>
+                        {share.tag_name && (
+                          <>
+                            <span className="text-muted-foreground hidden sm:inline">•</span>
+                            <Badge variant="outline" className="text-xs">
+                              {share.tag_emoji} {share.tag_name}
+                            </Badge>
+                          </>
+                        )}
+                        <span className="text-muted-foreground hidden sm:inline">•</span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(share.created_at), "dd 'de' MMMM, yyyy", {
+                            locale: ptBR,
+                          })}
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Ações - Desktop: mostrar todos os botões, Mobile: botão de menu */}
+                  {isMobile ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="flex-shrink-0 h-9 w-9"
+                      onClick={() => {
+                        setSelectedShare(share);
+                        setShowActionsSheet(true);
+                      }}
+                    >
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  ) : (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleReviewWithCopilot(share.document)}
+                        title="Revisar com Copilot"
+                        className="hover:bg-primary/10 hover:text-primary"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownloadDocument(share.document)}
+                        title="Baixar documento"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveShare(share.id)}
+                        title="Remover da lista"
+                        className="hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Bottom Sheet para ações no mobile */}
+      <Sheet open={showActionsSheet} onOpenChange={setShowActionsSheet}>
+        <SheetContent side="bottom" className="bg-background">
+          <SheetHeader>
+            <SheetTitle className="text-left">Ações do Documento</SheetTitle>
+            <SheetDescription className="text-left">
+              {selectedShare?.document.name}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-2 mt-4">
+            <Button
+              variant="outline"
+              className="justify-start h-12"
+              onClick={() => {
+                if (selectedShare) {
+                  handleReviewWithCopilot(selectedShare.document);
+                  setShowActionsSheet(false);
+                }
+              }}
+            >
+              <Sparkles className="mr-3 h-5 w-5 text-primary" />
+              Revisar com Copilot
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-12"
+              onClick={() => {
+                if (selectedShare) {
+                  handleDownloadDocument(selectedShare.document);
+                  setShowActionsSheet(false);
+                }
+              }}
+            >
+              <Download className="mr-3 h-5 w-5" />
+              Baixar Documento
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start h-12 text-destructive hover:bg-destructive/10"
+              onClick={() => {
+                if (selectedShare) {
+                  handleRemoveShare(selectedShare.id);
+                  setShowActionsSheet(false);
+                }
+              }}
+            >
+              <Trash2 className="mr-3 h-5 w-5" />
+              Remover da Lista
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Dialog de Revisão com Copilot */}
       <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
