@@ -315,6 +315,14 @@ const Compartilhado = () => {
                         <Badge variant="secondary" className="text-xs">
                           {share.document.template_name}
                         </Badge>
+                        {share.tag_name && share.tag_emoji && (
+                          <>
+                            <span className="text-muted-foreground hidden sm:inline">•</span>
+                            <Badge variant="outline" className="text-xs">
+                              {share.tag_emoji} {share.tag_name}
+                            </Badge>
+                          </>
+                        )}
                         <span className="text-muted-foreground hidden sm:inline">•</span>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(share.created_at), "dd 'de' MMMM, yyyy", {
