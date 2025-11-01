@@ -10,12 +10,14 @@ import type { CopilotResult } from '@/types';
 
 const Index = () => {
   const [originalText, setOriginalText] = useState<string>('');
+  const [originalFilename, setOriginalFilename] = useState<string>('');
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  const handleFileUpload = async (text: string, templateId: string, templateName: string) => {
+  const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string) => {
     setOriginalText(text);
+    setOriginalFilename(filename);
     setIsProcessing(true);
     setSelectedTemplateId(templateId);
     
@@ -58,7 +60,7 @@ const Index = () => {
         .from('processed_documents')
         .insert({
           template_name: templateName,
-          original_filename: 'Documento.txt',
+          original_filename: originalFilename,
           original_text: sanitizedOriginalText,
           formatted_text: sanitizedFormattedText,
           alerts_count: result.alertas.length,

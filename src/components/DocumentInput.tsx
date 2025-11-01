@@ -22,7 +22,7 @@ interface Template {
 }
 
 interface DocumentInputProps {
-  onFileUpload: (text: string, templateId: string, templateName: string) => void;
+  onFileUpload: (text: string, templateId: string, templateName: string, filename: string) => void;
   selectedTemplateId: string | null;
   onTemplateChange: (templateId: string) => void;
 }
@@ -145,7 +145,7 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
       const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
       const templateName = selectedTemplate?.name || 'Template Desconhecido';
 
-      onFileUpload(text, selectedTemplateId, templateName);
+      onFileUpload(text, selectedTemplateId, templateName, selectedFile.name);
       toast.success('Processando documento...');
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
