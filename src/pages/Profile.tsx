@@ -188,10 +188,10 @@ export default function Profile() {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto px-4 py-8">
+    <div className="container max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
       <Button
         variant="ghost"
-        className="mb-6"
+        className="mb-4 sm:mb-6 text-sm sm:text-base"
         onClick={() => navigate('/')}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -199,27 +199,27 @@ export default function Profile() {
       </Button>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Configurações do Perfil</CardTitle>
-          <CardDescription>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-xl sm:text-2xl">Configurações do Perfil</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
             Atualize suas informações pessoais e foto de perfil
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6 pt-0">
           {/* Avatar Upload */}
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-3 sm:space-y-4">
             <div className="relative">
-              <Avatar className="h-32 w-32 border-4 border-primary/20">
+              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-primary/20">
                 <AvatarImage src={avatarUrl || undefined} />
-                <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-xl sm:text-2xl font-semibold">
                   {getInitials(fullName)}
                 </AvatarFallback>
               </Avatar>
               <label
                 htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 transition-colors"
+                className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 sm:p-2 cursor-pointer hover:bg-primary/90 transition-colors"
               >
-                <Camera className="h-5 w-5" />
+                <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
               </label>
               <input
                 id="avatar-upload"
@@ -230,7 +230,7 @@ export default function Profile() {
                 disabled={uploading}
               />
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center px-4">
               Clique no ícone da câmera para alterar sua foto
             </p>
           </div>

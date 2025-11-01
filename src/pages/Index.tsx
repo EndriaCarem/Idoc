@@ -86,7 +86,7 @@ const Index = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!originalText ? (
           <div className="max-w-4xl mx-auto">
             <DocumentInput 
@@ -98,13 +98,13 @@ const Index = () => {
         ) : (
           <>
             {isProcessing ? (
-              <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                <p className="text-lg text-muted-foreground">Processando documento com IA...</p>
+              <div className="flex flex-col items-center justify-center py-12 sm:py-20 space-y-4 px-4">
+                <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 animate-spin text-primary" />
+                <p className="text-base sm:text-lg text-muted-foreground text-center">Processando documento com IA...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                   <DocumentPreview 
                     originalText={originalText}
                     formattedText={copilotResult?.textoFormatado || ''}
