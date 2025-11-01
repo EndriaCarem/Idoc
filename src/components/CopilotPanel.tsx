@@ -89,7 +89,7 @@ const CopilotPanel = ({
             <CardTitle>Copilot</CardTitle>
           </div>
           <CardDescription>
-            Análise e sugestões do copiloto
+            Análise e sugestões do copilot
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -170,7 +170,7 @@ const CopilotPanel = ({
                 {messages.length === 0 ? (
                   <div className="p-4 rounded-lg border bg-gradient-to-br from-primary/5 to-secondary/5 space-y-3">
                     <p className="text-sm font-semibold text-foreground">
-                      💬 Pergunte ao Copiloto Técnico:
+                      💬 Pergunte ao Copilot Técnico:
                     </p>
                     <ul className="text-xs text-muted-foreground space-y-2 pl-1">
                       <li className="flex gap-2"><span className="text-primary">•</span> "Como melhorar a seção de objetivos para atender aos requisitos?"</li>
@@ -197,7 +197,7 @@ const CopilotPanel = ({
                         <div className="flex items-center gap-2 mb-1">
                           {msg.role === "assistant" && <Bot className="w-3.5 h-3.5 text-primary" />}
                           <p className="font-semibold text-xs">
-                            {msg.role === "user" ? "Você" : "Copiloto"}
+                            {msg.role === "user" ? "Você" : "Copilot"}
                           </p>
                         </div>
                         <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -207,7 +207,7 @@ const CopilotPanel = ({
                       <div className="p-3 rounded-lg text-sm bg-muted mr-4">
                         <div className="flex items-center gap-2">
                           <Bot className="w-3.5 h-3.5 text-primary animate-pulse" />
-                          <p className="font-semibold text-xs">Copiloto está pensando...</p>
+                          <p className="font-semibold text-xs">Copilot está pensando...</p>
                           <div className="flex gap-1 ml-2">
                             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                             <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
