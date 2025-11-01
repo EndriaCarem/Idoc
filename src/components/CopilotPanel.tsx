@@ -1,10 +1,11 @@
-import { AlertCircle, CheckCircle, MessageSquare, Sparkles, Send } from 'lucide-react';
+import { AlertCircle, CheckCircle, MessageSquare, Sparkles, Send, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -30,6 +31,8 @@ const CopilotPanel = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [alertasOpen, setAlertasOpen] = useState(true);
+  const [sugestoesOpen, setSugestoesOpen] = useState(true);
   const { toast } = useToast();
 
   const handleSendMessage = async () => {
@@ -87,51 +90,65 @@ const CopilotPanel = ({
             <div className="p-6 space-y-6">
               {/* Alertas */}
               {alertas.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-destructive" />
-                    <h4 className="font-semibold text-sm">Alertas de Conformidade</h4>
-                    <Badge variant="destructive" className="ml-auto">
-                      {alertas.length}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    {alertas.map((alerta, index) => (
-                      <div
-                        key={index}
-                        className="p-3 rounded-lg bg-destructive/5 border border-destructive/20"
-                      >
-                        <p className="text-sm">{alerta}</p>
+                <Collapsible open={alertasOpen} onOpenChange={setAlertasOpen}>
+                  <div className="space-y-3">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <AlertCircle className="w-4 h-4 text-destructive" />
+                        <h4 className="font-semibold text-sm">Alertas de Conformidade</h4>
+                        <Badge variant="destructive" className="ml-auto">
+                          {alertas.length}
+                        </Badge>
+                        <ChevronDown className={`w-4 h-4 text-destructive transition-transform duration-200 ${alertasOpen ? 'rotate-180' : ''}`} />
                       </div>
-                    ))}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2">
+                        {alertas.map((alerta, index) => (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg bg-destructive/5 border border-destructive/20"
+                          >
+                            <p className="text-sm">{alerta}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
                   </div>
-                </div>
+                </Collapsible>
               )}
 
               <Separator />
 
               {/* Sugestões */}
               {sugestoes.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-secondary" />
-                    <h4 className="font-semibold text-sm">Formatações Aplicadas</h4>
-                    <Badge variant="secondary" className="ml-auto">
-                      {sugestoes.length}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    {sugestoes.map((sugestao, index) => (
-                      <div
-                        key={index}
-                        className="p-3 rounded-lg bg-secondary/5 border border-secondary/20 flex items-start gap-2"
-                      >
-                        <CheckCircle className="w-4 h-4 text-secondary mt-0.5 flex-shrink-0" />
-                        <p className="text-sm">{sugestao}</p>
+                <Collapsible open={sugestoesOpen} onOpenChange={setSugestoesOpen}>
+                  <div className="space-y-3">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <CheckCircle className="w-4 h-4 text-secondary" />
+                        <h4 className="font-semibold text-sm">Formatações Aplicadas</h4>
+                        <Badge variant="secondary" className="ml-auto">
+                          {sugestoes.length}
+                        </Badge>
+                        <ChevronDown className={`w-4 h-4 text-secondary transition-transform duration-200 ${sugestoesOpen ? 'rotate-180' : ''}`} />
                       </div>
-                    ))}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className="space-y-2">
+                        {sugestoes.map((sugestao, index) => (
+                          <div
+                            key={index}
+                            className="p-3 rounded-lg bg-secondary/5 border border-secondary/20 flex items-start gap-2"
+                          >
+                            <CheckCircle className="w-4 h-4 text-secondary mt-0.5 flex-shrink-0" />
+                            <p className="text-sm">{sugestao}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
                   </div>
-                </div>
+                </Collapsible>
               )}
 
               <Separator />
