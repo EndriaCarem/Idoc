@@ -91,7 +91,7 @@ const Compartilhado = () => {
             id: 'doc-1',
             name: 'Contrato de Prestação de Serviços - Revisado',
             formatted_text: 'Conteúdo do documento...',
-            template_name: 'Template Jurídico',
+            template_name: 'Mover',
             created_at: new Date().toISOString(),
           },
           shared_by: {
@@ -305,7 +305,6 @@ const Compartilhado = () => {
                         {share.tag_emoji && (
                           <span className="text-base sm:text-lg flex-shrink-0">{share.tag_emoji}</span>
                         )}
-                        <FileText className="h-4 w-4 text-primary flex-shrink-0" />
                         <p className="font-semibold truncate text-sm sm:text-base">{share.document.name}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
