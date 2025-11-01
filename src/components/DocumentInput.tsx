@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Upload, File, X, FolderPlus } from 'lucide-react';
+import { Upload, File, X, FolderPlus, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -32,6 +34,8 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [pastedText, setPastedText] = useState('');
+  const [inputMethod, setInputMethod] = useState<'file' | 'text'>('file');
   
   // Estados para o modal de novo template
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -105,7 +109,7 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmitFile = async () => {
     if (!selectedFile) {
       toast.error('Selecione um arquivo');
       return;
@@ -153,6 +157,24 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
         description: 'Não foi possível processar o arquivo.'
       });
     }
+  };
+
+  const handleSubmitText = async () => {
+    if (!pastedText.trim()) {
+      toast.error('Cole ou digite um texto');
+      return;
+    }
+
+    if (!selectedTemplateId) {
+      toast.error('Selecione um template');
+      return;
+    }
+
+    const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+    const templateName = selectedTemplate?.name || 'Template Desconhecido';
+
+    onFileUpload(pastedText.trim(), selectedTemplateId, templateName, 'texto-colado.txt');
+    toast.success('Processando texto...');
   };
 
   // Funções para o modal de template
@@ -344,69 +366,124 @@ const DocumentInput = ({ onFileUpload, selectedTemplateId, onTemplateChange }: D
           </div>
         </div>
 
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-12 text-center transition-all backdrop-blur-xl bg-white/40 dark:bg-card/40 ${
-            isDragging 
-              ? 'border-primary bg-primary/10 scale-105' 
-              : 'border-border hover:border-primary/50'
-          }`}
-        >
-          {selectedFile ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-3">
-                <File className="w-8 h-8 text-primary" />
-                <div className="text-left">
-                  <p className="font-semibold">{selectedFile.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {(selectedFile.size / 1024).toFixed(2)} KB
-                  </p>
+        <Tabs value={inputMethod} onValueChange={(v) => setInputMethod(v as 'file' | 'text')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="file" className="gap-2">
+              <Upload className="w-4 h-4" />
+              Upload de Arquivo
+            </TabsTrigger>
+            <TabsTrigger value="text" className="gap-2">
+              <FileText className="w-4 h-4" />
+              Colar Texto
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="file" className="mt-4">
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-xl p-12 text-center transition-all backdrop-blur-xl bg-white/40 dark:bg-card/40 ${
+                isDragging 
+                  ? 'border-primary bg-primary/10 scale-105' 
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              {selectedFile ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <File className="w-8 h-8 text-primary" />
+                    <div className="text-left">
+                      <p className="font-semibold">{selectedFile.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {(selectedFile.size / 1024).toFixed(2)} KB
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedFile(null)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Button 
+                    onClick={handleSubmitFile} 
+                    className="w-full"
+                    disabled={!selectedTemplateId}
+                  >
+                    Processar Documento
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSelectedFile(null)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+              ) : (
+                <>
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-semibold mb-2">
+                    Arraste seu documento aqui
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    ou clique para selecionar
+                  </p>
+                  <input
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept=".txt,.docx,.pdf"
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload">
+                    <Button asChild className="bg-primary hover:bg-primary/90">
+                      <span className="text-primary-foreground">Selecionar Arquivo</span>
+                    </Button>
+                  </label>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Formatos suportados: TXT, DOCX, PDF
+                  </p>
+                </>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="text" className="mt-4">
+            <div className="space-y-4">
+              <div className="border-2 border-dashed rounded-xl p-6 transition-all backdrop-blur-xl bg-white/40 dark:bg-card/40 border-border hover:border-primary/50">
+                <div className="space-y-3">
+                  <Label htmlFor="pasted-text" className="text-base font-semibold">
+                    Cole ou digite seu texto aqui
+                  </Label>
+                  <Textarea
+                    id="pasted-text"
+                    value={pastedText}
+                    onChange={(e) => setPastedText(e.target.value)}
+                    placeholder="Cole seu texto aqui ou digite diretamente..."
+                    className="min-h-[300px] font-mono text-sm resize-none"
+                  />
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-muted-foreground">
+                      {pastedText.length} caracteres
+                    </p>
+                    {pastedText && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPastedText('')}
+                      >
+                        Limpar
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
               <Button 
-                onClick={handleSubmit} 
+                onClick={handleSubmitText} 
                 className="w-full"
-                disabled={!selectedTemplateId}
+                disabled={!selectedTemplateId || !pastedText.trim()}
               >
-                Processar Documento
+                Processar Texto
               </Button>
             </div>
-          ) : (
-            <>
-              <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg font-semibold mb-2">
-                Arraste seu documento aqui
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                ou clique para selecionar
-              </p>
-              <input
-                type="file"
-                onChange={handleFileSelect}
-                accept=".txt,.docx,.pdf"
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload">
-                <Button asChild className="bg-primary hover:bg-primary/90">
-                  <span className="text-primary-foreground">Selecionar Arquivo</span>
-                </Button>
-              </label>
-              <p className="text-xs text-muted-foreground mt-4">
-                Formatos suportados: TXT, DOCX, PDF
-              </p>
-            </>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
 
       {/* Modal para adicionar novo template */}
