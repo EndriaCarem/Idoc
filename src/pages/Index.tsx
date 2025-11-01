@@ -14,7 +14,7 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  const handleFileUpload = async (text: string, templateId: string) => {
+  const handleFileUpload = async (text: string, templateId: string, templateName: string) => {
     setOriginalText(text);
     setIsProcessing(true);
     setSelectedTemplateId(templateId);
@@ -57,7 +57,7 @@ const Index = () => {
       const { error } = await supabase
         .from('processed_documents')
         .insert({
-          template_name: templateId,
+          template_name: templateName,
           original_filename: 'Documento.txt',
           original_text: sanitizedOriginalText,
           formatted_text: sanitizedFormattedText,
