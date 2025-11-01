@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { FolderPlus, File, Folder, Share2, Trash2, Download, Upload } from 'lucide-react';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Upload, Edit, Bold, Italic, Underline, List, ListOrdered, Undo, Redo } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SavedDocument {
@@ -30,9 +30,12 @@ const Arquivos = () => {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [editingDocument, setEditingDocument] = useState<SavedDocument | null>(null);
+  const [editedText, setEditedText] = useState('');
 
   useEffect(() => {
     loadFolders();
@@ -175,6 +178,48 @@ const Arquivos = () => {
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Download iniciado!');
+  };
+
+  const handleEditDocument = (doc: SavedDocument) => {
+    setEditingDocument(doc);
+    setEditedText(doc.formatted_text);
+    setShowEditDialog(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingDocument) return;
+
+    const { error } = await supabase
+      .from('saved_documents')
+      .update({ formatted_text: editedText })
+      .eq('id', editingDocument.id);
+
+    if (error) {
+      console.error('Erro ao salvar documento:', error);
+      toast.error('Erro ao salvar documento');
+      return;
+    }
+
+    toast.success('Documento salvo com sucesso!');
+    setShowEditDialog(false);
+    setEditingDocument(null);
+    loadDocuments();
+  };
+
+  const insertFormatting = (before: string, after: string = '') => {
+    const textarea = document.getElementById('edit-textarea') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = editedText.substring(start, end);
+    const newText = editedText.substring(0, start) + before + selectedText + after + editedText.substring(end);
+    
+    setEditedText(newText);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, end + before.length);
+    }, 0);
   };
 
   return (
@@ -375,6 +420,14 @@ const Arquivos = () => {
                           <Button
                             variant="ghost"
                             size="icon"
+                            onClick={() => handleEditDocument(doc)}
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => handleDownloadDocument(doc)}
                             title="Baixar"
                           >
@@ -466,6 +519,88 @@ const Arquivos = () => {
               Cancelar
             </Button>
             <Button onClick={handleShareDocument}>Compartilhar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar documento */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Editar Documento: {editingDocument?.name}</DialogTitle>
+            <DialogDescription>
+              Use a barra de ferramentas para formatar o texto
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Barra de ferramentas de formatação */}
+          <div className="flex flex-wrap gap-1 p-3 bg-muted/50 rounded-lg border">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertFormatting('**', '**')}
+              title="Negrito"
+              className="h-8 w-8 p-0"
+            >
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertFormatting('_', '_')}
+              title="Itálico"
+              className="h-8 w-8 p-0"
+            >
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertFormatting('<u>', '</u>')}
+              title="Sublinhado"
+              className="h-8 w-8 p-0"
+            >
+              <Underline className="h-4 w-4" />
+            </Button>
+            <div className="w-px h-8 bg-border mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertFormatting('• ', '')}
+              title="Lista com marcadores"
+              className="h-8 w-8 p-0"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => insertFormatting('1. ', '')}
+              title="Lista numerada"
+              className="h-8 w-8 p-0"
+            >
+              <ListOrdered className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Editor de texto */}
+          <div className="space-y-4 py-2">
+            <textarea
+              id="edit-textarea"
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+              className="w-full h-[400px] p-4 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-primary font-mono text-sm"
+              placeholder="Digite ou edite o texto aqui..."
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Salvar Alterações
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
