@@ -285,9 +285,11 @@ Assinatura: Ana Paula Costa`,
 
   const handleReviewWithCopilot = (doc: SharedDocument['document']) => {
     setSelectedDocument(doc);
-    setEditableText(doc.formatted_text);
+    // Garantir que o texto do documento seja carregado na área de edição
+    setEditableText(doc.formatted_text || '');
     setCopilotResult(null);
     setShowReviewDialog(true);
+    console.log('Documento carregado:', doc.name, 'Tamanho do texto:', doc.formatted_text?.length);
   };
 
   const handleProcessDocument = async () => {
@@ -634,7 +636,7 @@ Assinatura: Ana Paula Costa`,
                 onChange={(e) => setEditableText(e.target.value)}
                 rows={15}
                 className="font-mono text-sm resize-none"
-                placeholder="O conteúdo do documento aparecerá aqui após processar com IA..."
+                placeholder="O conteúdo do documento aparecerá aqui..."
               />
             </div>
 
