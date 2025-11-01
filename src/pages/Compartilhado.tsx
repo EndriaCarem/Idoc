@@ -92,7 +92,41 @@ const Compartilhado = () => {
           document: {
             id: 'doc-1',
             name: 'Contrato de Prestação de Serviços - Revisado',
-            formatted_text: 'Conteúdo do documento...',
+            formatted_text: `CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+
+CONTRATANTE: Tech Solutions Ltda.
+CNPJ: 12.345.678/0001-90
+Endereço: Av. Paulista, 1000 - São Paulo/SP
+
+CONTRATADO: João Silva Consultoria
+CPF: 123.456.789-00
+Endereço: Rua das Flores, 500 - São Paulo/SP
+
+OBJETO: Prestação de serviços de consultoria em tecnologia da informação.
+
+PRAZO: 12 (doze) meses, a partir de 01/01/2024.
+
+VALOR: R$ 10.000,00 (dez mil reais) mensais.
+
+CLÁUSULA PRIMEIRA - DO OBJETO
+O presente contrato tem por objeto a prestação de serviços de consultoria especializada em desenvolvimento de software e infraestrutura de TI.
+
+CLÁUSULA SEGUNDA - DAS OBRIGAÇÕES DO CONTRATADO
+São obrigações do CONTRATADO:
+a) Prestar os serviços com qualidade e pontualidade;
+b) Manter sigilo sobre informações confidenciais;
+c) Apresentar relatórios mensais de atividades.
+
+CLÁUSULA TERCEIRA - DAS OBRIGAÇÕES DO CONTRATANTE
+São obrigações do CONTRATANTE:
+a) Efetuar os pagamentos nas datas acordadas;
+b) Fornecer as informações necessárias para execução dos serviços;
+c) Disponibilizar ambiente adequado de trabalho.
+
+São Paulo, 15 de março de 2024.
+
+_____________________          _____________________
+CONTRATANTE                    CONTRATADO`,
             template_name: 'Mover',
             created_at: new Date().toISOString(),
           },
@@ -105,13 +139,57 @@ const Compartilhado = () => {
           id: 'mock-2',
           document_id: 'doc-2',
           shared_by_user_id: 'user-2',
-          created_at: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+          created_at: new Date(Date.now() - 86400000).toISOString(),
           tag_emoji: '📊',
           tag_name: 'Relatório',
           document: {
             id: 'doc-2',
             name: 'Relatório de Análise Técnica Q1 2024',
-            formatted_text: 'Conteúdo do relatório...',
+            formatted_text: `RELATÓRIO DE ANÁLISE TÉCNICA - 1º TRIMESTRE 2024
+
+Empresa: Tech Innovations S.A.
+Período: Janeiro a Março de 2024
+Responsável: Ana Paula Costa
+
+1. RESUMO EXECUTIVO
+Este relatório apresenta a análise técnica dos projetos desenvolvidos durante o primeiro trimestre de 2024, incluindo métricas de desempenho, recursos utilizados e principais conquistas.
+
+2. PROJETOS DESENVOLVIDOS
+2.1 Sistema de Gestão Integrada
+- Status: 85% concluído
+- Prazo estimado: Abril/2024
+- Recursos alocados: 5 desenvolvedores
+- Budget: R$ 250.000,00
+
+2.2 Aplicativo Mobile - Versão 2.0
+- Status: Finalizado
+- Lançamento: Março/2024
+- Downloads: 15.000 nos primeiros 10 dias
+- Avaliação: 4.5 estrelas
+
+3. MÉTRICAS DE DESEMPENHO
+- Taxa de conclusão de tarefas: 92%
+- Bugs identificados: 47
+- Bugs corrigidos: 45
+- Tempo médio de resposta: 2.3 horas
+
+4. RECURSOS HUMANOS
+- Equipe técnica: 12 profissionais
+- Novos colaboradores: 2
+- Taxa de satisfação interna: 87%
+
+5. INVESTIMENTOS
+Total investido: R$ 500.000,00
+Distribuição:
+- Infraestrutura: 40%
+- Recursos Humanos: 45%
+- Ferramentas e Licenças: 15%
+
+6. CONCLUSÕES
+O primeiro trimestre apresentou resultados positivos com entrega dentro do prazo e qualidade acima da média. Recomenda-se manter o ritmo de desenvolvimento e ampliar a equipe em 20% para o próximo trimestre.
+
+Data: 31 de março de 2024
+Assinatura: Ana Paula Costa`,
             template_name: 'RA',
             created_at: new Date(Date.now() - 86400000).toISOString(),
           },
