@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Arquivos from "./pages/Arquivos";
+import Compartilhado from "./pages/Compartilhado";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/arquivos" element={<Arquivos />} />
+                <Route path="/compartilhado" element={<Compartilhado />} />
                 <Route path="/historico" element={<Historico />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/templates" element={<Templates />} />
