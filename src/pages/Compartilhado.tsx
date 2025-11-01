@@ -40,6 +40,47 @@ const Compartilhado = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Dados fictícios para demonstração
+      const mockData: SharedDocument[] = [
+        {
+          id: 'mock-1',
+          document_id: 'doc-1',
+          shared_by_user_id: 'user-1',
+          created_at: new Date().toISOString(),
+          document: {
+            id: 'doc-1',
+            name: 'Contrato de Prestação de Serviços - Revisado',
+            formatted_text: 'Conteúdo do documento...',
+            template_name: 'Template Jurídico',
+            created_at: new Date().toISOString(),
+          },
+          shared_by: {
+            full_name: 'Dr. Carlos Silva',
+            avatar_url: null,
+          },
+        },
+        {
+          id: 'mock-2',
+          document_id: 'doc-2',
+          shared_by_user_id: 'user-2',
+          created_at: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+          document: {
+            id: 'doc-2',
+            name: 'Relatório de Análise Técnica Q1 2024',
+            formatted_text: 'Conteúdo do relatório...',
+            template_name: 'Template Técnico',
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+          },
+          shared_by: {
+            full_name: 'Ana Paula Costa',
+            avatar_url: null,
+          },
+        },
+      ];
+
+      setSharedDocuments(mockData);
+
+      /* Código real comentado para quando houver dados reais
       const { data, error } = await supabase
         .from('shared_documents')
         .select(`
@@ -65,6 +106,7 @@ const Compartilhado = () => {
       if (error) throw error;
 
       setSharedDocuments((data as any) || []);
+      */
     } catch (error) {
       console.error('Erro ao carregar documentos compartilhados:', error);
       toast.error('Erro ao carregar documentos compartilhados');
