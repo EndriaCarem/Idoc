@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { FileText, Download, Trash2, Users, Sparkles } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { FileText, Download, Trash2, Users, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatarComCopilot } from '@/services/geminiService';
+import type { CopilotResult } from '@/types';
+import CopilotPanel from '@/components/CopilotPanel';
 
 interface SharedDocument {
   id: string;
@@ -28,13 +34,24 @@ interface SharedDocument {
   };
 }
 
+interface Template {
+  id: string;
+  name: string;
+}
+
 const Compartilhado = () => {
   const [sharedDocuments, setSharedDocuments] = useState<SharedDocument[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<SharedDocument['document'] | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
 
   useEffect(() => {
     loadSharedDocuments();
+    loadTemplates();
   }, []);
 
   const loadSharedDocuments = async () => {
@@ -144,15 +161,62 @@ const Compartilhado = () => {
     loadSharedDocuments();
   };
 
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('id, name')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+      
+      if (data && data.length > 0) {
+        setSelectedTemplateId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar templates:', error);
+      toast.error('Erro ao carregar templates');
+    }
+  };
+
   const handleReviewWithCopilot = (doc: SharedDocument['document']) => {
-    // Armazenar o documento no sessionStorage para ser processado na página principal
-    sessionStorage.setItem('documentToReview', JSON.stringify({
-      text: doc.formatted_text,
-      name: doc.name
-    }));
+    setSelectedDocument(doc);
+    setCopilotResult(null);
+    setShowReviewDialog(true);
+  };
+
+  const handleProcessDocument = async () => {
+    if (!selectedDocument || !selectedTemplateId) {
+      toast.error('Selecione um template');
+      return;
+    }
+
+    setIsProcessing(true);
     
-    toast.success('Redirecionando para o Copilot...');
-    navigate('/');
+    try {
+      toast.loading("📄 Processando documento com IA...", { id: "processing" });
+      
+      const result = await formatarComCopilot(selectedDocument.formatted_text, selectedTemplateId);
+      
+      toast.dismiss("processing");
+      
+      if (result.alertas && result.alertas.length > 0) {
+        toast.warning(`⚠️ ${result.alertas.length} alertas encontrados`);
+      }
+      
+      if (result.sugestoes && result.sugestoes.length > 0) {
+        toast.info(`💡 ${result.sugestoes.length} sugestões de formatação`);
+      }
+      
+      setCopilotResult(result);
+      toast.success("✅ Documento revisado com sucesso!");
+    } catch (error) {
+      console.error('Erro ao processar documento:', error);
+      toast.error("❌ Erro ao processar documento");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading) {
@@ -273,6 +337,93 @@ const Compartilhado = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Revisão com Copilot */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Revisar Documento com Copilot
+            </DialogTitle>
+            <DialogDescription>
+              Selecione um template e processe o documento para obter sugestões e alertas
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Seleção de Template */}
+            <div className="space-y-2">
+              <Label htmlFor="template">Template de Formatação</Label>
+              <div className="flex gap-2">
+                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Escolha um template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  onClick={handleProcessDocument}
+                  disabled={isProcessing || !selectedTemplateId}
+                  className="min-w-[150px]"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Processar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Preview do Documento */}
+            <div className="space-y-2">
+              <Label>Documento Original</Label>
+              <Textarea
+                value={selectedDocument?.formatted_text || ''}
+                readOnly
+                rows={10}
+                className="font-mono text-sm resize-none"
+              />
+            </div>
+
+            {/* Resultados do Copilot */}
+            {copilotResult && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
+                  <Label>Texto Formatado</Label>
+                  <Textarea
+                    value={copilotResult.textoFormatado}
+                    readOnly
+                    rows={15}
+                    className="font-mono text-sm resize-none mt-2"
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <CopilotPanel
+                    sugestoes={copilotResult.sugestoes}
+                    alertas={copilotResult.alertas}
+                    documentoOriginal={selectedDocument?.formatted_text || ''}
+                    documentoFormatado={copilotResult.textoFormatado}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
