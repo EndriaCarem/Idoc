@@ -86,7 +86,7 @@ const Compartilhado = () => {
           shared_by_user_id: 'user-1',
           created_at: new Date().toISOString(),
           tag_emoji: '📄',
-          tag_name: 'Jurídico',
+          tag_name: 'relatório',
           document: {
             id: 'doc-1',
             name: 'Contrato de Prestação de Serviços - Revisado',
