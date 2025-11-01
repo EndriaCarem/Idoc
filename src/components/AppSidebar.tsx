@@ -1,5 +1,5 @@
-import { FileText, History, LayoutDashboard, FileStack, FolderOpen, Users } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { FileText, History, LayoutDashboard, FileStack, FolderOpen, Users, Settings, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -9,8 +9,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { Separator } from '@/components/ui/separator';
 
 const menuItems = [
   { title: 'Processar', url: '/', icon: FileText },
@@ -23,6 +27,17 @@ const menuItems = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Erro ao sair');
+      return;
+    }
+    toast.success('Você saiu com sucesso');
+    navigate('/auth');
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -55,6 +70,33 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter>
+        <Separator className="mb-2" />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Configurações">
+              <NavLink
+                to="/configuracoes"
+                className={({ isActive }) =>
+                  isActive
+                    ? 'bg-primary/10 text-primary font-medium'
+                    : 'hover:bg-accent transition-colors'
+                }
+              >
+                <Settings className="h-5 w-5 shrink-0" />
+                {open && <span className="ml-2">Configurações</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout} tooltip="Sair">
+              <LogOut className="h-5 w-5 shrink-0" />
+              {open && <span className="ml-2">Sair</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
