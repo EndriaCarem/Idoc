@@ -302,9 +302,6 @@ const Compartilhado = () => {
                     {/* Informações do documento */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {share.tag_emoji && (
-                          <span className="text-base sm:text-lg flex-shrink-0">{share.tag_emoji}</span>
-                        )}
                         <p className="font-semibold truncate text-sm sm:text-base">{share.document.name}</p>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap text-xs sm:text-sm">
@@ -318,14 +315,6 @@ const Compartilhado = () => {
                         <Badge variant="secondary" className="text-xs">
                           {share.document.template_name}
                         </Badge>
-                        {share.tag_name && (
-                          <>
-                            <span className="text-muted-foreground hidden sm:inline">•</span>
-                            <Badge variant="outline" className="text-xs">
-                              {share.tag_emoji} {share.tag_name}
-                            </Badge>
-                          </>
-                        )}
                         <span className="text-muted-foreground hidden sm:inline">•</span>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(share.created_at), "dd 'de' MMMM, yyyy", {
