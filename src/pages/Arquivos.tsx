@@ -438,15 +438,11 @@ const Arquivos = () => {
           <p className="text-muted-foreground mt-1">Gerencie seus documentos e arquivos</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none" variant="outline">
+          <Button onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none">
             <Upload className="mr-2 h-4 w-4" />
             Upload
           </Button>
-          <Button onClick={() => setShowNewTagDialog(true)} className="flex-1 sm:flex-none" variant="outline">
-            <Tag className="mr-2 h-4 w-4" />
-            Nova Etiqueta
-          </Button>
-          <Button onClick={() => setShowNewFolderDialog(true)} className="flex-1 sm:flex-none">
+          <Button onClick={() => setShowNewFolderDialog(true)} className="flex-1 sm:flex-none" variant="outline">
             <FolderPlus className="mr-2 h-4 w-4" />
             Nova Pasta
           </Button>
@@ -705,30 +701,40 @@ const Arquivos = () => {
           <DialogHeader>
             <DialogTitle>Compartilhar com Etiqueta</DialogTitle>
             <DialogDescription>
-              Escolha uma etiqueta e digite o nome ou email do usuário
+              Escolha uma etiqueta personalizada e compartilhe com um usuário
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="share-tag">Etiqueta (opcional)</Label>
-              <Select value={selectedTagId} onValueChange={setSelectedTagId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma etiqueta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tags.map((tag) => (
-                    <SelectItem key={tag.id} value={tag.id}>
-                      <span className="flex items-center gap-2">
-                        <span>{tag.emoji}</span>
-                        <span>{tag.name}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="share-tag">Selecione ou crie uma etiqueta</Label>
+              <div className="flex gap-2">
+                <Select value={selectedTagId} onValueChange={setSelectedTagId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Escolha uma etiqueta" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background">
+                    {tags.map((tag) => (
+                      <SelectItem key={tag.id} value={tag.id}>
+                        <span className="flex items-center gap-2">
+                          <span>{tag.emoji}</span>
+                          <span>{tag.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowNewTagDialog(true)}
+                  title="Nova etiqueta"
+                >
+                  <Tag className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="share-email">Nome ou Email</Label>
+              <Label htmlFor="share-email">Nome ou Email do destinatário</Label>
               <Input
                 id="share-email"
                 placeholder="Digite o nome ou email do usuário"
@@ -742,7 +748,10 @@ const Arquivos = () => {
             <Button variant="outline" onClick={() => setShowShareDialog(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleShareDocument}>Compartilhar</Button>
+            <Button onClick={handleShareDocument}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Compartilhar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
