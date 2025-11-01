@@ -406,6 +406,27 @@ const Arquivos = () => {
     setSelectedTagId('');
   };
 
+  const handleDeleteTag = async (tagId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    
+    const { error } = await supabase
+      .from('file_tags')
+      .delete()
+      .eq('id', tagId);
+
+    if (error) {
+      console.error('Erro ao excluir etiqueta:', error);
+      toast.error('Erro ao excluir etiqueta');
+      return;
+    }
+
+    toast.success('Etiqueta excluída!');
+    if (selectedTagId === tagId) {
+      setSelectedTagId('');
+    }
+    loadTags();
+  };
+
   const handleDownloadDocument = (doc: SavedDocument) => {
     const blob = new Blob([doc.formatted_text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -712,13 +733,23 @@ const Arquivos = () => {
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Escolha uma etiqueta" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background">
+                  <SelectContent className="bg-background z-50">
                     {tags.map((tag) => (
                       <SelectItem key={tag.id} value={tag.id}>
-                        <span className="flex items-center gap-2">
-                          <span>{tag.emoji}</span>
-                          <span>{tag.name}</span>
-                        </span>
+                        <div className="flex items-center justify-between w-full gap-4">
+                          <span className="flex items-center gap-2">
+                            <span>{tag.emoji}</span>
+                            <span>{tag.name}</span>
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
+                            onClick={(e) => handleDeleteTag(tag.id, e)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
