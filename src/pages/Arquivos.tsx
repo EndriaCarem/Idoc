@@ -27,7 +27,6 @@ interface FolderType {
 const Arquivos = () => {
   const [documents, setDocuments] = useState<SavedDocument[]>([]);
   const [folders, setFolders] = useState<FolderType[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -40,7 +39,7 @@ const Arquivos = () => {
   useEffect(() => {
     loadFolders();
     loadDocuments();
-  }, [selectedFolder]);
+  }, []);
 
   const loadFolders = async () => {
     const { data, error } = await supabase
@@ -59,18 +58,10 @@ const Arquivos = () => {
   };
 
   const loadDocuments = async () => {
-    let query = supabase
+    const { data, error } = await supabase
       .from('saved_documents')
       .select('*')
       .order('created_at', { ascending: false });
-
-    if (selectedFolder) {
-      query = query.eq('folder_id', selectedFolder);
-    } else {
-      query = query.is('folder_id', null);
-    }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao carregar documentos:', error);
@@ -240,47 +231,13 @@ const Arquivos = () => {
         <div className="lg:col-span-1">
           <Card className="bg-gradient-to-br from-background to-accent/5 border-2">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Folder className="h-4 w-4 text-primary" />
-                  Pastas
-                </CardTitle>
-                {selectedFolder && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFolder(null)}
-                    className="text-xs gap-1 h-7"
-                  >
-                    <ArrowLeft className="h-3 w-3" />
-                    Voltar
-                  </Button>
-                )}
-              </div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Folder className="h-4 w-4 text-primary" />
+                Pastas
+              </CardTitle>
             </CardHeader>
             <CardContent className="px-3 pb-3">
               <div className="space-y-2 max-h-[600px] overflow-y-auto overflow-x-visible pr-2">
-                  {/* Pasta "Todos os arquivos" */}
-                  <button
-                    className={`
-                      w-full text-left p-3 rounded-lg
-                      transition-all duration-300 ease-out
-                      flex items-center gap-3
-                      ${selectedFolder === null 
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-[1.02]' 
-                        : 'bg-muted hover:bg-muted/80 text-foreground'
-                      }
-                    `}
-                    onClick={() => setSelectedFolder(null)}
-                  >
-                    <Folder 
-                      className={`h-4 w-4 transition-transform duration-300 ${
-                        selectedFolder === null ? 'scale-110' : ''
-                      }`}
-                    />
-                    <span className="font-medium text-sm">Todos os Arquivos</span>
-                  </button>
-
                   {/* Pastas do usuário */}
                   {folders.map((folder, index) => {
                     const colors = [
@@ -292,27 +249,20 @@ const Arquivos = () => {
                       { from: 'from-indigo-500', to: 'to-indigo-600', text: 'text-white' },
                     ];
                     const color = colors[index % colors.length];
-                    const isSelected = selectedFolder === folder.id;
 
                     return (
-                      <button
+                      <div
                         key={folder.id}
                         className={`
-                          w-full text-left p-3 rounded-lg
-                          transition-all duration-300 ease-out
-                          flex items-center gap-3
+                          w-full text-left p-2.5 rounded-lg
+                          flex items-center gap-2.5
                           bg-gradient-to-r ${color.from} ${color.to} ${color.text}
-                          ${isSelected ? 'shadow-lg scale-[1.02]' : 'opacity-90 hover:opacity-100'}
+                          opacity-90
                         `}
-                        onClick={() => setSelectedFolder(folder.id)}
                       >
-                        <Folder 
-                          className={`h-4 w-4 transition-transform duration-300 ${
-                            isSelected ? 'scale-110' : ''
-                          }`}
-                        />
+                        <Folder className="h-4 w-4" />
                         <span className="font-medium text-sm truncate">{folder.name}</span>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -354,11 +304,7 @@ const Arquivos = () => {
           {/* Lista de documentos */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-2xl">
-                {selectedFolder 
-                  ? folders.find(f => f.id === selectedFolder)?.name 
-                  : 'Todos os Documentos'}
-              </CardTitle>
+              <CardTitle className="text-2xl">Todos os Documentos</CardTitle>
               <CardDescription className="text-base">
                 {documents.length} documento(s) encontrado(s)
               </CardDescription>
