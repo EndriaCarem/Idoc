@@ -283,13 +283,50 @@ Assinatura: Ana Paula Costa`,
     }
   };
 
-  const handleReviewWithCopilot = (doc: SharedDocument['document']) => {
+  const handleReviewWithCopilot = async (doc: SharedDocument['document']) => {
     setSelectedDocument(doc);
     // Garantir que o texto do documento seja carregado na área de edição
     setEditableText(doc.formatted_text || '');
     setCopilotResult(null);
     setShowReviewDialog(true);
     console.log('Documento carregado:', doc.name, 'Tamanho do texto:', doc.formatted_text?.length);
+    
+    // Processar automaticamente com IA
+    if (templates.length > 0 && doc.formatted_text) {
+      // Seleciona o primeiro template automaticamente
+      const firstTemplateId = templates[0].id;
+      setSelectedTemplateId(firstTemplateId);
+      
+      setIsProcessing(true);
+      
+      try {
+        toast.loading("📄 Processando documento com IA...", { id: "processing" });
+        
+        const result = await formatarComCopilot(doc.formatted_text, firstTemplateId);
+        
+        toast.dismiss("processing");
+        
+        if (result.alertas && result.alertas.length > 0) {
+          toast.warning(`⚠️ ${result.alertas.length} alertas encontrados`);
+        }
+        
+        if (result.sugestoes && result.sugestoes.length > 0) {
+          toast.info(`💡 ${result.sugestoes.length} sugestões de formatação`);
+        }
+        
+        setCopilotResult(result);
+        // Atualizar o texto editável com o resultado formatado
+        setEditableText(result.textoFormatado);
+        toast.success("✅ Documento revisado com sucesso!");
+      } catch (error) {
+        console.error('Erro ao processar documento:', error);
+        toast.error("❌ Erro ao processar documento");
+      } finally {
+        setIsProcessing(false);
+      }
+    } else if (templates.length === 0) {
+      toast.error('Nenhum template disponível para processamento');
+    }
   };
 
   const handleProcessDocument = async () => {
