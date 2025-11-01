@@ -235,7 +235,7 @@ const Arquivos = () => {
                 Pastas
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 max-h-[500px] overflow-y-auto">
               {/* Todos os Arquivos */}
               <button
                 onClick={() => setSelectedFolder(null)}
