@@ -736,20 +736,10 @@ const Arquivos = () => {
                   <SelectContent className="bg-background z-50">
                     {tags.map((tag) => (
                       <SelectItem key={tag.id} value={tag.id}>
-                        <div className="flex items-center justify-between w-full gap-4">
-                          <span className="flex items-center gap-2">
-                            <span>{tag.emoji}</span>
-                            <span>{tag.name}</span>
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 hover:bg-destructive/10 hover:text-destructive"
-                            onClick={(e) => handleDeleteTag(tag.id, e)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        <span className="flex items-center gap-2">
+                          <span>{tag.emoji}</span>
+                          <span>{tag.name}</span>
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -764,6 +754,36 @@ const Arquivos = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Lista de etiquetas existentes para gerenciar */}
+            {tags.length > 0 && (
+              <div className="space-y-2">
+                <Label>Gerenciar Etiquetas</Label>
+                <div className="max-h-32 overflow-y-auto border rounded-lg p-2 space-y-1">
+                  {tags.map((tag) => (
+                    <div
+                      key={tag.id}
+                      className="flex items-center justify-between p-2 rounded hover:bg-accent/50 transition-colors"
+                    >
+                      <span className="flex items-center gap-2 text-sm">
+                        <span>{tag.emoji}</span>
+                        <span>{tag.name}</span>
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => handleDeleteTag(tag.id, e)}
+                        title="Excluir etiqueta"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="share-email">Nome ou Email do destinatário</Label>
               <Input
