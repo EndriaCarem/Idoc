@@ -33,8 +33,6 @@ const CopilotPanel = ({
   const [isLoading, setIsLoading] = useState(false);
   const [alertasOpen, setAlertasOpen] = useState(true);
   const [sugestoesOpen, setSugestoesOpen] = useState(true);
-  const [typingText, setTypingText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -42,25 +40,7 @@ const CopilotPanel = ({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, typingText]);
-
-  const typeMessage = (text: string) => {
-    setIsTyping(true);
-    setTypingText("");
-    let index = 0;
-    
-    const interval = setInterval(() => {
-      if (index < text.length) {
-        setTypingText(prev => prev + text[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-        setIsTyping(false);
-        setMessages(prev => [...prev, { role: "assistant", content: text }]);
-        setTypingText("");
-      }
-    }, 20);
-  };
+  }, [messages, isLoading]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -83,7 +63,11 @@ const CopilotPanel = ({
 
       if (error) throw error;
 
-      typeMessage(data.response);
+      const assistantMessage: Message = { 
+        role: "assistant", 
+        content: data.response 
+      };
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Erro no chat:', error);
       toast({
@@ -219,13 +203,17 @@ const CopilotPanel = ({
                         <p className="whitespace-pre-wrap">{msg.content}</p>
                       </div>
                     ))}
-                    {isTyping && (
+                    {isLoading && (
                       <div className="p-3 rounded-lg text-sm bg-muted mr-4">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2">
                           <Bot className="w-3.5 h-3.5 text-primary animate-pulse" />
-                          <p className="font-semibold text-xs">Copiloto</p>
+                          <p className="font-semibold text-xs">Copiloto está pensando...</p>
+                          <div className="flex gap-1 ml-2">
+                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                          </div>
                         </div>
-                        <p className="whitespace-pre-wrap">{typingText}<span className="animate-pulse">▊</span></p>
                       </div>
                     )}
                   </div>
