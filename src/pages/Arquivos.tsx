@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,10 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
 interface SavedDocument {
   id: string;
@@ -26,16 +29,43 @@ interface FolderType {
   created_at: string;
 }
 
+interface UploadedFile {
+  id: string;
+  name: string;
+  file_path: string;
+  file_size: number;
+  file_type: string;
+  created_at: string;
+  folder_id: string | null;
+}
+
+interface FileTag {
+  id: string;
+  name: string;
+  emoji: string;
+}
+
 const Arquivos = () => {
   const [documents, setDocuments] = useState<SavedDocument[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [folders, setFolders] = useState<FolderType[]>([]);
+  const [tags, setTags] = useState<FileTag[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [showNewTagDialog, setShowNewTagDialog] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [selectedTagId, setSelectedTagId] = useState<string>('');
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagEmoji, setNewTagEmoji] = useState('📄');
+  const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadData();
@@ -43,7 +73,7 @@ const Arquivos = () => {
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([loadFolders(), loadDocuments()]);
+    await Promise.all([loadFolders(), loadDocuments(), loadUploadedFiles(), loadTags()]);
     setLoading(false);
   };
 
@@ -84,6 +114,179 @@ const Arquivos = () => {
     }
 
     setDocuments(data || []);
+  };
+
+  const loadUploadedFiles = async () => {
+    let query = supabase
+      .from('uploaded_files')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (selectedFolder) {
+      query = query.eq('folder_id', selectedFolder);
+    } else {
+      query = query.is('folder_id', null);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Erro ao carregar arquivos:', error);
+      toast.error('Erro ao carregar arquivos');
+      return;
+    }
+
+    setUploadedFiles(data || []);
+  };
+
+  const loadTags = async () => {
+    const { data, error } = await supabase
+      .from('file_tags')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao carregar etiquetas:', error);
+      return;
+    }
+
+    setTags(data || []);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadingFile(file);
+      setShowUploadDialog(true);
+    }
+  };
+
+  const handleUploadFile = async () => {
+    if (!uploadingFile) {
+      toast.error('Selecione um arquivo');
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Você precisa estar autenticado');
+      return;
+    }
+
+    try {
+      toast.loading('Enviando arquivo...', { id: 'upload' });
+
+      // Upload to storage
+      const filePath = `${user.id}/${Date.now()}_${uploadingFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('user-files')
+        .upload(filePath, uploadingFile);
+
+      if (uploadError) throw uploadError;
+
+      // Save metadata to database
+      const { error: dbError } = await supabase
+        .from('uploaded_files')
+        .insert({
+          user_id: user.id,
+          name: uploadingFile.name,
+          file_path: filePath,
+          file_size: uploadingFile.size,
+          file_type: uploadingFile.type,
+          folder_id: selectedFolder,
+        });
+
+      if (dbError) throw dbError;
+
+      toast.dismiss('upload');
+      toast.success('Arquivo enviado com sucesso!');
+      setShowUploadDialog(false);
+      setUploadingFile(null);
+      loadUploadedFiles();
+    } catch (error) {
+      console.error('Erro ao enviar arquivo:', error);
+      toast.dismiss('upload');
+      toast.error('Erro ao enviar arquivo');
+    }
+  };
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) {
+      toast.error('Digite um nome para a etiqueta');
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Você precisa estar autenticado');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('file_tags')
+      .insert({
+        name: newTagName.trim(),
+        emoji: newTagEmoji,
+        user_id: user.id,
+      });
+
+    if (error) {
+      console.error('Erro ao criar etiqueta:', error);
+      toast.error('Erro ao criar etiqueta');
+      return;
+    }
+
+    toast.success('Etiqueta criada com sucesso!');
+    setNewTagName('');
+    setNewTagEmoji('📄');
+    setShowNewTagDialog(false);
+    loadTags();
+  };
+
+  const handleDeleteFile = async (fileId: string, filePath: string) => {
+    // Delete from storage
+    const { error: storageError } = await supabase.storage
+      .from('user-files')
+      .remove([filePath]);
+
+    if (storageError) {
+      console.error('Erro ao excluir arquivo do storage:', storageError);
+    }
+
+    // Delete from database
+    const { error: dbError } = await supabase
+      .from('uploaded_files')
+      .delete()
+      .eq('id', fileId);
+
+    if (dbError) {
+      console.error('Erro ao excluir arquivo:', dbError);
+      toast.error('Erro ao excluir arquivo');
+      return;
+    }
+
+    toast.success('Arquivo excluído!');
+    loadUploadedFiles();
+  };
+
+  const handleDownloadFile = async (file: UploadedFile) => {
+    const { data, error } = await supabase.storage
+      .from('user-files')
+      .download(file.file_path);
+
+    if (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      toast.error('Erro ao baixar arquivo');
+      return;
+    }
+
+    const url = URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Download iniciado!');
   };
 
   const handleCreateFolder = async () => {
@@ -134,7 +337,7 @@ const Arquivos = () => {
   };
 
   const handleShareDocument = async () => {
-    if (!shareEmail.trim() || !selectedDocId) {
+    if (!shareEmail.trim()) {
       toast.error('Digite um email válido');
       return;
     }
@@ -153,25 +356,54 @@ const Arquivos = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
-      .from('shared_documents')
-      .insert({
-        document_id: selectedDocId,
-        shared_by_user_id: user.id,
-        shared_with_user_id: profiles[0].user_id,
-        permission: 'view',
-      });
+    const selectedTag = tags.find(t => t.id === selectedTagId);
 
-    if (error) {
-      console.error('Erro ao compartilhar:', error);
-      toast.error('Erro ao compartilhar documento');
-      return;
+    if (selectedDocId) {
+      // Share document
+      const { error } = await supabase
+        .from('shared_documents')
+        .insert({
+          document_id: selectedDocId,
+          shared_by_user_id: user.id,
+          shared_with_user_id: profiles[0].user_id,
+          permission: 'view',
+          tag_id: selectedTagId || null,
+          tag_name: selectedTag?.name,
+          tag_emoji: selectedTag?.emoji,
+        });
+
+      if (error) {
+        console.error('Erro ao compartilhar:', error);
+        toast.error('Erro ao compartilhar documento');
+        return;
+      }
+    } else if (selectedFileId) {
+      // Share file
+      const { error } = await supabase
+        .from('file_shares')
+        .insert({
+          file_id: selectedFileId,
+          shared_by_user_id: user.id,
+          shared_with_user_id: profiles[0].user_id,
+          permission: 'view',
+          tag_id: selectedTagId || null,
+          tag_name: selectedTag?.name,
+          tag_emoji: selectedTag?.emoji,
+        });
+
+      if (error) {
+        console.error('Erro ao compartilhar:', error);
+        toast.error('Erro ao compartilhar arquivo');
+        return;
+      }
     }
 
-    toast.success('Documento compartilhado com sucesso!');
+    toast.success('Compartilhado com sucesso!');
     setShowShareDialog(false);
     setShareEmail('');
     setSelectedDocId(null);
+    setSelectedFileId(null);
+    setSelectedTagId('');
   };
 
   const handleDownloadDocument = (doc: SavedDocument) => {
@@ -203,13 +435,30 @@ const Arquivos = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Meus Arquivos</h1>
-          <p className="text-muted-foreground mt-1">Gerencie seus documentos formatados</p>
+          <p className="text-muted-foreground mt-1">Gerencie seus documentos e arquivos</p>
         </div>
-        <Button onClick={() => setShowNewFolderDialog(true)} className="w-full sm:w-auto">
-          <FolderPlus className="mr-2 h-4 w-4" />
-          Nova Pasta
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button onClick={() => fileInputRef.current?.click()} className="flex-1 sm:flex-none" variant="outline">
+            <Upload className="mr-2 h-4 w-4" />
+            Upload
+          </Button>
+          <Button onClick={() => setShowNewTagDialog(true)} className="flex-1 sm:flex-none" variant="outline">
+            <Tag className="mr-2 h-4 w-4" />
+            Nova Etiqueta
+          </Button>
+          <Button onClick={() => setShowNewFolderDialog(true)} className="flex-1 sm:flex-none">
+            <FolderPlus className="mr-2 h-4 w-4" />
+            Nova Pasta
+          </Button>
+        </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
 
       {/* Breadcrumb */}
       {currentFolderName && (
@@ -290,16 +539,72 @@ const Arquivos = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {documents.length === 0 ? (
+              {documents.length === 0 && uploadedFiles.length === 0 ? (
                 <div className="text-center py-16">
                   <File className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground text-lg">Nenhum documento nesta pasta</p>
+                  <p className="text-muted-foreground text-lg">Nenhum arquivo nesta pasta</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Comece processando um documento na página inicial
+                    Comece fazendo upload de arquivos ou processando documentos
                   </p>
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {uploadedFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-all"
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                            <File className="h-5 w-5 text-blue-500" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold truncate">{file.name}</p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant="outline" className="text-xs">
+                              Arquivo
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(file.created_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDownloadFile(file)}
+                          title="Baixar"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedFileId(file.id);
+                            setShowShareDialog(true);
+                          }}
+                          title="Compartilhar"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteFile(file.id, file.file_path)}
+                          title="Excluir"
+                          className="hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                   {documents.map((doc) => (
                     <div
                       key={doc.id}
@@ -398,12 +703,30 @@ const Arquivos = () => {
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Compartilhar Documento</DialogTitle>
+            <DialogTitle>Compartilhar com Etiqueta</DialogTitle>
             <DialogDescription>
-              Digite o nome ou email do usuário para compartilhar
+              Escolha uma etiqueta e digite o nome ou email do usuário
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="share-tag">Etiqueta (opcional)</Label>
+              <Select value={selectedTagId} onValueChange={setSelectedTagId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma etiqueta" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tags.map((tag) => (
+                    <SelectItem key={tag.id} value={tag.id}>
+                      <span className="flex items-center gap-2">
+                        <span>{tag.emoji}</span>
+                        <span>{tag.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="share-email">Nome ou Email</Label>
               <Input
@@ -412,7 +735,6 @@ const Arquivos = () => {
                 value={shareEmail}
                 onChange={(e) => setShareEmail(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleShareDocument()}
-                autoFocus
               />
             </div>
           </div>
@@ -421,6 +743,97 @@ const Arquivos = () => {
               Cancelar
             </Button>
             <Button onClick={handleShareDocument}>Compartilhar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Upload */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload de Arquivo</DialogTitle>
+            <DialogDescription>
+              Confirme o upload do arquivo selecionado
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {uploadingFile && (
+              <div className="p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <File className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="font-medium">{uploadingFile.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(uploadingFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUploadFile}>
+              <Upload className="mr-2 h-4 w-4" />
+              Enviar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Nova Etiqueta */}
+      <Dialog open={showNewTagDialog} onOpenChange={setShowNewTagDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar Nova Etiqueta</DialogTitle>
+            <DialogDescription>
+              Escolha um emoji e digite um nome para a etiqueta
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Emoji da Etiqueta</Label>
+              <div className="flex flex-wrap gap-2">
+                {COMMON_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => setNewTagEmoji(emoji)}
+                    className={`
+                      w-12 h-12 text-2xl rounded-lg border-2 transition-all
+                      hover:scale-110
+                      ${newTagEmoji === emoji
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50'
+                      }
+                    `}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tag-name">Nome da Etiqueta</Label>
+              <Input
+                id="tag-name"
+                placeholder="Ex: Relatórios"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewTagDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateTag}>
+              <Tag className="mr-2 h-4 w-4" />
+              Criar Etiqueta
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

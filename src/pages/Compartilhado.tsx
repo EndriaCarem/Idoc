@@ -21,6 +21,8 @@ interface SharedDocument {
   document_id: string;
   shared_by_user_id: string;
   created_at: string;
+  tag_name?: string;
+  tag_emoji?: string;
   document: {
     id: string;
     name: string;
@@ -268,41 +270,52 @@ const Compartilhado = () => {
                   key={share.id}
                   className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-all"
                 >
-                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                    {/* Avatar do usuário que compartilhou */}
-                    <Avatar className="h-10 w-10 border-2 border-primary/20">
-                      <AvatarImage src={share.shared_by.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {share.shared_by.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        {/* Avatar do usuário que compartilhou */}
+                        <Avatar className="h-10 w-10 border-2 border-primary/20">
+                          <AvatarImage src={share.shared_by.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            {share.shared_by.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
 
-                    {/* Informações do documento */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FileText className="h-4 w-4 text-primary flex-shrink-0" />
-                        <p className="font-semibold truncate">{share.document.name}</p>
+                        {/* Informações do documento */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            {share.tag_emoji && (
+                              <span className="text-lg">{share.tag_emoji}</span>
+                            )}
+                            <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                            <p className="font-semibold truncate">{share.document.name}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm text-muted-foreground">
+                              Compartilhado por{' '}
+                              <span className="font-medium text-foreground">
+                                {share.shared_by.full_name}
+                              </span>
+                            </p>
+                            <span className="text-muted-foreground">•</span>
+                            <Badge variant="secondary" className="text-xs">
+                              {share.document.template_name}
+                            </Badge>
+                            {share.tag_name && (
+                              <>
+                                <span className="text-muted-foreground">•</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {share.tag_emoji} {share.tag_name}
+                                </Badge>
+                              </>
+                            )}
+                            <span className="text-muted-foreground">•</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(share.created_at), "dd 'de' MMMM, yyyy", {
+                                locale: ptBR,
+                              })}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm text-muted-foreground">
-                          Compartilhado por{' '}
-                          <span className="font-medium text-foreground">
-                            {share.shared_by.full_name}
-                          </span>
-                        </p>
-                        <span className="text-muted-foreground">•</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {share.document.template_name}
-                        </Badge>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(share.created_at), "dd 'de' MMMM, yyyy", {
-                            locale: ptBR,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Ações */}
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

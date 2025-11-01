@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      file_shares: {
+        Row: {
+          created_at: string
+          file_id: string
+          id: string
+          permission: string | null
+          shared_by_user_id: string
+          shared_with_user_id: string
+          tag_emoji: string | null
+          tag_id: string | null
+          tag_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          id?: string
+          permission?: string | null
+          shared_by_user_id: string
+          shared_with_user_id: string
+          tag_emoji?: string | null
+          tag_id?: string | null
+          tag_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          id?: string
+          permission?: string | null
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+          tag_emoji?: string | null
+          tag_id?: string | null
+          tag_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_shares_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "uploaded_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "file_shares_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "file_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      file_tags: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       folders: {
         Row: {
           created_at: string
@@ -179,6 +254,9 @@ export type Database = {
           permission: string | null
           shared_by_user_id: string
           shared_with_user_id: string
+          tag_emoji: string | null
+          tag_id: string | null
+          tag_name: string | null
         }
         Insert: {
           created_at?: string
@@ -187,6 +265,9 @@ export type Database = {
           permission?: string | null
           shared_by_user_id: string
           shared_with_user_id: string
+          tag_emoji?: string | null
+          tag_id?: string | null
+          tag_name?: string | null
         }
         Update: {
           created_at?: string
@@ -195,6 +276,9 @@ export type Database = {
           permission?: string | null
           shared_by_user_id?: string
           shared_with_user_id?: string
+          tag_emoji?: string | null
+          tag_id?: string | null
+          tag_name?: string | null
         }
         Relationships: [
           {
@@ -202,6 +286,13 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "saved_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shared_documents_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "file_tags"
             referencedColumns: ["id"]
           },
         ]
@@ -267,6 +358,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      uploaded_files: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number
+          file_type: string
+          folder_id: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size: number
+          file_type: string
+          folder_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          folder_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uploaded_files_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
