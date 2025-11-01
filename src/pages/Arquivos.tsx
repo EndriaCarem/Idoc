@@ -258,9 +258,9 @@ const Arquivos = () => {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="pr-0">
-              <ScrollArea className="h-[600px] pr-4">
-                <div className="space-y-3 relative">
+            <CardContent className="pr-0 overflow-visible">
+              <div className="h-[600px] pr-4 overflow-visible">
+                <div className="space-y-3 relative overflow-visible">
                   {/* Pasta "Todos os arquivos" */}
                   <div
                     className={`
@@ -373,7 +373,7 @@ const Arquivos = () => {
                     );
                   })}
                 </div>
-              </ScrollArea>
+              </div>
             </CardContent>
           </Card>
         </div>
