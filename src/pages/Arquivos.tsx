@@ -266,8 +266,8 @@ const Arquivos = () => {
                     className={`
                       relative group cursor-pointer
                       transition-all duration-700 ease-out
-                      hover:translate-x-3
-                      ${selectedFolder === null ? 'translate-x-8 animate-scale-in' : 'translate-x-0'}
+                      hover:translate-x-3 hover:-translate-y-1
+                      ${selectedFolder === null ? 'translate-x-8 -translate-y-3 z-50' : 'translate-x-0 translate-y-0 z-10'}
                     `}
                     onClick={() => setSelectedFolder(null)}
                   >
@@ -326,8 +326,8 @@ const Arquivos = () => {
                         className={`
                           relative group cursor-pointer
                           transition-all duration-700 ease-out
-                          hover:translate-x-3
-                          ${isSelected ? 'translate-x-8 animate-scale-in' : 'translate-x-0'}
+                          hover:translate-x-3 hover:-translate-y-1
+                          ${isSelected ? 'translate-x-8 -translate-y-3 z-50' : 'translate-x-0 translate-y-0 z-10'}
                         `}
                         onClick={() => setSelectedFolder(folder.id)}
                       >
