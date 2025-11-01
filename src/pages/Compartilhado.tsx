@@ -69,14 +69,14 @@ const Compartilhado = () => {
 
       // Dados fictícios para demonstração com nomes variados
       const randomNames = [
-        { name: 'Dr. Carlos Silva', avatar: 'https://i.pravatar.cc/150?img=12' },
+        { name: 'Mauricio Gomes', avatar: 'https://i.pravatar.cc/150?img=12' },
         { name: 'Ana Paula Costa', avatar: 'https://i.pravatar.cc/150?img=47' },
         { name: 'Roberto Mendes', avatar: 'https://i.pravatar.cc/150?img=33' },
         { name: 'Mariana Santos', avatar: 'https://i.pravatar.cc/150?img=25' },
         { name: 'João Pedro Oliveira', avatar: 'https://i.pravatar.cc/150?img=68' },
       ];
 
-      const randomPerson1 = randomNames[Math.floor(Math.random() * randomNames.length)];
+      // Usar o primeiro nome (Mauricio Gomes) para o primeiro documento
       const randomPerson2 = randomNames[Math.floor(Math.random() * randomNames.length)];
 
       const mockData: SharedDocument[] = [
@@ -95,8 +95,8 @@ const Compartilhado = () => {
             created_at: new Date().toISOString(),
           },
           shared_by: {
-            full_name: randomPerson1.name,
-            avatar_url: randomPerson1.avatar,
+            full_name: randomNames[0].name,
+            avatar_url: randomNames[0].avatar,
           },
         },
         {
