@@ -22,6 +22,7 @@ interface SavedDocument {
   id: string;
   name: string;
   formatted_text: string;
+  original_text?: string;
   template_name: string;
   created_at: string;
   folder_id: string | null;
@@ -590,70 +591,76 @@ const Arquivos = () => {
     try {
       console.log('selectedDocForAction:', selectedDocForAction);
       
-      // Se temos formatted_text, é um documento processado
-      if (selectedDocForAction.formatted_text) {
-        console.log('Tipo: documento processado');
-        sessionStorage.setItem('copilot_doc', JSON.stringify({
-          type: 'processed',
-          id: selectedDocForAction.id
-        }));
-        window.location.href = '/';
-      } else {
-        console.log('Tipo: arquivo carregado');
-        // É um arquivo de uploaded_files, precisamos baixar o conteúdo
-        const fileToProcess = uploadedFiles.find(f => f.id === selectedDocForAction.id);
-        console.log('Arquivo encontrado:', fileToProcess);
+      // Verificar se é um documento salvo (tem formatted_text)
+      if ('formatted_text' in selectedDocForAction && selectedDocForAction.formatted_text) {
+        console.log('Tipo: documento salvo (saved_documents)');
         
-        if (!fileToProcess) {
-          toast.error('Arquivo não encontrado');
-          return;
-        }
-
-        toast.loading('Carregando arquivo...', { id: 'loading' });
-
-        // Baixar o conteúdo do arquivo
-        const { data, error } = await supabase.storage
-          .from('user-files')
-          .download(fileToProcess.file_path);
-
-        console.log('Download result:', { data, error });
-
-        if (error || !data) {
-          toast.dismiss('loading');
-          toast.error('Erro ao carregar arquivo');
-          return;
-        }
-
-        // Ler o conteúdo
-        let content = '';
-        if (fileToProcess.file_type === 'text/plain') {
-          content = await data.text();
-        } else if (fileToProcess.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-          const mammoth = (await import('mammoth')).default;
-          const arrayBuffer = await data.arrayBuffer();
-          const result = await mammoth.extractRawText({ arrayBuffer });
-          content = result.value;
-        } else {
-          toast.dismiss('loading');
-          toast.error('Tipo de arquivo não suportado para análise');
-          return;
-        }
-
-        console.log('Conteúdo lido:', content.substring(0, 100));
-        toast.dismiss('loading');
-
-        // Salvar no sessionStorage
+        // Para documentos salvos, passamos o texto diretamente
         const dataToStore = {
           type: 'file',
-          content: content,
-          filename: fileToProcess.name
+          content: selectedDocForAction.original_text || selectedDocForAction.formatted_text,
+          filename: selectedDocForAction.name
         };
         console.log('Salvando no sessionStorage:', dataToStore);
         sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
-
-        // Redirecionar
         window.location.href = '/';
+        return;
       }
+      
+      // Se não tem formatted_text, é um arquivo de uploaded_files
+      console.log('Tipo: arquivo carregado (uploaded_files)');
+      const fileToProcess = uploadedFiles.find(f => f.id === selectedDocForAction.id);
+      console.log('Arquivo encontrado:', fileToProcess);
+      
+      if (!fileToProcess) {
+        toast.error('Arquivo não encontrado');
+        return;
+      }
+
+      toast.loading('Carregando arquivo...', { id: 'loading' });
+
+      // Baixar o conteúdo do arquivo
+      const { data, error } = await supabase.storage
+        .from('user-files')
+        .download(fileToProcess.file_path);
+
+      console.log('Download result:', { data, error });
+
+      if (error || !data) {
+        toast.dismiss('loading');
+        toast.error('Erro ao carregar arquivo');
+        return;
+      }
+
+      // Ler o conteúdo
+      let content = '';
+      if (fileToProcess.file_type === 'text/plain') {
+        content = await data.text();
+      } else if (fileToProcess.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        const mammoth = (await import('mammoth')).default;
+        const arrayBuffer = await data.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        content = result.value;
+      } else {
+        toast.dismiss('loading');
+        toast.error('Tipo de arquivo não suportado para análise');
+        return;
+      }
+
+      console.log('Conteúdo lido:', content.substring(0, 100));
+      toast.dismiss('loading');
+
+      // Salvar no sessionStorage
+      const dataToStore = {
+        type: 'file',
+        content: content,
+        filename: fileToProcess.name
+      };
+      console.log('Salvando no sessionStorage:', dataToStore);
+      sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
+
+      // Redirecionar
+      window.location.href = '/';
     } catch (error) {
       console.error('Erro ao enviar para copilot:', error);
       toast.error('Erro ao processar arquivo');
