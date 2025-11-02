@@ -786,10 +786,46 @@ const Arquivos = () => {
                       </div>
                       
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {file.file_type === 'text/plain' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              // Baixar e mostrar o conteúdo do arquivo texto
+                              const { data, error } = await supabase.storage
+                                .from('user-files')
+                                .download(file.file_path);
+                              
+                              if (error) {
+                                toast.error('Erro ao carregar arquivo');
+                                return;
+                              }
+                              
+                              const text = await data.text();
+                              setEditedDocumentContent(text);
+                              setSelectedDocForAction({ 
+                                id: file.id, 
+                                name: file.name,
+                                formatted_text: text,
+                                template_name: 'Arquivo de Texto',
+                                created_at: file.created_at,
+                                folder_id: file.folder_id
+                              } as SavedDocument);
+                              setShowDocumentViewDialog(true);
+                            }}
+                            title="Visualizar/Editar"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDownloadFile(file)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadFile(file);
+                          }}
                           title="Baixar"
                         >
                           <Download className="h-4 w-4" />
@@ -797,7 +833,8 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedFileId(file.id);
                             setShowShareDialog(true);
                           }}
@@ -808,7 +845,10 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteFile(file.id, file.file_path)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFile(file.id, file.file_path);
+                          }}
                           title="Excluir"
                           className="hover:bg-destructive/10 hover:text-destructive"
                         >
