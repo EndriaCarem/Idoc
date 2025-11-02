@@ -37,10 +37,15 @@ const Index = () => {
         
         if (data.type === 'processed') {
           console.log('Carregando documento processado:', data.id);
-          loadDocumentFromId(data.id);
+          loadDocumentFromId(data.id, data.document_group_id);
         } else if (data.type === 'file') {
           console.log('Carregando arquivo:', data.filename);
-          loadFromFileContent(data.content, data.filename);
+          // Se templateId foi fornecido, usar ele; senão buscar o mais recente
+          if (data.templateId && data.templateName) {
+            loadFromFileContent(data.content, data.filename, data.document_group_id, data.templateId, data.templateName);
+          } else {
+            loadFromFileContent(data.content, data.filename, data.document_group_id);
+          }
         }
       } catch (error) {
         console.error('Erro ao processar dados do copilot:', error);
@@ -50,9 +55,20 @@ const Index = () => {
     }
   }, []);
 
-  const loadFromFileContent = async (content: string, filename: string) => {
+  const loadFromFileContent = async (content: string, filename: string, documentGroupId?: string, templateId?: string, templateName?: string) => {
     try {
-      // Buscar o primeiro template disponível
+      // Se templateId foi fornecido, usar ele
+      if (templateId && templateName) {
+        setOriginalText(content);
+        setEditableText(content);
+        setOriginalFilename(filename);
+        setSelectedTemplateId(templateId);
+        
+        handleFileUpload(content, templateId, templateName, filename, documentGroupId);
+        return;
+      }
+
+      // Senão buscar o primeiro template disponível
       const { data: templates } = await supabase
         .from('templates')
         .select('id, name')
@@ -67,7 +83,7 @@ const Index = () => {
         setSelectedTemplateId(template.id);
         
         // Processar automaticamente (isProcessing já está true do useEffect)
-        handleFileUpload(content, template.id, template.name, filename);
+        handleFileUpload(content, template.id, template.name, filename, documentGroupId);
       } else {
         toast.error('Nenhum template disponível. Crie um template primeiro.');
         setIsProcessing(false);
@@ -79,7 +95,7 @@ const Index = () => {
     }
   };
 
-  const loadDocumentFromId = async (docId: string) => {
+  const loadDocumentFromId = async (docId: string, documentGroupId?: string) => {
     try {
       console.log('Buscando documento saved_documents id:', docId);
       
@@ -170,7 +186,7 @@ const Index = () => {
     }
   };
 
-  const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string) => {
+  const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string, documentGroupId?: string) => {
     // Não setar estados de documento aqui pois já foram setados antes
     // Apenas garantir que isProcessing está true
     if (!isProcessing) {
@@ -212,15 +228,24 @@ const Index = () => {
       const sanitizedOriginalText = text.replace(/\0/g, '').trim();
       const sanitizedFormattedText = result.textoFormatado.replace(/\0/g, '').trim();
       
+      // Buscar user_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+      
       const { error } = await supabase
         .from('processed_documents')
         .insert({
           template_name: templateName,
-          original_filename: originalFilename,
+          original_filename: filename,
           original_text: sanitizedOriginalText,
           formatted_text: sanitizedFormattedText,
           alerts_count: result.alertas.length,
           suggestions_count: result.sugestoes.length,
+          user_id: user.id,
+          document_group_id: documentGroupId || undefined, // Se houver group_id, usa; senão será criado automaticamente
         });
       
       toast.dismiss("saving");

@@ -89,12 +89,35 @@ const Arquivos = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [isEditingDocName, setIsEditingDocName] = useState(false);
   const [editedDocName, setEditedDocName] = useState('');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplateForCopilot, setSelectedTemplateForCopilot] = useState<string>('');
+  const [availableTemplates, setAvailableTemplates] = useState<Array<{id: string, name: string}>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     loadData();
+    loadTemplates();
   }, [selectedFolder]);
+
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('id, name')
+        .order('created_at', { ascending: false});
+
+      if (error) throw error;
+      setAvailableTemplates(data || []);
+      
+      // Selecionar o template mais recente por padrão
+      if (data && data.length > 0) {
+        setSelectedTemplateForCopilot(data[0].id);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar templates:', error);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -590,7 +613,15 @@ const Arquivos = () => {
   const handleSendToCopilot = async () => {
     if (!selectedDocForAction) return;
     
+    // Mostrar seletor de template
+    setShowTemplateSelector(true);
+  };
+
+  const confirmSendToCopilot = async () => {
+    if (!selectedDocForAction || !selectedTemplateForCopilot) return;
+    
     try {
+      setShowTemplateSelector(false);
       setIsProcessingCopilot(true);
       console.log('selectedDocForAction:', selectedDocForAction);
       
@@ -601,11 +632,16 @@ const Arquivos = () => {
         // Aguarda um pouco para mostrar a animação
         await new Promise(resolve => setTimeout(resolve, 800));
         
+        // Buscar nome do template selecionado
+        const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
+        
         // Para documentos salvos, passamos o texto diretamente
         const dataToStore = {
           type: 'file',
           content: selectedDocForAction.original_text || selectedDocForAction.formatted_text,
-          filename: selectedDocForAction.name
+          filename: selectedDocForAction.name,
+          templateId: selectedTemplateForCopilot,
+          templateName: selectedTemplate?.name
         };
         console.log('Salvando no sessionStorage:', dataToStore);
         sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
@@ -657,11 +693,16 @@ const Arquivos = () => {
       // Aguarda um pouco para mostrar a animação
       await new Promise(resolve => setTimeout(resolve, 800));
 
+      // Buscar nome do template selecionado
+      const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
+
       // Salvar no sessionStorage
       const dataToStore = {
         type: 'file',
         content: content,
-        filename: fileToProcess.name
+        filename: fileToProcess.name,
+        templateId: selectedTemplateForCopilot,
+        templateName: selectedTemplate?.name
       };
       console.log('Salvando no sessionStorage:', dataToStore);
       sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
@@ -1697,6 +1738,44 @@ const Arquivos = () => {
             <Button onClick={handleSaveDocument}>
               <Edit className="mr-2 h-4 w-4" />
               Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de seleção de template */}
+      <Dialog open={showTemplateSelector} onOpenChange={setShowTemplateSelector}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Selecionar Template</DialogTitle>
+            <DialogDescription>
+              Escolha qual template será usado para analisar o documento
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="template-select">Template</Label>
+              <Select value={selectedTemplateForCopilot} onValueChange={setSelectedTemplateForCopilot}>
+                <SelectTrigger id="template-select">
+                  <SelectValue placeholder="Selecione um template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTemplates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTemplateSelector(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmSendToCopilot}>
+              <Bot className="mr-2 h-4 w-4" />
+              Analisar
             </Button>
           </DialogFooter>
         </DialogContent>
