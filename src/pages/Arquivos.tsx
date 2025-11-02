@@ -794,7 +794,12 @@ const Arquivos = () => {
                   {documents.map((doc) => (
                     <div
                       key={doc.id}
-                      className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-all"
+                      className="group flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer"
+                      onClick={() => {
+                        setSelectedDocForAction(doc);
+                        setEditedDocumentContent(doc.formatted_text);
+                        setShowDocumentViewDialog(true);
+                      }}
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="flex-shrink-0">
@@ -819,19 +824,10 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
-                            setSelectedDocForAction(doc);
-                            setEditedDocumentContent(doc.formatted_text);
-                            setShowDocumentViewDialog(true);
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadDocument(doc);
                           }}
-                          title="Visualizar/Editar"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownloadDocument(doc)}
                           title="Baixar"
                         >
                           <Download className="h-4 w-4" />
@@ -839,7 +835,8 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedDocId(doc.id);
                             setShowShareDialog(true);
                           }}
@@ -850,7 +847,10 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteDocument(doc.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteDocument(doc.id);
+                          }}
                           title="Excluir"
                           className="hover:bg-destructive/10 hover:text-destructive"
                         >
