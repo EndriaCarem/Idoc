@@ -8,12 +8,13 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile, MoreVertical, Palette } from 'lucide-react';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile, MoreVertical, Palette, Eye, Bot } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Textarea } from '@/components/ui/textarea';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -63,6 +64,7 @@ const Arquivos = () => {
   const [showRenameFolderDialog, setShowRenameFolderDialog] = useState(false);
   const [showColorPickerDialog, setShowColorPickerDialog] = useState(false);
   const [showDeleteFolderDialog, setShowDeleteFolderDialog] = useState(false);
+  const [showDocumentViewDialog, setShowDocumentViewDialog] = useState(false);
   const [deleteFolderConfirmName, setDeleteFolderConfirmName] = useState('');
   const [showFolderActionsSheet, setShowFolderActionsSheet] = useState(false);
   const [showFileActionsSheet, setShowFileActionsSheet] = useState(false);
@@ -70,6 +72,7 @@ const Arquivos = () => {
   const [selectedFolderForAction, setSelectedFolderForAction] = useState<FolderType | null>(null);
   const [selectedFileForAction, setSelectedFileForAction] = useState<UploadedFile | null>(null);
   const [selectedDocForAction, setSelectedDocForAction] = useState<SavedDocument | null>(null);
+  const [editedDocumentContent, setEditedDocumentContent] = useState('');
   const [newFolderName, setNewFolderName] = useState('');
   const [renameFolderName, setRenameFolderName] = useState('');
   const [shareEmail, setShareEmail] = useState('');
@@ -516,6 +519,32 @@ const Arquivos = () => {
     loadTags();
   };
 
+  const handleSaveDocument = async () => {
+    if (!selectedDocForAction) return;
+
+    const { error } = await supabase
+      .from('saved_documents')
+      .update({ formatted_text: editedDocumentContent })
+      .eq('id', selectedDocForAction.id);
+
+    if (error) {
+      console.error('Erro ao salvar documento:', error);
+      toast.error('Erro ao salvar documento');
+      return;
+    }
+
+    toast.success('Documento salvo com sucesso!');
+    setShowDocumentViewDialog(false);
+    loadDocuments();
+  };
+
+  const handleSendToCopilot = () => {
+    if (!selectedDocForAction) return;
+    
+    // Redirecionar para a página principal com o documento selecionado
+    window.location.href = `/?doc=${selectedDocForAction.id}`;
+  };
+
   const handleDownloadDocument = (doc: SavedDocument) => {
     const blob = new Blob([doc.formatted_text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -790,18 +819,22 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDownloadDocument(doc)}
-                          title="Baixar"
+                          onClick={() => {
+                            setSelectedDocForAction(doc);
+                            setEditedDocumentContent(doc.formatted_text);
+                            setShowDocumentViewDialog(true);
+                          }}
+                          title="Visualizar/Editar"
                         >
-                          <Download className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => window.location.href = `/?doc=${doc.id}`}
-                          title="Editar"
+                          onClick={() => handleDownloadDocument(doc)}
+                          title="Baixar"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Download className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -1156,6 +1189,52 @@ const Arquivos = () => {
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Excluir Pasta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para visualizar e editar documento */}
+      <Dialog open={showDocumentViewDialog} onOpenChange={setShowDocumentViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>{selectedDocForAction?.name}</DialogTitle>
+            <DialogDescription>
+              Visualize e edite o conteúdo do documento ou envie para análise do copilot
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4 overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="document-content">Conteúdo do Documento</Label>
+              <Textarea
+                id="document-content"
+                value={editedDocumentContent}
+                onChange={(e) => setEditedDocumentContent(e.target.value)}
+                className="min-h-[400px] font-mono text-sm"
+                placeholder="Conteúdo do documento..."
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDocumentViewDialog(false);
+                setSelectedDocForAction(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              variant="secondary" 
+              onClick={handleSendToCopilot}
+            >
+              <Bot className="mr-2 h-4 w-4" />
+              Analisar com Copilot
+            </Button>
+            <Button onClick={handleSaveDocument}>
+              <Edit className="mr-2 h-4 w-4" />
+              Salvar Alterações
             </Button>
           </DialogFooter>
         </DialogContent>
