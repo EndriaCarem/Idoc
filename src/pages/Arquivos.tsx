@@ -836,13 +836,26 @@ const Arquivos = () => {
                       </div>
                       
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {file.file_type === 'text/plain' && (
+                        {/* Botão de visualização para arquivos de texto, DOCX e PDF */}
+                        {(file.file_type === 'text/plain' || 
+                          file.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                          file.file_type === 'application/pdf') && (
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={async (e) => {
                               e.stopPropagation();
-                              // Baixar e mostrar o conteúdo do arquivo texto
+                              
+                              if (file.file_type === 'application/pdf') {
+                                // Para PDFs, abrir em nova aba
+                                const { data: { publicUrl } } = supabase.storage
+                                  .from('user-files')
+                                  .getPublicUrl(file.file_path);
+                                window.open(publicUrl, '_blank');
+                                return;
+                              }
+                              
+                              // Baixar arquivo
                               const { data, error } = await supabase.storage
                                 .from('user-files')
                                 .download(file.file_path);
@@ -852,13 +865,31 @@ const Arquivos = () => {
                                 return;
                               }
                               
-                              const text = await data.text();
-                              setEditedDocumentContent(text);
+                              let content = '';
+                              
+                              if (file.file_type === 'text/plain') {
+                                // Arquivos de texto
+                                content = await data.text();
+                              } else if (file.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                                // Arquivos DOCX
+                                try {
+                                  const mammoth = (await import('mammoth')).default;
+                                  const arrayBuffer = await data.arrayBuffer();
+                                  const result = await mammoth.convertToHtml({ arrayBuffer });
+                                  content = result.value;
+                                } catch (err) {
+                                  console.error('Erro ao processar DOCX:', err);
+                                  toast.error('Erro ao processar documento Word');
+                                  return;
+                                }
+                              }
+                              
+                              setEditedDocumentContent(content);
                               setSelectedDocForAction({ 
                                 id: file.id, 
                                 name: file.name,
-                                formatted_text: text,
-                                template_name: 'Arquivo de Texto',
+                                formatted_text: content,
+                                template_name: file.file_type === 'text/plain' ? 'Arquivo de Texto' : 'Documento Word',
                                 created_at: file.created_at,
                                 folder_id: file.folder_id
                               } as SavedDocument);
