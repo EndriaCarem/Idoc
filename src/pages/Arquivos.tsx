@@ -783,6 +783,14 @@ const Arquivos = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => window.location.href = `/?doc=${doc.id}`}
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => {
                             setSelectedDocId(doc.id);
                             setShowShareDialog(true);
