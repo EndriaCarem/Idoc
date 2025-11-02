@@ -8,7 +8,7 @@ const Header = () => {
         <img
           src={logoImage}
           alt="Idoc Logo"
-          className="h-20 sm:h-28 w-auto transition-transform hover:scale-105"
+          className="h-12 sm:h-16 w-auto transition-transform hover:scale-105"
         />
       </div>
       <UserMenu />
