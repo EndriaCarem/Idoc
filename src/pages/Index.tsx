@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
-import LoadingDots from '@/components/LoadingDots';
+import LoadingRobot from '@/components/LoadingRobot';
 import { formatarComCopilot } from '@/services/geminiService';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -277,10 +277,7 @@ const Index = () => {
         ) : (
           <>
             {isProcessing ? (
-              <div className="flex flex-col items-center justify-center py-12 sm:py-20 space-y-6 px-4">
-                <LoadingDots />
-                <p className="text-base sm:text-lg text-muted-foreground text-center">Processando documento com IA...</p>
-              </div>
+              <LoadingRobot message="Processando documento com IA..." />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="lg:col-span-2 space-y-4 sm:space-y-6">
