@@ -588,16 +588,22 @@ const Arquivos = () => {
     if (!selectedDocForAction) return;
     
     try {
+      console.log('selectedDocForAction:', selectedDocForAction);
+      
       // Se temos formatted_text, é um documento processado
       if (selectedDocForAction.formatted_text) {
+        console.log('Tipo: documento processado');
         sessionStorage.setItem('copilot_doc', JSON.stringify({
           type: 'processed',
           id: selectedDocForAction.id
         }));
         window.location.href = '/';
       } else {
+        console.log('Tipo: arquivo carregado');
         // É um arquivo de uploaded_files, precisamos baixar o conteúdo
         const fileToProcess = uploadedFiles.find(f => f.id === selectedDocForAction.id);
+        console.log('Arquivo encontrado:', fileToProcess);
+        
         if (!fileToProcess) {
           toast.error('Arquivo não encontrado');
           return;
@@ -609,6 +615,8 @@ const Arquivos = () => {
         const { data, error } = await supabase.storage
           .from('user-files')
           .download(fileToProcess.file_path);
+
+        console.log('Download result:', { data, error });
 
         if (error || !data) {
           toast.dismiss('loading');
@@ -631,14 +639,17 @@ const Arquivos = () => {
           return;
         }
 
+        console.log('Conteúdo lido:', content.substring(0, 100));
         toast.dismiss('loading');
 
         // Salvar no sessionStorage
-        sessionStorage.setItem('copilot_doc', JSON.stringify({
+        const dataToStore = {
           type: 'file',
           content: content,
           filename: fileToProcess.name
-        }));
+        };
+        console.log('Salvando no sessionStorage:', dataToStore);
+        sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
 
         // Redirecionar
         window.location.href = '/';

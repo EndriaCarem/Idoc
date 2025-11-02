@@ -24,15 +24,19 @@ const Index = () => {
   // Carregar documento se vier do sessionStorage
   useEffect(() => {
     const copilotData = sessionStorage.getItem('copilot_doc');
+    console.log('Dados do copilot no sessionStorage:', copilotData);
     
     if (copilotData) {
       try {
         const data = JSON.parse(copilotData);
+        console.log('Dados parseados:', data);
         sessionStorage.removeItem('copilot_doc'); // Limpar após ler
         
         if (data.type === 'processed') {
+          console.log('Carregando documento processado:', data.id);
           loadDocumentFromId(data.id);
         } else if (data.type === 'file') {
+          console.log('Carregando arquivo:', data.filename);
           loadFromFileContent(data.content, data.filename);
         }
       } catch (error) {
