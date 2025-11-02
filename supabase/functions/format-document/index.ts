@@ -156,16 +156,26 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
     const htmlMatch = aiResponse.match(/---DOCUMENT_HTML---\s*([\s\S]*?)\s*---STRUCT_DATA_JSON---/);
     const jsonMatch = aiResponse.match(/---STRUCT_DATA_JSON---\s*([\s\S]*?)\s*---END---/);
     
-    let textoFormatado = aiResponse;
+    let textoFormatado = '';
     let structData: any = null;
     
     if (htmlMatch && jsonMatch) {
       textoFormatado = htmlMatch[1].trim();
       try {
         structData = JSON.parse(jsonMatch[1].trim());
+        console.log('JSON estruturado parseado com sucesso');
       } catch (e) {
         console.error('Erro ao parsear JSON estruturado:', e);
+        console.error('JSON que falhou:', jsonMatch[1]);
       }
+    } else {
+      console.warn('Formato de resposta não reconhecido, usando resposta completa');
+      textoFormatado = aiResponse;
+    }
+    
+    if (!textoFormatado) {
+      console.warn('HTML vazio após parse, usando resposta completa');
+      textoFormatado = aiResponse;
     }
 
     // Usar dados estruturados se disponíveis, caso contrário fazer análise do HTML
