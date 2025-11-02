@@ -62,6 +62,8 @@ const Arquivos = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showRenameFolderDialog, setShowRenameFolderDialog] = useState(false);
   const [showColorPickerDialog, setShowColorPickerDialog] = useState(false);
+  const [showDeleteFolderDialog, setShowDeleteFolderDialog] = useState(false);
+  const [deleteFolderConfirmName, setDeleteFolderConfirmName] = useState('');
   const [showFolderActionsSheet, setShowFolderActionsSheet] = useState(false);
   const [showFileActionsSheet, setShowFileActionsSheet] = useState(false);
   const [showDocActionsSheet, setShowDocActionsSheet] = useState(false);
@@ -334,11 +336,18 @@ const Arquivos = () => {
     loadFolders();
   };
 
-  const handleDeleteFolder = async (folderId: string) => {
+  const handleDeleteFolder = async () => {
+    if (!selectedFolderForAction) return;
+
+    if (deleteFolderConfirmName.trim() !== selectedFolderForAction.name) {
+      toast.error('O nome da pasta não corresponde');
+      return;
+    }
+
     const { error } = await supabase
       .from('folders')
       .delete()
-      .eq('id', folderId);
+      .eq('id', selectedFolderForAction.id);
 
     if (error) {
       console.error('Erro ao excluir pasta:', error);
@@ -347,9 +356,12 @@ const Arquivos = () => {
     }
 
     toast.success('Pasta excluída com sucesso!');
-    if (selectedFolder === folderId) {
+    if (selectedFolder === selectedFolderForAction.id) {
       setSelectedFolder(null);
     }
+    setShowDeleteFolderDialog(false);
+    setDeleteFolderConfirmName('');
+    setSelectedFolderForAction(null);
     loadFolders();
   };
 
@@ -651,7 +663,10 @@ const Arquivos = () => {
                         Mudar Cor
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteFolder(folder.id)}
+                        onClick={() => {
+                          setSelectedFolderForAction(folder);
+                          setShowDeleteFolderDialog(true);
+                        }}
                         className="text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -1090,6 +1105,57 @@ const Arquivos = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowColorPickerDialog(false)}>
               Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para confirmar exclusão de pasta */}
+      <Dialog open={showDeleteFolderDialog} onOpenChange={setShowDeleteFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Pasta</DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. Para confirmar, digite o nome da pasta exatamente como aparece abaixo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da pasta a ser excluída:</Label>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="font-semibold">{selectedFolderForAction?.name}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-folder-name">Digite o nome da pasta para confirmar:</Label>
+              <Input
+                id="confirm-folder-name"
+                placeholder={selectedFolderForAction?.name || ''}
+                value={deleteFolderConfirmName}
+                onChange={(e) => setDeleteFolderConfirmName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleDeleteFolder()}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteFolderDialog(false);
+                setDeleteFolderConfirmName('');
+                setSelectedFolderForAction(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteFolder}
+              disabled={deleteFolderConfirmName.trim() !== selectedFolderForAction?.name}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Excluir Pasta
             </Button>
           </DialogFooter>
         </DialogContent>
