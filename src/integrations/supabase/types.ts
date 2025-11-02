@@ -131,7 +131,6 @@ export type Database = {
         Row: {
           alerts_count: number | null
           created_at: string
-          document_group_id: string | null
           formatted_text: string | null
           id: string
           original_filename: string
@@ -139,13 +138,10 @@ export type Database = {
           processed_at: string
           suggestions_count: number | null
           template_name: string
-          user_id: string | null
-          version_number: number | null
         }
         Insert: {
           alerts_count?: number | null
           created_at?: string
-          document_group_id?: string | null
           formatted_text?: string | null
           id?: string
           original_filename: string
@@ -153,13 +149,10 @@ export type Database = {
           processed_at?: string
           suggestions_count?: number | null
           template_name: string
-          user_id?: string | null
-          version_number?: number | null
         }
         Update: {
           alerts_count?: number | null
           created_at?: string
-          document_group_id?: string | null
           formatted_text?: string | null
           id?: string
           original_filename?: string
@@ -167,8 +160,6 @@ export type Database = {
           processed_at?: string
           suggestions_count?: number | null
           template_name?: string
-          user_id?: string | null
-          version_number?: number | null
         }
         Relationships: []
       }

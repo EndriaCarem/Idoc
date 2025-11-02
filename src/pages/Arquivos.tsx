@@ -15,7 +15,6 @@ import { ptBR } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Textarea } from '@/components/ui/textarea';
-import LoadingRobot from '@/components/LoadingRobot';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -23,7 +22,6 @@ interface SavedDocument {
   id: string;
   name: string;
   formatted_text: string;
-  original_text?: string;
   template_name: string;
   created_at: string;
   folder_id: string | null;
@@ -85,39 +83,15 @@ const Arquivos = () => {
   const [newTagEmoji, setNewTagEmoji] = useState('📄');
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isProcessingCopilot, setIsProcessingCopilot] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [isEditingDocName, setIsEditingDocName] = useState(false);
   const [editedDocName, setEditedDocName] = useState('');
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
-  const [selectedTemplateForCopilot, setSelectedTemplateForCopilot] = useState<string>('');
-  const [availableTemplates, setAvailableTemplates] = useState<Array<{id: string, name: string}>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     loadData();
-    loadTemplates();
   }, [selectedFolder]);
-
-  const loadTemplates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('templates')
-        .select('id, name')
-        .order('created_at', { ascending: false});
-
-      if (error) throw error;
-      setAvailableTemplates(data || []);
-      
-      // Selecionar o template mais recente por padrão
-      if (data && data.length > 0) {
-        setSelectedTemplateForCopilot(data[0].id);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar templates:', error);
-    }
-  };
 
   const loadData = async () => {
     setLoading(true);
@@ -610,110 +584,11 @@ const Arquivos = () => {
     loadDocuments();
   };
 
-  const handleSendToCopilot = async () => {
+  const handleSendToCopilot = () => {
     if (!selectedDocForAction) return;
     
-    // Mostrar seletor de template
-    setShowTemplateSelector(true);
-  };
-
-  const confirmSendToCopilot = async () => {
-    if (!selectedDocForAction || !selectedTemplateForCopilot) return;
-    
-    try {
-      setShowTemplateSelector(false);
-      setIsProcessingCopilot(true);
-      console.log('selectedDocForAction:', selectedDocForAction);
-      
-      // Verificar se é um documento salvo (tem formatted_text)
-      if ('formatted_text' in selectedDocForAction && selectedDocForAction.formatted_text) {
-        console.log('Tipo: documento salvo (saved_documents)');
-        
-        // Aguarda um pouco para mostrar a animação
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Buscar nome do template selecionado
-        const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
-        
-        // Para documentos salvos, passamos o texto diretamente
-        const dataToStore = {
-          type: 'file',
-          content: selectedDocForAction.original_text || selectedDocForAction.formatted_text,
-          filename: selectedDocForAction.name,
-          templateId: selectedTemplateForCopilot,
-          templateName: selectedTemplate?.name
-        };
-        console.log('Salvando no sessionStorage:', dataToStore);
-        sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
-        window.location.href = '/';
-        return;
-      }
-      
-      // Se não tem formatted_text, é um arquivo de uploaded_files
-      console.log('Tipo: arquivo carregado (uploaded_files)');
-      const fileToProcess = uploadedFiles.find(f => f.id === selectedDocForAction.id);
-      console.log('Arquivo encontrado:', fileToProcess);
-      
-      if (!fileToProcess) {
-        toast.error('Arquivo não encontrado');
-        setIsProcessingCopilot(false);
-        return;
-      }
-
-      // Baixar o conteúdo do arquivo
-      const { data, error } = await supabase.storage
-        .from('user-files')
-        .download(fileToProcess.file_path);
-
-      console.log('Download result:', { data, error });
-
-      if (error || !data) {
-        toast.error('Erro ao carregar arquivo');
-        setIsProcessingCopilot(false);
-        return;
-      }
-
-      // Ler o conteúdo
-      let content = '';
-      if (fileToProcess.file_type === 'text/plain') {
-        content = await data.text();
-      } else if (fileToProcess.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        const mammoth = (await import('mammoth')).default;
-        const arrayBuffer = await data.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        content = result.value;
-      } else {
-        toast.error('Tipo de arquivo não suportado para análise');
-        setIsProcessingCopilot(false);
-        return;
-      }
-
-      console.log('Conteúdo lido:', content.substring(0, 100));
-
-      // Aguarda um pouco para mostrar a animação
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Buscar nome do template selecionado
-      const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
-
-      // Salvar no sessionStorage
-      const dataToStore = {
-        type: 'file',
-        content: content,
-        filename: fileToProcess.name,
-        templateId: selectedTemplateForCopilot,
-        templateName: selectedTemplate?.name
-      };
-      console.log('Salvando no sessionStorage:', dataToStore);
-      sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
-
-      // Redirecionar
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Erro ao enviar para copilot:', error);
-      toast.error('Erro ao processar arquivo');
-      setIsProcessingCopilot(false);
-    }
+    // Redirecionar para a página principal com o documento selecionado
+    window.location.href = `/?doc=${selectedDocForAction.id}`;
   };
 
   const insertFormatting = (prefix: string, suffix: string = '') => {
@@ -770,10 +645,7 @@ const Arquivos = () => {
   }
 
   return (
-    <>
-      {isProcessingCopilot && <LoadingRobot message="Preparando documento para análise..." />}
-      
-      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
@@ -964,26 +836,13 @@ const Arquivos = () => {
                       </div>
                       
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {/* Botão de visualização para arquivos de texto, DOCX e PDF */}
-                        {(file.file_type === 'text/plain' || 
-                          file.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-                          file.file_type === 'application/pdf') && (
+                        {file.file_type === 'text/plain' && (
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={async (e) => {
                               e.stopPropagation();
-                              
-                              if (file.file_type === 'application/pdf') {
-                                // Para PDFs, abrir em nova aba
-                                const { data: { publicUrl } } = supabase.storage
-                                  .from('user-files')
-                                  .getPublicUrl(file.file_path);
-                                window.open(publicUrl, '_blank');
-                                return;
-                              }
-                              
-                              // Baixar arquivo
+                              // Baixar e mostrar o conteúdo do arquivo texto
                               const { data, error } = await supabase.storage
                                 .from('user-files')
                                 .download(file.file_path);
@@ -993,31 +852,13 @@ const Arquivos = () => {
                                 return;
                               }
                               
-                              let content = '';
-                              
-                              if (file.file_type === 'text/plain') {
-                                // Arquivos de texto
-                                content = await data.text();
-                              } else if (file.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-                                // Arquivos DOCX
-                                try {
-                                  const mammoth = (await import('mammoth')).default;
-                                  const arrayBuffer = await data.arrayBuffer();
-                                  const result = await mammoth.convertToHtml({ arrayBuffer });
-                                  content = result.value;
-                                } catch (err) {
-                                  console.error('Erro ao processar DOCX:', err);
-                                  toast.error('Erro ao processar documento Word');
-                                  return;
-                                }
-                              }
-                              
-                              setEditedDocumentContent(content);
+                              const text = await data.text();
+                              setEditedDocumentContent(text);
                               setSelectedDocForAction({ 
                                 id: file.id, 
                                 name: file.name,
-                                formatted_text: content,
-                                template_name: file.file_type === 'text/plain' ? 'Arquivo de Texto' : 'Documento Word',
+                                formatted_text: text,
+                                template_name: 'Arquivo de Texto',
                                 created_at: file.created_at,
                                 folder_id: file.folder_id
                               } as SavedDocument);
@@ -1742,46 +1583,7 @@ const Arquivos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Dialog de seleção de template */}
-      <Dialog open={showTemplateSelector} onOpenChange={setShowTemplateSelector}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Selecionar Template</DialogTitle>
-            <DialogDescription>
-              Escolha qual template será usado para analisar o documento
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="template-select">Template</Label>
-              <Select value={selectedTemplateForCopilot} onValueChange={setSelectedTemplateForCopilot}>
-                <SelectTrigger id="template-select">
-                  <SelectValue placeholder="Selecione um template" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableTemplates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
-                      {template.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTemplateSelector(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={confirmSendToCopilot}>
-              <Bot className="mr-2 h-4 w-4" />
-              Analisar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      </div>
-    </>
+    </div>
   );
 };
 
