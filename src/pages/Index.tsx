@@ -75,41 +75,83 @@ const Index = () => {
 
   const loadDocumentFromId = async (docId: string) => {
     try {
-      const { data, error } = await supabase
+      console.log('Buscando documento saved_documents id:', docId);
+      
+      // Primeiro tentar buscar em saved_documents
+      const { data: savedDoc, error: savedError } = await supabase
+        .from('saved_documents')
+        .select('*')
+        .eq('id', docId)
+        .maybeSingle();
+
+      console.log('Resultado saved_documents:', { savedDoc, savedError });
+
+      if (savedDoc) {
+        // Buscar o template_id baseado no template_name
+        const { data: templateData } = await supabase
+          .from('templates')
+          .select('id')
+          .eq('name', savedDoc.template_name)
+          .maybeSingle();
+
+        const templateId = templateData?.id || null;
+        console.log('Template encontrado:', templateId);
+        
+        setOriginalText(savedDoc.original_text || savedDoc.formatted_text);
+        setEditableText(savedDoc.original_text || savedDoc.formatted_text);
+        setOriginalFilename(savedDoc.name);
+        setSelectedTemplateId(templateId);
+        
+        // Processar automaticamente
+        if (templateId && savedDoc.template_name) {
+          handleFileUpload(
+            savedDoc.original_text || savedDoc.formatted_text, 
+            templateId, 
+            savedDoc.template_name, 
+            savedDoc.name
+          );
+        }
+        return;
+      }
+
+      // Se não encontrou em saved_documents, tentar processed_documents
+      console.log('Buscando em processed_documents id:', docId);
+      const { data: processedDoc, error: processedError } = await supabase
         .from('processed_documents')
         .select('*')
         .eq('id', docId)
         .maybeSingle();
 
-      if (error) throw error;
-      
-      if (data) {
+      console.log('Resultado processed_documents:', { processedDoc, processedError });
+
+      if (processedDoc) {
         // Buscar o template_id baseado no template_name
         const { data: templateData } = await supabase
           .from('templates')
           .select('id')
-          .eq('name', data.template_name)
+          .eq('name', processedDoc.template_name)
           .maybeSingle();
 
         const templateId = templateData?.id || null;
         
-        setOriginalText(data.original_text || data.formatted_text);
-        setEditableText(data.original_text || data.formatted_text);
-        setOriginalFilename(data.original_filename || 'documento.txt');
+        setOriginalText(processedDoc.original_text || processedDoc.formatted_text);
+        setEditableText(processedDoc.original_text || processedDoc.formatted_text);
+        setOriginalFilename(processedDoc.original_filename || 'documento.txt');
         setSelectedTemplateId(templateId);
         
         // Processar automaticamente
         if (templateId) {
           handleFileUpload(
-            data.original_text || data.formatted_text, 
+            processedDoc.original_text || processedDoc.formatted_text, 
             templateId, 
-            data.template_name, 
-            data.original_filename || 'documento.txt'
+            processedDoc.template_name, 
+            processedDoc.original_filename || 'documento.txt'
           );
         }
-      } else {
-        toast.error('Documento não encontrado');
+        return;
       }
+      
+      toast.error('Documento não encontrado');
     } catch (error) {
       console.error('Erro ao carregar documento:', error);
       toast.error('Erro ao carregar documento');
