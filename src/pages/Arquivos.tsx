@@ -1325,8 +1325,8 @@ const Arquivos = () => {
 
       {/* Dialog para visualizar e editar documento */}
       <Dialog open={showDocumentViewDialog} onOpenChange={setShowDocumentViewDialog}>
-        <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
-          <DialogHeader className="border-b pb-4">
+        <DialogContent className="max-w-7xl h-[95vh] flex flex-col p-0">
+          <DialogHeader className="border-b pb-4 px-6 pt-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <DialogTitle className="text-2xl flex items-center gap-2">
@@ -1396,7 +1396,7 @@ const Arquivos = () => {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 flex flex-col gap-4 py-4 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-4 py-4 px-6 overflow-hidden">
             {/* Tabs para Edição e Pré-visualização */}
             <div className="flex gap-2 border-b">
               <button
@@ -1527,12 +1527,12 @@ const Arquivos = () => {
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col gap-2 overflow-hidden">
+                <div className="flex-1 flex flex-col gap-2 min-h-0">
                   <Textarea
                     id="document-content"
                     value={editedDocumentContent}
                     onChange={(e) => setEditedDocumentContent(e.target.value)}
-                    className="flex-1 font-mono text-sm resize-none min-h-0"
+                    className="flex-1 font-mono text-sm resize-none h-full"
                     placeholder="Digite o conteúdo do documento..."
                   />
                   <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
@@ -1559,7 +1559,7 @@ const Arquivos = () => {
               </div>
             )}
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 px-6 pb-6">
             <Button 
               variant="outline" 
               onClick={() => {
