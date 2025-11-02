@@ -5,7 +5,6 @@ export const formatarComCopilot = async (
   texto: string,
   templateId: string
 ): Promise<CopilotResult> => {
-  // Buscar o template do banco de dados
   const { data: template, error } = await supabase
     .from('templates')
     .select('*')
@@ -16,7 +15,6 @@ export const formatarComCopilot = async (
     throw new Error('Template não encontrado');
   }
 
-  // Chamar edge function com IA real
   const { data, error: functionError } = await supabase.functions.invoke('format-document', {
     body: { 
       documentText: texto,
