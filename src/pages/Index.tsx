@@ -21,18 +21,24 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
-  // Carregar documento se vier da URL
+  // Carregar documento se vier do sessionStorage
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const docId = params.get('doc');
-    const docType = params.get('type');
-    const fileContent = params.get('file');
-    const filename = params.get('filename');
+    const copilotData = sessionStorage.getItem('copilot_doc');
     
-    if (docId && docType === 'processed') {
-      loadDocumentFromId(docId);
-    } else if (fileContent && filename) {
-      loadFromFileContent(decodeURIComponent(fileContent), decodeURIComponent(filename));
+    if (copilotData) {
+      try {
+        const data = JSON.parse(copilotData);
+        sessionStorage.removeItem('copilot_doc'); // Limpar após ler
+        
+        if (data.type === 'processed') {
+          loadDocumentFromId(data.id);
+        } else if (data.type === 'file') {
+          loadFromFileContent(data.content, data.filename);
+        }
+      } catch (error) {
+        console.error('Erro ao processar dados do copilot:', error);
+        toast.error('Erro ao carregar documento');
+      }
     }
   }, []);
 
@@ -69,7 +75,7 @@ const Index = () => {
         .from('processed_documents')
         .select('*')
         .eq('id', docId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
@@ -79,7 +85,7 @@ const Index = () => {
           .from('templates')
           .select('id')
           .eq('name', data.template_name)
-          .single();
+          .maybeSingle();
 
         const templateId = templateData?.id || null;
         
@@ -97,6 +103,8 @@ const Index = () => {
             data.original_filename || 'documento.txt'
           );
         }
+      } else {
+        toast.error('Documento não encontrado');
       }
     } catch (error) {
       console.error('Erro ao carregar documento:', error);

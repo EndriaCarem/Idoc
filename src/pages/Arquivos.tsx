@@ -590,7 +590,11 @@ const Arquivos = () => {
     try {
       // Se temos formatted_text, é um documento processado
       if (selectedDocForAction.formatted_text) {
-        window.location.href = `/?doc=${selectedDocForAction.id}&type=processed`;
+        sessionStorage.setItem('copilot_doc', JSON.stringify({
+          type: 'processed',
+          id: selectedDocForAction.id
+        }));
+        window.location.href = '/';
       } else {
         // É um arquivo de uploaded_files, precisamos baixar o conteúdo
         const fileToProcess = uploadedFiles.find(f => f.id === selectedDocForAction.id);
@@ -599,12 +603,15 @@ const Arquivos = () => {
           return;
         }
 
+        toast.loading('Carregando arquivo...', { id: 'loading' });
+
         // Baixar o conteúdo do arquivo
         const { data, error } = await supabase.storage
           .from('user-files')
           .download(fileToProcess.file_path);
 
         if (error || !data) {
+          toast.dismiss('loading');
           toast.error('Erro ao carregar arquivo');
           return;
         }
@@ -619,16 +626,22 @@ const Arquivos = () => {
           const result = await mammoth.extractRawText({ arrayBuffer });
           content = result.value;
         } else {
+          toast.dismiss('loading');
           toast.error('Tipo de arquivo não suportado para análise');
           return;
         }
 
-        // Redirecionar com o conteúdo
-        const params = new URLSearchParams({
-          file: encodeURIComponent(content),
+        toast.dismiss('loading');
+
+        // Salvar no sessionStorage
+        sessionStorage.setItem('copilot_doc', JSON.stringify({
+          type: 'file',
+          content: content,
           filename: fileToProcess.name
-        });
-        window.location.href = `/?${params.toString()}`;
+        }));
+
+        // Redirecionar
+        window.location.href = '/';
       }
     } catch (error) {
       console.error('Erro ao enviar para copilot:', error);
