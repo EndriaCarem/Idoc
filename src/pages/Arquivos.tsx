@@ -826,6 +826,19 @@ const Arquivos = () => {
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setSelectedDocForAction(doc);
+                            setEditedDocumentContent(doc.formatted_text);
+                            setShowDocumentViewDialog(true);
+                          }}
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleDownloadDocument(doc);
                           }}
                           title="Baixar"
