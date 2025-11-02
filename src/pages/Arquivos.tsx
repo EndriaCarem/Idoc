@@ -584,11 +584,56 @@ const Arquivos = () => {
     loadDocuments();
   };
 
-  const handleSendToCopilot = () => {
+  const handleSendToCopilot = async () => {
     if (!selectedDocForAction) return;
     
-    // Redirecionar para a página principal com o documento selecionado
-    window.location.href = `/?doc=${selectedDocForAction.id}`;
+    try {
+      // Se temos formatted_text, é um documento processado
+      if (selectedDocForAction.formatted_text) {
+        window.location.href = `/?doc=${selectedDocForAction.id}&type=processed`;
+      } else {
+        // É um arquivo de uploaded_files, precisamos baixar o conteúdo
+        const fileToProcess = uploadedFiles.find(f => f.id === selectedDocForAction.id);
+        if (!fileToProcess) {
+          toast.error('Arquivo não encontrado');
+          return;
+        }
+
+        // Baixar o conteúdo do arquivo
+        const { data, error } = await supabase.storage
+          .from('user-files')
+          .download(fileToProcess.file_path);
+
+        if (error || !data) {
+          toast.error('Erro ao carregar arquivo');
+          return;
+        }
+
+        // Ler o conteúdo
+        let content = '';
+        if (fileToProcess.file_type === 'text/plain') {
+          content = await data.text();
+        } else if (fileToProcess.file_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+          const mammoth = (await import('mammoth')).default;
+          const arrayBuffer = await data.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          content = result.value;
+        } else {
+          toast.error('Tipo de arquivo não suportado para análise');
+          return;
+        }
+
+        // Redirecionar com o conteúdo
+        const params = new URLSearchParams({
+          file: encodeURIComponent(content),
+          filename: fileToProcess.name
+        });
+        window.location.href = `/?${params.toString()}`;
+      }
+    } catch (error) {
+      console.error('Erro ao enviar para copilot:', error);
+      toast.error('Erro ao processar arquivo');
+    }
   };
 
   const insertFormatting = (prefix: string, suffix: string = '') => {

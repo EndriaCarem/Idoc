@@ -25,11 +25,43 @@ const Index = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const docId = params.get('doc');
+    const docType = params.get('type');
+    const fileContent = params.get('file');
+    const filename = params.get('filename');
     
-    if (docId) {
+    if (docId && docType === 'processed') {
       loadDocumentFromId(docId);
+    } else if (fileContent && filename) {
+      loadFromFileContent(decodeURIComponent(fileContent), decodeURIComponent(filename));
     }
   }, []);
+
+  const loadFromFileContent = async (content: string, filename: string) => {
+    try {
+      // Buscar o primeiro template disponível
+      const { data: templates } = await supabase
+        .from('templates')
+        .select('id, name')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (templates && templates.length > 0) {
+        const template = templates[0];
+        setOriginalText(content);
+        setEditableText(content);
+        setOriginalFilename(filename);
+        setSelectedTemplateId(template.id);
+        
+        // Processar automaticamente
+        handleFileUpload(content, template.id, template.name, filename);
+      } else {
+        toast.error('Nenhum template disponível. Crie um template primeiro.');
+      }
+    } catch (error) {
+      console.error('Erro ao processar arquivo:', error);
+      toast.error('Erro ao processar arquivo');
+    }
+  };
 
   const loadDocumentFromId = async (docId: string) => {
     try {
