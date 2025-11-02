@@ -279,13 +279,17 @@ const Index = () => {
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!originalText ? (
-          <div className="max-w-4xl mx-auto">
-            <DocumentInput 
-              onFileUpload={handleFileUpload}
-              selectedTemplateId={selectedTemplateId}
-              onTemplateChange={handleTemplateChange}
-            />
-          </div>
+          isProcessing ? (
+            <LoadingRobot message="Carregando documento..." />
+          ) : (
+            <div className="max-w-4xl mx-auto">
+              <DocumentInput 
+                onFileUpload={handleFileUpload}
+                selectedTemplateId={selectedTemplateId}
+                onTemplateChange={handleTemplateChange}
+              />
+            </div>
+          )
         ) : (
           <>
             {isProcessing ? (
