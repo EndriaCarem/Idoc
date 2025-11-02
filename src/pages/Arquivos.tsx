@@ -15,6 +15,7 @@ import { ptBR } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Textarea } from '@/components/ui/textarea';
+import LoadingRobot from '@/components/LoadingRobot';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -84,6 +85,7 @@ const Arquivos = () => {
   const [newTagEmoji, setNewTagEmoji] = useState('📄');
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isProcessingCopilot, setIsProcessingCopilot] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [isEditingDocName, setIsEditingDocName] = useState(false);
   const [editedDocName, setEditedDocName] = useState('');
@@ -589,11 +591,15 @@ const Arquivos = () => {
     if (!selectedDocForAction) return;
     
     try {
+      setIsProcessingCopilot(true);
       console.log('selectedDocForAction:', selectedDocForAction);
       
       // Verificar se é um documento salvo (tem formatted_text)
       if ('formatted_text' in selectedDocForAction && selectedDocForAction.formatted_text) {
         console.log('Tipo: documento salvo (saved_documents)');
+        
+        // Aguarda um pouco para mostrar a animação
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         // Para documentos salvos, passamos o texto diretamente
         const dataToStore = {
@@ -614,10 +620,9 @@ const Arquivos = () => {
       
       if (!fileToProcess) {
         toast.error('Arquivo não encontrado');
+        setIsProcessingCopilot(false);
         return;
       }
-
-      toast.loading('Carregando arquivo...', { id: 'loading' });
 
       // Baixar o conteúdo do arquivo
       const { data, error } = await supabase.storage
@@ -627,8 +632,8 @@ const Arquivos = () => {
       console.log('Download result:', { data, error });
 
       if (error || !data) {
-        toast.dismiss('loading');
         toast.error('Erro ao carregar arquivo');
+        setIsProcessingCopilot(false);
         return;
       }
 
@@ -642,13 +647,15 @@ const Arquivos = () => {
         const result = await mammoth.extractRawText({ arrayBuffer });
         content = result.value;
       } else {
-        toast.dismiss('loading');
         toast.error('Tipo de arquivo não suportado para análise');
+        setIsProcessingCopilot(false);
         return;
       }
 
       console.log('Conteúdo lido:', content.substring(0, 100));
-      toast.dismiss('loading');
+
+      // Aguarda um pouco para mostrar a animação
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Salvar no sessionStorage
       const dataToStore = {
@@ -664,6 +671,7 @@ const Arquivos = () => {
     } catch (error) {
       console.error('Erro ao enviar para copilot:', error);
       toast.error('Erro ao processar arquivo');
+      setIsProcessingCopilot(false);
     }
   };
 
@@ -721,7 +729,10 @@ const Arquivos = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
+    <>
+      {isProcessingCopilot && <LoadingRobot message="Preparando documento para análise..." />}
+      
+      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 pb-safe">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
@@ -1690,7 +1701,8 @@ const Arquivos = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </>
   );
 };
 
