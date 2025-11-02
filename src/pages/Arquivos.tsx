@@ -132,6 +132,29 @@ const Arquivos = () => {
       return;
     }
 
+    // Buscar nomes dos templates
+    if (data && data.length > 0) {
+      const templateIds = [...new Set(data.map(doc => doc.template_name).filter(Boolean))];
+      
+      if (templateIds.length > 0) {
+        const { data: templates } = await supabase
+          .from('templates')
+          .select('id, name')
+          .in('id', templateIds);
+
+        const templateMap = new Map(templates?.map(t => [t.id, t.name]) || []);
+        
+        // Atualizar documentos com nomes dos templates
+        const documentsWithNames = data.map(doc => ({
+          ...doc,
+          template_name: templateMap.get(doc.template_name) || doc.template_name
+        }));
+        
+        setDocuments(documentsWithNames);
+        return;
+      }
+    }
+
     setDocuments(data || []);
   };
 
