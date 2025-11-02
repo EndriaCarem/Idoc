@@ -32,6 +32,9 @@ const Index = () => {
         console.log('Dados parseados:', data);
         sessionStorage.removeItem('copilot_doc'); // Limpar após ler
         
+        // Setar loading imediatamente
+        setIsProcessing(true);
+        
         if (data.type === 'processed') {
           console.log('Carregando documento processado:', data.id);
           loadDocumentFromId(data.id);
@@ -42,6 +45,7 @@ const Index = () => {
       } catch (error) {
         console.error('Erro ao processar dados do copilot:', error);
         toast.error('Erro ao carregar documento');
+        setIsProcessing(false);
       }
     }
   }, []);
@@ -62,14 +66,16 @@ const Index = () => {
         setOriginalFilename(filename);
         setSelectedTemplateId(template.id);
         
-        // Processar automaticamente
+        // Processar automaticamente (isProcessing já está true do useEffect)
         handleFileUpload(content, template.id, template.name, filename);
       } else {
         toast.error('Nenhum template disponível. Crie um template primeiro.');
+        setIsProcessing(false);
       }
     } catch (error) {
       console.error('Erro ao processar arquivo:', error);
       toast.error('Erro ao processar arquivo');
+      setIsProcessing(false);
     }
   };
 
@@ -102,7 +108,7 @@ const Index = () => {
         setOriginalFilename(savedDoc.name);
         setSelectedTemplateId(templateId);
         
-        // Processar automaticamente
+        // Processar automaticamente (isProcessing já está true do useEffect)
         if (templateId && savedDoc.template_name) {
           handleFileUpload(
             savedDoc.original_text || savedDoc.formatted_text, 
@@ -110,6 +116,8 @@ const Index = () => {
             savedDoc.template_name, 
             savedDoc.name
           );
+        } else {
+          setIsProcessing(false);
         }
         return;
       }
@@ -139,7 +147,7 @@ const Index = () => {
         setOriginalFilename(processedDoc.original_filename || 'documento.txt');
         setSelectedTemplateId(templateId);
         
-        // Processar automaticamente
+        // Processar automaticamente (isProcessing já está true do useEffect)
         if (templateId) {
           handleFileUpload(
             processedDoc.original_text || processedDoc.formatted_text, 
@@ -147,24 +155,27 @@ const Index = () => {
             processedDoc.template_name, 
             processedDoc.original_filename || 'documento.txt'
           );
+        } else {
+          setIsProcessing(false);
         }
         return;
       }
       
       toast.error('Documento não encontrado');
+      setIsProcessing(false);
     } catch (error) {
       console.error('Erro ao carregar documento:', error);
       toast.error('Erro ao carregar documento');
+      setIsProcessing(false);
     }
   };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string) => {
-    // Definir estados imediatamente para mostrar loading
-    setIsProcessing(true);
-    setOriginalText(text);
-    setEditableText(text);
-    setOriginalFilename(filename);
-    setSelectedTemplateId(templateId);
+    // Não setar estados de documento aqui pois já foram setados antes
+    // Apenas garantir que isProcessing está true
+    if (!isProcessing) {
+      setIsProcessing(true);
+    }
     
     try {
       toast.info("🔄 Iniciando processamento do documento...");
