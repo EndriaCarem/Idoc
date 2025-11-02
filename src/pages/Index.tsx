@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
@@ -20,6 +20,57 @@ const Index = () => {
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+
+  // Carregar documento se vier da URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get('doc');
+    
+    if (docId) {
+      loadDocumentFromId(docId);
+    }
+  }, []);
+
+  const loadDocumentFromId = async (docId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('processed_documents')
+        .select('*')
+        .eq('id', docId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        // Buscar o template_id baseado no template_name
+        const { data: templateData } = await supabase
+          .from('templates')
+          .select('id')
+          .eq('name', data.template_name)
+          .single();
+
+        const templateId = templateData?.id || null;
+        
+        setOriginalText(data.original_text || data.formatted_text);
+        setEditableText(data.original_text || data.formatted_text);
+        setOriginalFilename(data.original_filename || 'documento.txt');
+        setSelectedTemplateId(templateId);
+        
+        // Processar automaticamente
+        if (templateId) {
+          handleFileUpload(
+            data.original_text || data.formatted_text, 
+            templateId, 
+            data.template_name, 
+            data.original_filename || 'documento.txt'
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar documento:', error);
+      toast.error('Erro ao carregar documento');
+    }
+  };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string) => {
     setOriginalText(text);
