@@ -745,7 +745,7 @@ const Arquivos = () => {
                     {currentFolderName || 'Todos os Documentos'}
                   </CardTitle>
                   <CardDescription className="mt-1">
-                    {documents.length} documento(s) encontrado(s)
+                    {documents.length + uploadedFiles.length} arquivo(s) encontrado(s)
                   </CardDescription>
                 </div>
               </div>
