@@ -192,6 +192,7 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
     if (structData) {
       sugestoes = structData.sugestoes || [];
       alertas = structData.alertas || [];
+      console.log('Usando alertas e sugestões do structData:', { alertas: alertas.length, sugestoes: sugestoes.length });
     } else {
       // Fallback: análise do HTML gerado
       const tipoRegime = templateName?.toLowerCase() || '';
@@ -208,9 +209,19 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
       
       alertas.push('⚠️ Revise o documento formatado antes do envio oficial');
       alertas.push('⚠️ Confirme que todos os valores numéricos estão corretos');
+      console.log('Usando alertas e sugestões de fallback');
+    }
+    
+    // Garantir que sempre temos um HTML formatado, mesmo que seja básico
+    if (!textoFormatado || textoFormatado.trim().length === 0) {
+      console.warn('HTML vazio, criando estrutura básica a partir do documento original');
+      textoFormatado = `<h1>${templateName || 'Documento'}</h1>\n<div>\n${documentText.replace(/\n/g, '<br>\n')}\n</div>`;
+      alertas.unshift('⚠️ Não foi possível formatar o documento completamente - verifique o formato do template');
     }
 
     console.log('Formatação concluída com sucesso');
+    console.log('Tamanho do HTML:', textoFormatado.length);
+    console.log('Primeiros 200 caracteres:', textoFormatado.substring(0, 200));
 
     return new Response(
       JSON.stringify({
