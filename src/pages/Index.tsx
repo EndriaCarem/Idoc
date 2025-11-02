@@ -14,11 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Index = () => {
+  // Verificar sessionStorage ANTES de inicializar estados
+  const hasCopilotData = !!sessionStorage.getItem('copilot_doc');
+  
   const [originalText, setOriginalText] = useState<string>('');
   const [editableText, setEditableText] = useState<string>('');
   const [originalFilename, setOriginalFilename] = useState<string>('');
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(hasCopilotData); // Iniciar como true se houver dados
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
   // Carregar documento se vier do sessionStorage
@@ -31,9 +34,6 @@ const Index = () => {
         const data = JSON.parse(copilotData);
         console.log('Dados parseados:', data);
         sessionStorage.removeItem('copilot_doc'); // Limpar após ler
-        
-        // Setar loading imediatamente
-        setIsProcessing(true);
         
         if (data.type === 'processed') {
           console.log('Carregando documento processado:', data.id);
