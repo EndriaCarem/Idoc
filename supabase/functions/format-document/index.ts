@@ -190,66 +190,87 @@ Retorne o relatório completo formatado em Markdown, com tabelas, validações e
       sugestoes.push('✓ Documento formatado para apresentação profissional e auditável');
     }
 
-    // Análise inteligente para gerar alertas específicos baseados no conteúdo
+    // Análise inteligente para gerar alertas específicos baseados no conteúdo e template
     let alertas: string[] = [];
     
-    // Extrair alertas da seção de validações se existir
+    // Extrair seções e requisitos do template para comparação
+    const secoesTemplate = templateContent.match(/#{1,3}\s+[^\n]+/g) || [];
+    const tabelasTemplate = templateContent.match(/\|[^\n]+\|/g) || [];
+    const secoesDocumento = textoFormatado.match(/#{1,3}\s+[^\n]+/g) || [];
+    
+    // 1. Validar seções obrigatórias do template
+    const secoesObrigatoriasFaltantes: string[] = [];
+    secoesTemplate.forEach((secaoTemplate: string) => {
+      const tituloSecao = secaoTemplate.replace(/#{1,3}\s+/, '').trim().toUpperCase();
+      const encontrada = secoesDocumento.some((secaoDoc: string) => 
+        secaoDoc.toUpperCase().includes(tituloSecao.substring(0, 20))
+      );
+      if (!encontrada && tituloSecao.length > 5) {
+        secoesObrigatoriasFaltantes.push(tituloSecao);
+      }
+    });
+    
+    if (secoesObrigatoriasFaltantes.length > 0) {
+      alertas.push(`⚠️ CONFORMIDADE - Seções obrigatórias do template não identificadas: ${secoesObrigatoriasFaltantes.slice(0, 3).join(', ')}`);
+    }
+    
+    // 2. Validar estrutura de tabelas
+    const tabelasDocumento = textoFormatado.match(/\|[^\n]+\|/g) || [];
+    if (tabelasTemplate.length > tabelasDocumento.length) {
+      alertas.push(`⚠️ ESTRUTURA - Template exige ${tabelasTemplate.length} tabelas, documento possui ${tabelasDocumento.length}. Verifique tabelas de investimentos, projetos e indicadores`);
+    }
+    
+    // 3. Extrair alertas da seção de validações gerada pela IA
     const validacoesMatch = textoFormatado.match(/VALIDAÇÕES E CONFORMIDADE[\s\S]*?(?=\n#|$)/i);
     if (validacoesMatch) {
       const validacoesTexto = validacoesMatch[0];
       const alertasExtraidos = validacoesTexto.match(/⚠️[^\n]+/g);
       if (alertasExtraidos) {
-        alertas = alertasExtraidos.map((a: string) => a.trim());
+        alertas.push(...alertasExtraidos.map((a: string) => a.trim()));
       }
     }
     
-    // Alertas específicos por tipo de regime (complementares)
-    if (tipoRegime.includes('automotivo') || tipoRegime.includes('ra')) {
-      alertas = [
-        '⚠️ REGIME AUTOMOTIVO - Verificar seções obrigatórias: Objetivos, Metodologia, Resultados, Investimentos',
-        '⚠️ Validar datas de início e fim do projeto no formato dd/mm/aaaa',
-        '⚠️ Confirmar valores de investimentos em P&D discriminados por categoria (RH, equipamentos, insumos)',
-        '⚠️ Revisar classificação das atividades como Pesquisa Básica, Aplicada ou Desenvolvimento',
-        '⚠️ Verificar enquadramento nos percentuais mínimos de investimento em P&D',
-        '⚠️ Conferir nomenclatura de veículos e componentes conforme glossário MDIC',
-        '⚠️ Atenção: documentos comprobatórios (notas fiscais, contratos) devem estar anexados',
-        '⚠️ Validar indicadores de inovação tecnológica e registro de propriedade intelectual'
-      ];
-    } else if (tipoRegime.includes('informática') || tipoRegime.includes('ppb') || tipoRegime.includes('lei de informática')) {
-      alertas = [
-        '⚠️ LEI DE INFORMÁTICA/PPB - Verificar descrição detalhada das atividades de P&D realizadas',
-        '⚠️ Validar percentual de faturamento investido em P&D (mínimo 5% conforme lei)',
-        '⚠️ Confirmar convênios com ICTs (Instituições Científicas e Tecnológicas) quando aplicável',
-        '⚠️ Revisar processo de certificação PPB e validade do certificado',
-        '⚠️ Verificar atendimento aos requisitos de conteúdo local e processo produtivo básico',
-        '⚠️ Conferir metas de exportação e indicadores de desempenho do projeto',
-        '⚠️ Atenção: relatórios de auditorias e avaliações técnicas devem estar incluídos',
-        '⚠️ Validar registro de patentes, softwares e inovações geradas pelo projeto'
-      ];
-    } else if (tipoRegime.includes('mover')) {
-      alertas = [
-        '⚠️ PROGRAMA MOVER - Verificar alinhamento com metas de descarbonização e eficiência energética',
-        '⚠️ Validar investimentos em eletrificação, hibridização e tecnologias de baixa emissão',
-        '⚠️ Confirmar indicadores de redução de emissões de CO2 e eficiência energética',
-        '⚠️ Revisar projetos de P&D em mobilidade sustentável e veículos elétricos',
-        '⚠️ Verificar conformidade com requisitos ambientais e certificações (PROCONVE, PROMOT)',
-        '⚠️ Conferir cronograma de implantação e marcos de inovação tecnológica',
-        '⚠️ Atenção: estudos de impacto ambiental e avaliações de ciclo de vida devem estar presentes',
-        '⚠️ Validar parcerias estratégicas para desenvolvimento de tecnologias limpas'
-      ];
-    } else {
-      // Alertas genéricos para outros casos
-      alertas = [
-        '⚠️ CRÍTICO: Verificar se todas as seções obrigatórias do programa estão preenchidas',
-        '⚠️ Validar datas no formato dd/mm/aaaa conforme exigido pela prestação de contas',
-        '⚠️ Confirmar valores monetários e percentuais com documentação fonte',
-        '⚠️ Revisar referências normativas (leis, portarias, decretos) quanto a numeração e vigência',
-        '⚠️ Verificar siglas, abreviações e nomenclaturas técnicas conforme glossário oficial',
-        '⚠️ Atenção: responsáveis técnicos e assinaturas devem estar identificados corretamente',
-        '⚠️ Conferir prazos regulatórios, marcos do projeto e cronograma de execução',
-        '⚠️ Validar anexos obrigatórios (comprovantes, relatórios, certificações)'
-      ];
+    // 4. Validações financeiras
+    const valoresEncontrados = textoFormatado.match(/R\$\s*[\d.,]+/g);
+    if (valoresEncontrados && valoresEncontrados.length > 1) {
+      alertas.push(`⚠️ FINANCEIRO - Documento contém ${valoresEncontrados.length} valores monetários. Confirme totalização e consistência entre tabelas de perfil de investimentos e dispêndios por projeto`);
     }
+    
+    // 5. Validações de TRL (Technology Readiness Level)
+    const trlMencionados = textoFormatado.match(/TRL\s*\d/gi);
+    if (trlMencionados) {
+      alertas.push(`⚠️ TECNOLOGIA - ${trlMencionados.length} níveis TRL identificados. Valide evolução (TRL final ≥ TRL inicial) e justificativas técnicas para cada projeto`);
+    }
+    
+    // 6. Validações de datas
+    const datasEncontradas = textoFormatado.match(/\d{2}\/\d{2}\/\d{4}/g);
+    if (datasEncontradas && datasEncontradas.length > 0) {
+      alertas.push(`⚠️ CRONOGRAMA - ${datasEncontradas.length} datas identificadas. Verifique coerência de prazos com ano-base do relatório e marcos regulatórios`);
+    }
+    
+    // 7. Alertas específicos por regime baseado no template
+    if (tipoRegime.includes('automotivo') || tipoRegime.includes('ra') || templateContent.includes('REGIME AUTOMOTIVO')) {
+      alertas.push('⚠️ REGIME AUTOMOTIVO - Confirme: 1) Categorias de P&D (básica/aplicada/desenvolvimento), 2) Percentual mínimo sobre receita líquida, 3) Documentos MDIC/MCTIC');
+      alertas.push('⚠️ NOMENCLATURA - Valide terminologia: veículos, sistemas, componentes conforme glossário técnico do setor automotivo');
+    } else if (tipoRegime.includes('informática') || tipoRegime.includes('ppb') || templateContent.includes('LEI DE INFORMÁTICA')) {
+      alertas.push('⚠️ LEI DE INFORMÁTICA - Confirme: 1) Mínimo 5% faturamento em P&D, 2) Convênios ICT válidos, 3) Certificação PPB vigente');
+      alertas.push('⚠️ PROCESSO PRODUTIVO - Valide atendimento a requisitos de conteúdo local e etapas do PPB conforme portarias MCTIC');
+    } else if (tipoRegime.includes('mover') || templateContent.includes('MOVER')) {
+      alertas.push('⚠️ PROGRAMA MOVER - Confirme: 1) Indicadores de descarbonização, 2) Metas de eficiência energética, 3) Certificações ambientais PROCONVE/PROMOT');
+      alertas.push('⚠️ SUSTENTABILIDADE - Valide projetos de eletrificação, tecnologias de baixa emissão e estudos de impacto ambiental');
+    }
+    
+    // 8. Alertas obrigatórios de conformidade regulatória
+    alertas.push('⚠️ DOCUMENTAÇÃO - Anexe comprovantes: notas fiscais, contratos, pareceres técnicos, laudos de ICT, certificados de propriedade intelectual');
+    alertas.push('⚠️ ASSINATURAS - Identifique responsáveis técnicos, responsável legal da empresa e representantes de instituições parceiras com CPF/CNPJ');
+    
+    // 9. Alertas de qualidade e revisão
+    if (textoFormatado.includes('[PENDENTE') || textoFormatado.includes('[REVISAR')) {
+      alertas.push('⚠️ ATENÇÃO - Documento contém marcações [PENDENTE] ou [REVISAR]. Complete informações antes do envio oficial');
+    }
+    
+    // Limitar a 12 alertas mais relevantes
+    alertas = alertas.slice(0, 12);
 
     console.log('Formatação concluída com sucesso');
 
