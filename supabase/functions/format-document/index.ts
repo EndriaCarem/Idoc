@@ -36,7 +36,6 @@ REGRAS IMPORTANTES:
 - O HTML deve ser minimalista e sem CSS inline desnecessário: apenas <h1>, <h2>, <p>, <ul>/<ol>, <table>/<thead>/<tbody>/<tr>/<th>/<td>, <strong>, <em>.
 - Tabelas: inclua cabeçalho <thead> seguindo as colunas do MANIFEST.
 - Onde houver campos vazios no RASCUNHO, deixe vazio (não fabular).
-- **VALIDAÇÃO DE COMPLETUDE**: Compare o RASCUNHO com o MANIFEST e identifique TODAS as seções, campos e tabelas que estão faltando ou incompletas. Gere alertas específicos para cada item faltante.
 - Saída FINAL deve conter apenas três blocos, nesta ordem e com estes marcadores:
 ---DOCUMENT_HTML---
 [HTML AQUI]
@@ -88,12 +87,6 @@ REGRAS DE VALIDAÇÃO (aplicar SOMENTE se existirem no MANIFEST):
 - trl-progress: TRL_Alvo >= TRL_Inicial por projeto; caso contrário, alerta.
 - text-presence: se "Serviços de Terceiros" aparecer, crie uma entrada textPresence e um alerta pedindo justificativa.
 - required-column: se alguma coluna obrigatória estiver vazia, sinalizar em requiredColumns e gerar alerta.
-- **completeness-check**: CRÍTICO - Compare cada seção do MANIFEST com o RASCUNHO:
-  * Se uma seção obrigatória estiver COMPLETAMENTE ausente, gere alerta: "⚠️ Seção obrigatória '[Nome da Seção]' está faltando no documento"
-  * Se uma seção existe mas está VAZIA ou com placeholder, gere alerta: "⚠️ Seção '[Nome da Seção]' está incompleta - preencha com os dados necessários"
-  * Se uma tabela obrigatória está faltando ou com dados de exemplo, gere alerta: "⚠️ Tabela '[Nome da Tabela]' precisa ser preenchida com dados reais"
-  * Para cada campo obrigatório vazio, gere alerta específico: "⚠️ Campo obrigatório '[Nome do Campo]' na seção '[Seção]' precisa ser preenchido"
-  * Liste TODOS os campos faltantes de forma clara e acionável
 
 FORMATO FINAL (OBRIGATÓRIO):
 ---DOCUMENT_HTML---
@@ -163,26 +156,16 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
     const htmlMatch = aiResponse.match(/---DOCUMENT_HTML---\s*([\s\S]*?)\s*---STRUCT_DATA_JSON---/);
     const jsonMatch = aiResponse.match(/---STRUCT_DATA_JSON---\s*([\s\S]*?)\s*---END---/);
     
-    let textoFormatado = '';
+    let textoFormatado = aiResponse;
     let structData: any = null;
     
     if (htmlMatch && jsonMatch) {
       textoFormatado = htmlMatch[1].trim();
       try {
         structData = JSON.parse(jsonMatch[1].trim());
-        console.log('JSON estruturado parseado com sucesso');
       } catch (e) {
         console.error('Erro ao parsear JSON estruturado:', e);
-        console.error('JSON que falhou:', jsonMatch[1]);
       }
-    } else {
-      console.warn('Formato de resposta não reconhecido, usando resposta completa');
-      textoFormatado = aiResponse;
-    }
-    
-    if (!textoFormatado) {
-      console.warn('HTML vazio após parse, usando resposta completa');
-      textoFormatado = aiResponse;
     }
 
     // Usar dados estruturados se disponíveis, caso contrário fazer análise do HTML
@@ -192,7 +175,6 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
     if (structData) {
       sugestoes = structData.sugestoes || [];
       alertas = structData.alertas || [];
-      console.log('Usando alertas e sugestões do structData:', { alertas: alertas.length, sugestoes: sugestoes.length });
     } else {
       // Fallback: análise do HTML gerado
       const tipoRegime = templateName?.toLowerCase() || '';
@@ -209,19 +191,9 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
       
       alertas.push('⚠️ Revise o documento formatado antes do envio oficial');
       alertas.push('⚠️ Confirme que todos os valores numéricos estão corretos');
-      console.log('Usando alertas e sugestões de fallback');
-    }
-    
-    // Garantir que sempre temos um HTML formatado, mesmo que seja básico
-    if (!textoFormatado || textoFormatado.trim().length === 0) {
-      console.warn('HTML vazio, criando estrutura básica a partir do documento original');
-      textoFormatado = `<h1>${templateName || 'Documento'}</h1>\n<div>\n${documentText.replace(/\n/g, '<br>\n')}\n</div>`;
-      alertas.unshift('⚠️ Não foi possível formatar o documento completamente - verifique o formato do template');
     }
 
     console.log('Formatação concluída com sucesso');
-    console.log('Tamanho do HTML:', textoFormatado.length);
-    console.log('Primeiros 200 caracteres:', textoFormatado.substring(0, 200));
 
     return new Response(
       JSON.stringify({
