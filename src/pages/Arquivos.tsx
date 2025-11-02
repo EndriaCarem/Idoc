@@ -84,6 +84,8 @@ const Arquivos = () => {
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
+  const [isEditingDocName, setIsEditingDocName] = useState(false);
+  const [editedDocName, setEditedDocName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
 
@@ -559,6 +561,26 @@ const Arquivos = () => {
 
     toast.success('Documento salvo com sucesso!');
     setShowDocumentViewDialog(false);
+    loadDocuments();
+  };
+
+  const handleRenameDocument = async () => {
+    if (!selectedDocForAction || !editedDocName.trim()) return;
+
+    const { error } = await supabase
+      .from('saved_documents')
+      .update({ name: editedDocName.trim() })
+      .eq('id', selectedDocForAction.id);
+
+    if (error) {
+      console.error('Erro ao renomear documento:', error);
+      toast.error('Erro ao renomear documento');
+      return;
+    }
+
+    toast.success('Documento renomeado com sucesso!');
+    setIsEditingDocName(false);
+    setSelectedDocForAction({ ...selectedDocForAction, name: editedDocName.trim() });
     loadDocuments();
   };
 
@@ -1309,7 +1331,57 @@ const Arquivos = () => {
               <div className="flex-1">
                 <DialogTitle className="text-2xl flex items-center gap-2">
                   <FileText className="h-6 w-6" />
-                  {selectedDocForAction?.name}
+                  {isEditingDocName ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        value={editedDocName}
+                        onChange={(e) => setEditedDocName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRenameDocument();
+                          if (e.key === 'Escape') {
+                            setIsEditingDocName(false);
+                            setEditedDocName(selectedDocForAction?.name || '');
+                          }
+                        }}
+                        className="text-2xl font-semibold h-auto py-1"
+                        autoFocus
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleRenameDocument}
+                        className="h-8 w-8"
+                      >
+                        <Save className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setIsEditingDocName(false);
+                          setEditedDocName(selectedDocForAction?.name || '');
+                        }}
+                        className="h-8 w-8"
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <span>{selectedDocForAction?.name}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setIsEditingDocName(true);
+                          setEditedDocName(selectedDocForAction?.name || '');
+                        }}
+                        className="h-6 w-6"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                 </DialogTitle>
                 <DialogDescription className="mt-2 flex items-center gap-4">
                   <span className="flex items-center gap-1">
