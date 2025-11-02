@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile, MoreVertical, Palette, Eye, Bot } from 'lucide-react';
+import { FolderPlus, File, Folder, Share2, Trash2, Download, Edit, FileText, ChevronRight, Upload, Tag, Smile, MoreVertical, Palette, Eye, Bot, Bold, Italic, List, Heading1, Heading2, Underline } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -544,6 +544,32 @@ const Arquivos = () => {
     // Redirecionar para a página principal com o documento selecionado
     window.location.href = `/?doc=${selectedDocForAction.id}`;
   };
+
+  const insertFormatting = (prefix: string, suffix: string = '') => {
+    const textarea = document.getElementById('document-content') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = editedDocumentContent;
+    const selectedText = text.substring(start, end);
+    
+    const newText = text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
+    setEditedDocumentContent(newText);
+    
+    // Restaurar foco e seleção
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
+  };
+
+  const handleBold = () => insertFormatting('**', '**');
+  const handleItalic = () => insertFormatting('*', '*');
+  const handleUnderline = () => insertFormatting('<u>', '</u>');
+  const handleHeading1 = () => insertFormatting('# ');
+  const handleHeading2 = () => insertFormatting('## ');
+  const handleList = () => insertFormatting('- ');
 
   const handleDownloadDocument = (doc: SavedDocument) => {
     const blob = new Blob([doc.formatted_text], { type: 'text/plain' });
@@ -1209,23 +1235,97 @@ const Arquivos = () => {
 
       {/* Dialog para visualizar e editar documento */}
       <Dialog open={showDocumentViewDialog} onOpenChange={setShowDocumentViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>{selectedDocForAction?.name}</DialogTitle>
-            <DialogDescription>
-              Visualize e edite o conteúdo do documento ou envie para análise do copilot
-            </DialogDescription>
+        <DialogContent className="max-w-4xl max-h-[85vh]">
+          <DialogHeader className="border-b pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <DialogTitle className="text-2xl">{selectedDocForAction?.name}</DialogTitle>
+                <DialogDescription className="mt-1">
+                  Template: {selectedDocForAction?.template_name}
+                </DialogDescription>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <FileText className="h-4 w-4" />
+                {selectedDocForAction?.created_at && format(new Date(selectedDocForAction.created_at), "dd/MM/yyyy", { locale: ptBR })}
+              </div>
+            </div>
           </DialogHeader>
+          
           <div className="space-y-4 py-4 overflow-y-auto">
+            {/* Barra de ferramentas de formatação */}
+            <div className="flex flex-wrap gap-1 p-2 bg-accent/50 rounded-lg border">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBold}
+                title="Negrito (Ctrl+B)"
+                className="h-8 w-8 p-0"
+              >
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleItalic}
+                title="Itálico (Ctrl+I)"
+                className="h-8 w-8 p-0"
+              >
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleUnderline}
+                title="Sublinhado (Ctrl+U)"
+                className="h-8 w-8 p-0"
+              >
+                <Underline className="h-4 w-4" />
+              </Button>
+              <div className="w-px h-8 bg-border mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleHeading1}
+                title="Título 1"
+                className="h-8 w-8 p-0"
+              >
+                <Heading1 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleHeading2}
+                title="Título 2"
+                className="h-8 w-8 p-0"
+              >
+                <Heading2 className="h-4 w-4" />
+              </Button>
+              <div className="w-px h-8 bg-border mx-1" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleList}
+                title="Lista"
+                className="h-8 w-8 p-0"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="document-content">Conteúdo do Documento</Label>
+              <Label htmlFor="document-content" className="text-sm font-medium">
+                Conteúdo do Documento
+              </Label>
               <Textarea
                 id="document-content"
                 value={editedDocumentContent}
                 onChange={(e) => setEditedDocumentContent(e.target.value)}
-                className="min-h-[400px] font-mono text-sm"
+                className="min-h-[400px] font-mono text-sm resize-none"
                 placeholder="Conteúdo do documento..."
               />
+              <p className="text-xs text-muted-foreground">
+                {editedDocumentContent.length} caracteres
+              </p>
             </div>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
