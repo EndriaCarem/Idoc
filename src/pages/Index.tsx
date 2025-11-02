@@ -159,10 +159,11 @@ const Index = () => {
   };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string) => {
+    // Definir estados imediatamente para mostrar loading
+    setIsProcessing(true);
     setOriginalText(text);
     setEditableText(text);
     setOriginalFilename(filename);
-    setIsProcessing(true);
     setSelectedTemplateId(templateId);
     
     try {
