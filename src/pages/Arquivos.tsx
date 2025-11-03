@@ -625,13 +625,6 @@ const Arquivos = () => {
       setIsProcessingCopilot(true);
       console.log('selectedDocForAction:', selectedDocForAction);
       
-      // Função para remover tags HTML
-      const stripHtml = (html: string) => {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
-      };
-      
       // Verificar se é um documento salvo (tem formatted_text)
       if ('formatted_text' in selectedDocForAction && selectedDocForAction.formatted_text) {
         console.log('Tipo: documento salvo (saved_documents)');
@@ -642,8 +635,23 @@ const Arquivos = () => {
         // Buscar nome do template selecionado
         const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
         
-        // Para documentos salvos, usar original_text ou texto sem HTML
-        const textToSend = selectedDocForAction.original_text || stripHtml(selectedDocForAction.formatted_text);
+        // Para documentos salvos, sempre usar o texto original se disponível
+        let textToSend = selectedDocForAction.original_text;
+        
+        // Se não houver original_text, tentar extrair do formatted_text
+        if (!textToSend || textToSend.trim() === '') {
+          console.warn('original_text vazio, extraindo de formatted_text');
+          const tmp = document.createElement('div');
+          tmp.innerHTML = selectedDocForAction.formatted_text;
+          textToSend = tmp.textContent || tmp.innerText || '';
+        }
+        
+        // Verificar se há conteúdo válido
+        if (!textToSend || textToSend.trim() === '') {
+          toast.error('Documento sem conteúdo válido para processar');
+          setIsProcessingCopilot(false);
+          return;
+        }
         
         const dataToStore = {
           type: 'file',
@@ -653,6 +661,7 @@ const Arquivos = () => {
           templateName: selectedTemplate?.name
         };
         console.log('Salvando no sessionStorage:', dataToStore);
+        console.log('Tamanho do conteúdo:', textToSend.length);
         sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
         window.location.href = '/';
         return;
