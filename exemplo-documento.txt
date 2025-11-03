@@ -1,0 +1,20 @@
+Relatório da empresa XYZ
+
+Empresa: XYZ Tecnologia Ltda
+cnpj 12.345.678/0001-99
+Período: Janeiro a Março 2024
+João Silva é o responsável
+
+Resumo
+Durante o primeiro trimestre de 2024 a empresa teve bom desempenho. As vendas cresceram e os custos ficaram controlados. Houve investimento em tecnologia.
+
+Valores
+Software - previsto 50000 realizado 48000 ok
+Hardware - previsto 30000 realizado 35000 acima
+Treinamento - previsto 20000 realizado 18000 ok
+
+Observações importantes
+- Investimento em cloud computing
+- Equipe aumentou em 15%
+- Novos clientes adquiridos
+- Sistema ERP implementado
