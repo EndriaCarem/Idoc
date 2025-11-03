@@ -351,13 +351,15 @@ const Index = () => {
                     </CardContent>
                   </Card>
 
-                  <DocumentPreview 
-                    originalText={originalText}
-                    formattedText={copilotResult?.textoFormatado || ''}
-                    templateName={selectedTemplateId || ''}
-                    alertsCount={copilotResult?.alertas.length || 0}
-                    suggestionsCount={copilotResult?.sugestoes.length || 0}
-                  />
+                  {copilotResult && (
+                    <DocumentPreview 
+                      originalText={originalText}
+                      formattedText={copilotResult.textoFormatado}
+                      templateName={selectedTemplateId || ''}
+                      alertsCount={copilotResult.alertas.length}
+                      suggestionsCount={copilotResult.sugestoes.length}
+                    />
+                  )}
                 </div>
                 
                 <div className="lg:col-span-1">
