@@ -5,7 +5,7 @@ import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import LoadingRobot from '@/components/LoadingRobot';
 import { formatarComCopilot } from '@/services/geminiService';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CopilotResult } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -57,16 +57,13 @@ const Index = () => {
 
   const loadFromFileContent = async (content: string, filename: string, documentGroupId?: string, templateId?: string, templateName?: string) => {
     try {
-      console.log('loadFromFileContent chamado com:', { content: content.substring(0, 50), filename, templateId, templateName });
-      
-      // CRÍTICO: Setar os estados ANTES de processar
-      setOriginalText(content);
-      setEditableText(content);
-      setOriginalFilename(filename);
-      
       // Se templateId foi fornecido, usar ele
       if (templateId && templateName) {
+        setOriginalText(content);
+        setEditableText(content);
+        setOriginalFilename(filename);
         setSelectedTemplateId(templateId);
+        
         handleFileUpload(content, templateId, templateName, filename, documentGroupId);
         return;
       }
@@ -80,6 +77,9 @@ const Index = () => {
 
       if (templates && templates.length > 0) {
         const template = templates[0];
+        setOriginalText(content);
+        setEditableText(content);
+        setOriginalFilename(filename);
         setSelectedTemplateId(template.id);
         
         // Processar automaticamente (isProcessing já está true do useEffect)
@@ -119,19 +119,15 @@ const Index = () => {
         const templateId = templateData?.id || null;
         console.log('Template encontrado:', templateId);
         
-        // CRÍTICO: Setar estados ANTES de processar
-        const textToUse = savedDoc.original_text || savedDoc.formatted_text;
-        console.log('Setando estados - text:', textToUse.substring(0, 50), 'filename:', savedDoc.name);
-        
-        setOriginalText(textToUse);
-        setEditableText(textToUse);
+        setOriginalText(savedDoc.original_text || savedDoc.formatted_text);
+        setEditableText(savedDoc.original_text || savedDoc.formatted_text);
         setOriginalFilename(savedDoc.name);
         setSelectedTemplateId(templateId);
         
         // Processar automaticamente (isProcessing já está true do useEffect)
         if (templateId && savedDoc.template_name) {
           handleFileUpload(
-            textToUse, 
+            savedDoc.original_text || savedDoc.formatted_text, 
             templateId, 
             savedDoc.template_name, 
             savedDoc.name
@@ -191,20 +187,37 @@ const Index = () => {
   };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string, documentGroupId?: string) => {
-    // Não setar estados de documento aqui pois já foram setados antes
-    // Apenas garantir que isProcessing está true
-    if (!isProcessing) {
-      setIsProcessing(true);
-    }
+    // Setar estados do documento
+    setOriginalText(text);
+    setEditableText(text);
+    setOriginalFilename(filename);
+    setSelectedTemplateId(templateId);
+    setIsProcessing(true);
     
     try {
+      console.log('🚀 Iniciando processamento do documento...');
       toast.info("🔄 Iniciando processamento do documento...");
       
       toast.loading("📄 Analisando documento com IA...", { id: "processing" });
       
+      console.log('📤 Enviando para IA:', { templateId, textLength: text.length });
       const result = await formatarComCopilot(text, templateId);
       
+      console.log('📥 Resultado recebido da IA:', {
+        hasTextoFormatado: !!result.textoFormatado,
+        textoFormatadoLength: result.textoFormatado?.length || 0,
+        alertasCount: result.alertas?.length || 0,
+        sugestoesCount: result.sugestoes?.length || 0
+      });
+      
       toast.dismiss("processing");
+      
+      // Verificar se o resultado está completo
+      if (!result.textoFormatado) {
+        console.error('❌ Resultado sem texto formatado!');
+        toast.error("Erro: Documento não foi formatado corretamente");
+        return;
+      }
       
       // Mostrar alertas encontrados em tempo real
       if (result.alertas && result.alertas.length > 0) {
@@ -223,9 +236,9 @@ const Index = () => {
         }, result.alertas.length * 800);
       }
       
+      console.log('✅ Definindo copilotResult...');
       setCopilotResult(result);
-      console.log('CopilotResult setado:', result);
-      console.log('Estados atuais - originalText:', originalText, 'editableText:', editableText, 'isProcessing:', isProcessing);
+      console.log('✅ copilotResult definido com sucesso');
       
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
@@ -251,7 +264,7 @@ const Index = () => {
           alerts_count: result.alertas.length,
           suggestions_count: result.sugestoes.length,
           user_id: user.id,
-          document_group_id: documentGroupId || undefined, // Se houver group_id, usa; senão será criado automaticamente
+          document_group_id: documentGroupId || undefined,
         });
       
       toast.dismiss("saving");
@@ -263,9 +276,11 @@ const Index = () => {
         toast.success("✅ Documento processado e salvo com sucesso!");
       }
     } catch (error) {
-      console.error('Erro ao processar documento:', error);
+      console.error('❌ Erro ao processar documento:', error);
       toast.error("❌ Erro ao processar documento. Tente novamente.");
+      setCopilotResult(null);
     } finally {
+      console.log('🏁 Finalizando processamento...');
       setIsProcessing(false);
     }
   };
@@ -307,7 +322,14 @@ const Index = () => {
     }
   };
 
-  console.log('RENDER - originalText:', !!originalText, 'isProcessing:', isProcessing, 'copilotResult:', !!copilotResult);
+  const handleNovoDocumento = () => {
+    setOriginalText('');
+    setEditableText('');
+    setOriginalFilename('');
+    setCopilotResult(null);
+    setSelectedTemplateId(null);
+    toast.info('Pronto para processar novo documento');
+  };
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
@@ -333,16 +355,27 @@ const Index = () => {
                   {/* Editor de Texto */}
                   <Card className="backdrop-blur-xl bg-white/40 dark:bg-card/40 border-2">
                     <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
+                      <CardTitle className="flex items-center justify-between flex-wrap gap-2">
                         <span>Editar Documento Original</span>
-                        <Button 
-                          onClick={handleReprocess}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          Reprocessar
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={handleNovoDocumento}
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <FileUp className="w-4 h-4" />
+                            Novo Documento
+                          </Button>
+                          <Button 
+                            onClick={handleReprocess}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Reprocessar
+                          </Button>
+                        </div>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -359,37 +392,23 @@ const Index = () => {
                     </CardContent>
                   </Card>
 
-                  {copilotResult ? (
-                    <DocumentPreview 
-                      originalText={originalText}
-                      formattedText={copilotResult.textoFormatado}
-                      templateName={selectedTemplateId || ''}
-                      alertsCount={copilotResult.alertas.length}
-                      suggestionsCount={copilotResult.sugestoes.length}
-                    />
-                  ) : (
-                    <Card className="shadow-lg border-2">
-                      <CardContent className="p-6 text-center text-muted-foreground">
-                        Processamento concluído. Aguardando resultado...
-                      </CardContent>
-                    </Card>
-                  )}
+                  <DocumentPreview 
+                    originalText={originalText}
+                    formattedText={copilotResult?.textoFormatado || ''}
+                    templateName={selectedTemplateId || ''}
+                    alertsCount={copilotResult?.alertas.length || 0}
+                    suggestionsCount={copilotResult?.sugestoes.length || 0}
+                  />
                 </div>
                 
                 <div className="lg:col-span-1">
-                  {copilotResult ? (
+                  {copilotResult && (
                     <CopilotPanel 
                       sugestoes={copilotResult.sugestoes}
                       alertas={copilotResult.alertas}
                       documentoOriginal={editableText}
                       documentoFormatado={copilotResult.textoFormatado}
                     />
-                  ) : (
-                    <Card className="shadow-lg border-2">
-                      <CardContent className="p-6 text-center text-muted-foreground">
-                        Processamento concluído. Aguardando resultado...
-                      </CardContent>
-                    </Card>
                   )}
                 </div>
               </div>
