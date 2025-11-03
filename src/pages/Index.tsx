@@ -5,7 +5,7 @@ import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import LoadingRobot from '@/components/LoadingRobot';
 import { formatarComCopilot } from '@/services/geminiService';
-import { RefreshCw, FileUp } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CopilotResult } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -187,37 +187,20 @@ const Index = () => {
   };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string, documentGroupId?: string) => {
-    // Setar estados do documento
-    setOriginalText(text);
-    setEditableText(text);
-    setOriginalFilename(filename);
-    setSelectedTemplateId(templateId);
-    setIsProcessing(true);
+    // Não setar estados de documento aqui pois já foram setados antes
+    // Apenas garantir que isProcessing está true
+    if (!isProcessing) {
+      setIsProcessing(true);
+    }
     
     try {
-      console.log('🚀 Iniciando processamento do documento...');
       toast.info("🔄 Iniciando processamento do documento...");
       
       toast.loading("📄 Analisando documento com IA...", { id: "processing" });
       
-      console.log('📤 Enviando para IA:', { templateId, textLength: text.length });
       const result = await formatarComCopilot(text, templateId);
       
-      console.log('📥 Resultado recebido da IA:', {
-        hasTextoFormatado: !!result.textoFormatado,
-        textoFormatadoLength: result.textoFormatado?.length || 0,
-        alertasCount: result.alertas?.length || 0,
-        sugestoesCount: result.sugestoes?.length || 0
-      });
-      
       toast.dismiss("processing");
-      
-      // Verificar se o resultado está completo
-      if (!result.textoFormatado) {
-        console.error('❌ Resultado sem texto formatado!');
-        toast.error("Erro: Documento não foi formatado corretamente");
-        return;
-      }
       
       // Mostrar alertas encontrados em tempo real
       if (result.alertas && result.alertas.length > 0) {
@@ -236,9 +219,7 @@ const Index = () => {
         }, result.alertas.length * 800);
       }
       
-      console.log('✅ Definindo copilotResult...');
       setCopilotResult(result);
-      console.log('✅ copilotResult definido com sucesso');
       
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
@@ -264,7 +245,7 @@ const Index = () => {
           alerts_count: result.alertas.length,
           suggestions_count: result.sugestoes.length,
           user_id: user.id,
-          document_group_id: documentGroupId || undefined,
+          document_group_id: documentGroupId || undefined, // Se houver group_id, usa; senão será criado automaticamente
         });
       
       toast.dismiss("saving");
@@ -276,11 +257,9 @@ const Index = () => {
         toast.success("✅ Documento processado e salvo com sucesso!");
       }
     } catch (error) {
-      console.error('❌ Erro ao processar documento:', error);
+      console.error('Erro ao processar documento:', error);
       toast.error("❌ Erro ao processar documento. Tente novamente.");
-      setCopilotResult(null);
     } finally {
-      console.log('🏁 Finalizando processamento...');
       setIsProcessing(false);
     }
   };
@@ -322,15 +301,6 @@ const Index = () => {
     }
   };
 
-  const handleNovoDocumento = () => {
-    setOriginalText('');
-    setEditableText('');
-    setOriginalFilename('');
-    setCopilotResult(null);
-    setSelectedTemplateId(null);
-    toast.info('Pronto para processar novo documento');
-  };
-
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!originalText ? (
@@ -355,27 +325,16 @@ const Index = () => {
                   {/* Editor de Texto */}
                   <Card className="backdrop-blur-xl bg-white/40 dark:bg-card/40 border-2">
                     <CardHeader>
-                      <CardTitle className="flex items-center justify-between flex-wrap gap-2">
+                      <CardTitle className="flex items-center justify-between">
                         <span>Editar Documento Original</span>
-                        <div className="flex gap-2">
-                          <Button 
-                            onClick={handleNovoDocumento}
-                            size="sm"
-                            variant="outline"
-                            className="gap-2"
-                          >
-                            <FileUp className="w-4 h-4" />
-                            Novo Documento
-                          </Button>
-                          <Button 
-                            onClick={handleReprocess}
-                            size="sm"
-                            className="gap-2"
-                          >
-                            <RefreshCw className="w-4 h-4" />
-                            Reprocessar
-                          </Button>
-                        </div>
+                        <Button 
+                          onClick={handleReprocess}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          Reprocessar
+                        </Button>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>

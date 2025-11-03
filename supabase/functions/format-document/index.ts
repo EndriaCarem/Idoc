@@ -25,37 +25,98 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    const systemPrompt = `Você é um assistente especializado em formatação de documentos regulatórios brasileiros.
-
-Sua tarefa é formatar o documento fornecido seguindo o template especificado, mantendo o formato em TEXTO PURO.
+    const systemPrompt = `SISTEMA (papel): Você é um formatador regulatório. Sua tarefa é transformar um RASCUNHO de relatório, com base no MANIFEST (seções e regras), em:
+(1) DOCUMENT_HTML: corpo do relatório já formatado (HTML limpo, com <h1>, <h2>, <table>, <thead>, <tbody>, listas).
+(2) STRUCT_DATA_JSON: dados estruturados para validações/telemetria (somatórios, alertas, sugestões).
 
 REGRAS IMPORTANTES:
-- NÃO use HTML, markdown ou qualquer tipo de formatação especial
-- Use apenas texto puro com quebras de linha e espaçamentos
-- NÃO invente números ou informações - use apenas o que está no documento original
-- Mantenha a formatação de valores monetários em pt-BR (ex: R$ 1.240.000,00)
-- Organize o conteúdo seguindo a estrutura do template fornecido
-- Para tabelas, use alinhamento de texto simples com espaços
-- Mantenha títulos de seções em MAIÚSCULAS seguidos de quebra de linha dupla
-- Separe seções diferentes com linhas em branco
+- NÃO invente números. Use somente os valores do RASCUNHO.
+- Números: detectar pt-BR e normalizar (ex.: 1.240.000,00 → 1240000.00) mantendo também a forma pt-BR ("R$ 1.240.000,00").
+- Estrutura (seções/tabelas) deve seguir o MANIFEST (\`sections\`, \`tableSpec\`, \`placeholders\`, \`rules\`).
+- O HTML deve ser minimalista e sem CSS inline desnecessário: apenas <h1>, <h2>, <p>, <ul>/<ol>, <table>/<thead>/<tbody>/<tr>/<th>/<td>, <strong>, <em>.
+- Tabelas: inclua cabeçalho <thead> seguindo as colunas do MANIFEST.
+- Onde houver campos vazios no RASCUNHO, deixe vazio (não fabular).
+- **VALIDAÇÃO DE COMPLETUDE**: Compare o RASCUNHO com o MANIFEST e identifique TODAS as seções, campos e tabelas que estão faltando ou incompletas. Gere alertas específicos para cada item faltante.
+- Saída FINAL deve conter apenas três blocos, nesta ordem e com estes marcadores:
+---DOCUMENT_HTML---
+[HTML AQUI]
+---STRUCT_DATA_JSON---
+[JSON AQUI]
+---END---
 
-FORMATO DE SAÍDA:
-Retorne APENAS o documento formatado em texto puro.
-Após o documento, em linhas separadas, forneça:
-- SUGESTÕES: lista de melhorias aplicadas (uma por linha, iniciando com "-")
-- ALERTAS: lista de pontos de atenção (uma por linha, iniciando com "⚠️")
+ENTRADAS:
+<<RASCUNHO>>
+{RASCUNHO}
+<</RASCUNHO>>
 
-TEMPLATE DE REFERÊNCIA:
+<<MANIFEST>>
+{MANIFEST}
+<</MANIFEST>>
+
+CONTEÚDO DO DOCUMENT_HTML (HTML):
+- Título principal <h1> com o nome do regime (RA, RDA, PPB ou MOVER).
+- Seções em <h2> obedecendo a ordem do MANIFEST (ex.: Identificação, Perfil/Mapa/Resumo, Projetos, Indicadores, Conformidades, Anexos).
+- Em cada seção de tabela, construa uma <table> com <thead> (nomes das colunas do MANIFEST) e <tbody> com as linhas extraídas do RASCUNHO.
+- Frases curtas, técnicas, sem alterar números.
+
+CONTEÚDO DO STRUCT_DATA_JSON (JSON):
+{
+  "identificacao": { "empresa":"", "cnpj":"", "anoBase":0, "unidadeFabril":"", "portaria":"" },
+  "sections": {
+    // chaves = keys do MANIFEST (ex.: "perfil_investimentos", "mapa_etapas", "resumo_disp", "projetos", "indicadores", ...)
+    // cada seção tabela = array de objetos com as colunas do MANIFEST; para colunas de moeda/percentual inclua:
+    //   <Coluna>Number (número normalizado) e <Coluna>BRL (string pt-BR) ou <Coluna>Percent (número)
+  },
+  "calculos": {
+    "perfilTotalNumber": 0, "perfilTotalBRL":"R$ 0,00",
+    "projetosTotalNumber": 0, "projetosTotalBRL":"R$ 0,00"
+  },
+  "checks": {
+    "sumCheck": { "ok": true, "diferencaNumber": 0, "mensagem": "" },
+    "percentuaisMinimos": [{ "linha":1, "ok":true, "mensagem":"" }],
+    "trlProgress": [{ "codigo":"", "ok":true, "mensagem":"" }],
+    "textPresence": [{ "alvo":"Serviços de Terceiros", "presente":false, "mensagem":"" }],
+    "requiredColumns": [{ "secao":"", "coluna":"", "linha":1, "ok":true, "mensagem":"" }]
+  },
+  "alertas": [ "mensagens curtas de conformidade" ],
+  "sugestoes": [ "bullets curtos de clareza (sem mudar números)" ]
+}
+
+REGRAS DE VALIDAÇÃO (aplicar SOMENTE se existirem no MANIFEST):
+- numeric-sum-check: comparar somatórios entre seções; se diferente, checks.sumCheck.ok=false e gerar alerta.
+- numeric-compare-row: validar por linha (ex.: % Realizado >= % Mínimo).
+- trl-progress: TRL_Alvo >= TRL_Inicial por projeto; caso contrário, alerta.
+- text-presence: se "Serviços de Terceiros" aparecer, crie uma entrada textPresence e um alerta pedindo justificativa.
+- required-column: se alguma coluna obrigatória estiver vazia, sinalizar em requiredColumns e gerar alerta.
+- **completeness-check**: CRÍTICO - Compare cada seção do MANIFEST com o RASCUNHO:
+  * Se uma seção obrigatória estiver COMPLETAMENTE ausente, gere alerta: "⚠️ Seção obrigatória '[Nome da Seção]' está faltando no documento"
+  * Se uma seção existe mas está VAZIA ou com placeholder, gere alerta: "⚠️ Seção '[Nome da Seção]' está incompleta - preencha com os dados necessários"
+  * Se uma tabela obrigatória está faltando ou com dados de exemplo, gere alerta: "⚠️ Tabela '[Nome da Tabela]' precisa ser preenchida com dados reais"
+  * Para cada campo obrigatório vazio, gere alerta específico: "⚠️ Campo obrigatório '[Nome do Campo]' na seção '[Seção]' precisa ser preenchido"
+  * Liste TODOS os campos faltantes de forma clara e acionável
+
+FORMATO FINAL (OBRIGATÓRIO):
+---DOCUMENT_HTML---
+[HTML]
+---STRUCT_DATA_JSON---
+[JSON]
+---END---
+
+=== TEMPLATE DE REFERÊNCIA (MANIFEST) ===
 ${templateContent.substring(0, 4000)}`;
 
-    const userPrompt = `DOCUMENTO ORIGINAL:
+    const userPrompt = `<<RASCUNHO>>
 ${documentText.substring(0, 10000)}
+<</RASCUNHO>>
 
-TEMPLATE A SEGUIR:
+<<MANIFEST>>
 ${templateContent}
+<</MANIFEST>>
 
-Formate o documento acima seguindo o template, mantendo apenas texto puro sem HTML ou markdown.
-Ao final, liste as sugestões e alertas em linhas separadas.`;
+Processe o RASCUNHO conforme as instruções do sistema e retorne no formato especificado:
+---DOCUMENT_HTML---
+---STRUCT_DATA_JSON---
+---END---`;
 
     console.log('Chamando Lovable AI para formatação...');
 
@@ -98,46 +159,69 @@ Ao final, liste as sugestões e alertas em linhas separadas.`;
     const aiData = await response.json();
     const aiResponse = aiData.choices[0].message.content;
     
-    // Separar o texto formatado das sugestões e alertas
-    const lines = aiResponse.split('\n');
-    const textoFormatadoLines: string[] = [];
-    const sugestoes: string[] = [];
-    const alertas: string[] = [];
+    // Parse da resposta estruturada
+    const htmlMatch = aiResponse.match(/---DOCUMENT_HTML---\s*([\s\S]*?)\s*---STRUCT_DATA_JSON---/);
+    const jsonMatch = aiResponse.match(/---STRUCT_DATA_JSON---\s*([\s\S]*?)\s*---END---/);
     
-    let currentSection = 'documento';
+    let textoFormatado = '';
+    let structData: any = null;
     
-    for (const line of lines) {
-      const trimmed = line.trim();
-      
-      if (trimmed.toLowerCase().startsWith('sugestõ') || trimmed.toLowerCase().startsWith('sugest')) {
-        currentSection = 'sugestoes';
-        continue;
+    if (htmlMatch && jsonMatch) {
+      textoFormatado = htmlMatch[1].trim();
+      try {
+        structData = JSON.parse(jsonMatch[1].trim());
+        console.log('JSON estruturado parseado com sucesso');
+      } catch (e) {
+        console.error('Erro ao parsear JSON estruturado:', e);
+        console.error('JSON que falhou:', jsonMatch[1]);
       }
-      if (trimmed.toLowerCase().startsWith('alerta')) {
-        currentSection = 'alertas';
-        continue;
-      }
-      
-      if (trimmed.startsWith('-') && currentSection === 'sugestoes') {
-        sugestoes.push(trimmed.substring(1).trim());
-      } else if (trimmed.startsWith('⚠️') && currentSection === 'alertas') {
-        alertas.push(trimmed);
-      } else if (currentSection === 'documento') {
-        textoFormatadoLines.push(line);
-      }
+    } else {
+      console.warn('Formato de resposta não reconhecido, usando resposta completa');
+      textoFormatado = aiResponse;
     }
     
-    const textoFormatado = textoFormatadoLines.join('\n').trim();
-    
-    // Garantir que temos pelo menos uma sugestão e alerta
-    if (sugestoes.length === 0) {
-      sugestoes.push('Documento formatado conforme template');
+    if (!textoFormatado) {
+      console.warn('HTML vazio após parse, usando resposta completa');
+      textoFormatado = aiResponse;
     }
-    if (alertas.length === 0) {
-      alertas.push('⚠️ Revise o documento antes do envio oficial');
+
+    // Usar dados estruturados se disponíveis, caso contrário fazer análise do HTML
+    let sugestoes: string[] = [];
+    let alertas: string[] = [];
+    
+    if (structData) {
+      sugestoes = structData.sugestoes || [];
+      alertas = structData.alertas || [];
+      console.log('Usando alertas e sugestões do structData:', { alertas: alertas.length, sugestoes: sugestoes.length });
+    } else {
+      // Fallback: análise do HTML gerado
+      const tipoRegime = templateName?.toLowerCase() || '';
+      
+      if (textoFormatado.includes('<table')) {
+        sugestoes.push('✓ Dados organizados em tabelas estruturadas');
+      }
+      if (textoFormatado.includes('<thead>')) {
+        sugestoes.push('✓ Cabeçalhos de tabelas formatados corretamente');
+      }
+      if (textoFormatado.match(/R\$\s*[\d.,]+/)) {
+        sugestoes.push('✓ Valores monetários padronizados no formato brasileiro');
+      }
+      
+      alertas.push('⚠️ Revise o documento formatado antes do envio oficial');
+      alertas.push('⚠️ Confirme que todos os valores numéricos estão corretos');
+      console.log('Usando alertas e sugestões de fallback');
+    }
+    
+    // Garantir que sempre temos um HTML formatado, mesmo que seja básico
+    if (!textoFormatado || textoFormatado.trim().length === 0) {
+      console.warn('HTML vazio, criando estrutura básica a partir do documento original');
+      textoFormatado = `<h1>${templateName || 'Documento'}</h1>\n<div>\n${documentText.replace(/\n/g, '<br>\n')}\n</div>`;
+      alertas.unshift('⚠️ Não foi possível formatar o documento completamente - verifique o formato do template');
     }
 
     console.log('Formatação concluída com sucesso');
+    console.log('Tamanho do HTML:', textoFormatado.length);
+    console.log('Primeiros 200 caracteres:', textoFormatado.substring(0, 200));
 
     return new Response(
       JSON.stringify({
