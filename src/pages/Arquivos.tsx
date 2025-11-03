@@ -625,6 +625,13 @@ const Arquivos = () => {
       setIsProcessingCopilot(true);
       console.log('selectedDocForAction:', selectedDocForAction);
       
+      // Função para remover tags HTML
+      const stripHtml = (html: string) => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        return tmp.textContent || tmp.innerText || '';
+      };
+      
       // Verificar se é um documento salvo (tem formatted_text)
       if ('formatted_text' in selectedDocForAction && selectedDocForAction.formatted_text) {
         console.log('Tipo: documento salvo (saved_documents)');
@@ -635,10 +642,12 @@ const Arquivos = () => {
         // Buscar nome do template selecionado
         const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
         
-        // Para documentos salvos, passamos o texto diretamente
+        // Para documentos salvos, usar original_text ou texto sem HTML
+        const textToSend = selectedDocForAction.original_text || stripHtml(selectedDocForAction.formatted_text);
+        
         const dataToStore = {
           type: 'file',
-          content: selectedDocForAction.original_text || selectedDocForAction.formatted_text,
+          content: textToSend,
           filename: selectedDocForAction.name,
           templateId: selectedTemplateForCopilot,
           templateName: selectedTemplate?.name
