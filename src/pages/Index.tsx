@@ -5,7 +5,7 @@ import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import LoadingRobot from '@/components/LoadingRobot';
 import { formatarComCopilot } from '@/services/geminiService';
-import { RefreshCw, FileUp, Download } from 'lucide-react';
+import { RefreshCw, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CopilotResult } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -331,94 +331,13 @@ const Index = () => {
     toast.info('Pronto para processar novo documento');
   };
 
-  const downloadExampleFile = (filename: string, content: string) => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!originalText ? (
           isProcessing ? (
             <LoadingRobot message="Carregando documento..." />
           ) : (
-            <div className="max-w-4xl mx-auto space-y-4">
-              <div className="flex gap-2 justify-center flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => downloadExampleFile('exemplo-documento.txt', `Relatório da empresa XYZ
-
-Empresa: XYZ Tecnologia Ltda
-cnpj 12.345.678/0001-99
-Período: Janeiro a Março 2024
-João Silva é o responsável
-
-Resumo
-Durante o primeiro trimestre de 2024 a empresa teve bom desempenho. As vendas cresceram e os custos ficaram controlados. Houve investimento em tecnologia.
-
-Valores
-Software - previsto 50000 realizado 48000 ok
-Hardware - previsto 30000 realizado 35000 acima
-Treinamento - previsto 20000 realizado 18000 ok
-
-Observações importantes
-- Investimento em cloud computing
-- Equipe aumentou em 15%
-- Novos clientes adquiridos
-- Sistema ERP implementado`)}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Baixar Documento Exemplo
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => downloadExampleFile('exemplo-template.txt', `TEMPLATE: RELATÓRIO TÉCNICO SIMPLIFICADO
-
-ESTRUTURA OBRIGATÓRIA:
-
-1. IDENTIFICAÇÃO
-   - Empresa:
-   - CNPJ:
-   - Período:
-   - Responsável:
-
-2. RESUMO EXECUTIVO
-   (Texto descritivo de 2-3 parágrafos)
-
-3. DADOS FINANCEIROS
-   Tabela com colunas:
-   - Item
-   - Valor Previsto
-   - Valor Realizado
-   - Status
-
-4. OBSERVAÇÕES
-   - Lista de pontos importantes
-
-REGRAS DE FORMATAÇÃO:
-- Títulos em MAIÚSCULAS
-- Valores monetários em formato brasileiro (R$ X.XXX,XX)
-- Tabelas com alinhamento claro
-- Separação entre seções com linhas em branco
-
-VALIDAÇÕES:
-- Verificar se todos os campos obrigatórios foram preenchidos
-- Alertar se houver divergências maiores que 10% entre previsto e realizado
-- Sugerir melhorias na clareza do texto`)}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Baixar Template Exemplo
-                </Button>
-              </div>
+            <div className="max-w-4xl mx-auto">
               <DocumentInput 
                 onFileUpload={handleFileUpload}
                 selectedTemplateId={selectedTemplateId}
