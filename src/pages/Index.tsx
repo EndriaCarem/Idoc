@@ -26,7 +26,6 @@ const Index = () => {
 
   // Carregar documento se vier do sessionStorage
   useEffect(() => {
-    console.log('=== useEffect Index chamado ===');
     const copilotData = sessionStorage.getItem('copilot_doc');
     console.log('Dados do copilot no sessionStorage:', copilotData);
     
@@ -34,11 +33,6 @@ const Index = () => {
       try {
         const data = JSON.parse(copilotData);
         console.log('Dados parseados:', data);
-        console.log('Tipo de dados:', data.type);
-        console.log('Content length:', data.content?.length);
-        console.log('TemplateId:', data.templateId);
-        console.log('TemplateName:', data.templateName);
-        
         sessionStorage.removeItem('copilot_doc'); // Limpar após ler
         
         if (data.type === 'processed') {
@@ -46,46 +40,30 @@ const Index = () => {
           loadDocumentFromId(data.id, data.document_group_id);
         } else if (data.type === 'file') {
           console.log('Carregando arquivo:', data.filename);
-          console.log('Verificando templateId e templateName:', data.templateId, data.templateName);
-          
           // Se templateId foi fornecido, usar ele; senão buscar o mais recente
           if (data.templateId && data.templateName) {
-            console.log('Template fornecido, chamando loadFromFileContent com template');
             loadFromFileContent(data.content, data.filename, data.document_group_id, data.templateId, data.templateName);
           } else {
-            console.log('Sem template, chamando loadFromFileContent sem template');
             loadFromFileContent(data.content, data.filename, data.document_group_id);
           }
-        } else {
-          console.error('Tipo de dados desconhecido:', data.type);
         }
       } catch (error) {
         console.error('Erro ao processar dados do copilot:', error);
         toast.error('Erro ao carregar documento');
         setIsProcessing(false);
       }
-    } else {
-      console.log('Nenhum dado do copilot no sessionStorage');
     }
   }, []);
 
   const loadFromFileContent = async (content: string, filename: string, documentGroupId?: string, templateId?: string, templateName?: string) => {
     try {
-      console.log('=== loadFromFileContent chamado ===');
-      console.log('Conteúdo length:', content?.length);
-      console.log('Filename:', filename);
-      console.log('TemplateId:', templateId);
-      console.log('TemplateName:', templateName);
-      
       // Se templateId foi fornecido, usar ele
       if (templateId && templateName) {
-        console.log('Usando template fornecido:', templateId, templateName);
         setOriginalText(content);
         setEditableText(content);
         setOriginalFilename(filename);
         setSelectedTemplateId(templateId);
         
-        console.log('Chamando handleFileUpload...');
         handleFileUpload(content, templateId, templateName, filename, documentGroupId);
         return;
       }
@@ -209,28 +187,18 @@ const Index = () => {
   };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string, documentGroupId?: string) => {
-    console.log('=== handleFileUpload chamado ===');
-    console.log('Text length:', text?.length);
-    console.log('TemplateId:', templateId);
-    console.log('TemplateName:', templateName);
-    console.log('Filename:', filename);
-    
     // Não setar estados de documento aqui pois já foram setados antes
     // Apenas garantir que isProcessing está true
     if (!isProcessing) {
-      console.log('Setando isProcessing para true');
       setIsProcessing(true);
     }
     
     try {
-      console.log('Iniciando processamento...');
       toast.info("🔄 Iniciando processamento do documento...");
       
       toast.loading("📄 Analisando documento com IA...", { id: "processing" });
       
-      console.log('Chamando formatarComCopilot...');
       const result = await formatarComCopilot(text, templateId);
-      console.log('Resultado do copilot:', result);
       
       toast.dismiss("processing");
       

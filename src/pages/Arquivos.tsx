@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +53,6 @@ interface FileTag {
 }
 
 const Arquivos = () => {
-  const navigate = useNavigate();
   const [documents, setDocuments] = useState<SavedDocument[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [folders, setFolders] = useState<FolderType[]>([]);
@@ -665,7 +663,7 @@ const Arquivos = () => {
         console.log('Salvando no sessionStorage:', dataToStore);
         console.log('Tamanho do conteúdo:', textToSend.length);
         sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
-        navigate('/');
+        window.location.href = '/';
         return;
       }
       
@@ -728,7 +726,7 @@ const Arquivos = () => {
       sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
 
       // Redirecionar
-      navigate('/');
+      window.location.href = '/';
     } catch (error) {
       console.error('Erro ao enviar para copilot:', error);
       toast.error('Erro ao processar arquivo');
