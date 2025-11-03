@@ -5,7 +5,7 @@ import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
 import LoadingRobot from '@/components/LoadingRobot';
 import { formatarComCopilot } from '@/services/geminiService';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, FileUp } from 'lucide-react';
 import { toast } from 'sonner';
 import type { CopilotResult } from '@/types';
 import { Textarea } from '@/components/ui/textarea';
@@ -322,6 +322,15 @@ const Index = () => {
     }
   };
 
+  const handleNovoDocumento = () => {
+    setOriginalText('');
+    setEditableText('');
+    setOriginalFilename('');
+    setCopilotResult(null);
+    setSelectedTemplateId(null);
+    toast.info('Pronto para processar novo documento');
+  };
+
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {!originalText ? (
@@ -346,16 +355,27 @@ const Index = () => {
                   {/* Editor de Texto */}
                   <Card className="backdrop-blur-xl bg-white/40 dark:bg-card/40 border-2">
                     <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
+                      <CardTitle className="flex items-center justify-between flex-wrap gap-2">
                         <span>Editar Documento Original</span>
-                        <Button 
-                          onClick={handleReprocess}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          Reprocessar
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={handleNovoDocumento}
+                            size="sm"
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <FileUp className="w-4 h-4" />
+                            Novo Documento
+                          </Button>
+                          <Button 
+                            onClick={handleReprocess}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Reprocessar
+                          </Button>
+                        </div>
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
