@@ -57,13 +57,16 @@ const Index = () => {
 
   const loadFromFileContent = async (content: string, filename: string, documentGroupId?: string, templateId?: string, templateName?: string) => {
     try {
+      console.log('loadFromFileContent chamado com:', { content: content.substring(0, 50), filename, templateId, templateName });
+      
+      // CRÍTICO: Setar os estados ANTES de processar
+      setOriginalText(content);
+      setEditableText(content);
+      setOriginalFilename(filename);
+      
       // Se templateId foi fornecido, usar ele
       if (templateId && templateName) {
-        setOriginalText(content);
-        setEditableText(content);
-        setOriginalFilename(filename);
         setSelectedTemplateId(templateId);
-        
         handleFileUpload(content, templateId, templateName, filename, documentGroupId);
         return;
       }
@@ -77,9 +80,6 @@ const Index = () => {
 
       if (templates && templates.length > 0) {
         const template = templates[0];
-        setOriginalText(content);
-        setEditableText(content);
-        setOriginalFilename(filename);
         setSelectedTemplateId(template.id);
         
         // Processar automaticamente (isProcessing já está true do useEffect)
@@ -119,15 +119,19 @@ const Index = () => {
         const templateId = templateData?.id || null;
         console.log('Template encontrado:', templateId);
         
-        setOriginalText(savedDoc.original_text || savedDoc.formatted_text);
-        setEditableText(savedDoc.original_text || savedDoc.formatted_text);
+        // CRÍTICO: Setar estados ANTES de processar
+        const textToUse = savedDoc.original_text || savedDoc.formatted_text;
+        console.log('Setando estados - text:', textToUse.substring(0, 50), 'filename:', savedDoc.name);
+        
+        setOriginalText(textToUse);
+        setEditableText(textToUse);
         setOriginalFilename(savedDoc.name);
         setSelectedTemplateId(templateId);
         
         // Processar automaticamente (isProcessing já está true do useEffect)
         if (templateId && savedDoc.template_name) {
           handleFileUpload(
-            savedDoc.original_text || savedDoc.formatted_text, 
+            textToUse, 
             templateId, 
             savedDoc.template_name, 
             savedDoc.name
