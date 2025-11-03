@@ -221,6 +221,7 @@ const Index = () => {
       
       setCopilotResult(result);
       console.log('CopilotResult setado:', result);
+      console.log('Estados atuais - originalText:', originalText, 'editableText:', editableText, 'isProcessing:', isProcessing);
       
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
@@ -301,6 +302,8 @@ const Index = () => {
       setIsProcessing(false);
     }
   };
+
+  console.log('RENDER - originalText:', !!originalText, 'isProcessing:', isProcessing, 'copilotResult:', !!copilotResult);
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
