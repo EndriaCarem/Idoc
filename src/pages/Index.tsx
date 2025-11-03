@@ -194,13 +194,29 @@ const Index = () => {
     }
     
     try {
+      console.log('🚀 Iniciando processamento do documento...');
       toast.info("🔄 Iniciando processamento do documento...");
       
       toast.loading("📄 Analisando documento com IA...", { id: "processing" });
       
+      console.log('📤 Enviando para IA:', { templateId, textLength: text.length });
       const result = await formatarComCopilot(text, templateId);
       
+      console.log('📥 Resultado recebido da IA:', {
+        hasTextoFormatado: !!result.textoFormatado,
+        textoFormatadoLength: result.textoFormatado?.length || 0,
+        alertasCount: result.alertas?.length || 0,
+        sugestoesCount: result.sugestoes?.length || 0
+      });
+      
       toast.dismiss("processing");
+      
+      // Verificar se o resultado está completo
+      if (!result.textoFormatado) {
+        console.error('❌ Resultado sem texto formatado!');
+        toast.error("Erro: Documento não foi formatado corretamente");
+        return;
+      }
       
       // Mostrar alertas encontrados em tempo real
       if (result.alertas && result.alertas.length > 0) {
@@ -219,7 +235,9 @@ const Index = () => {
         }, result.alertas.length * 800);
       }
       
+      console.log('✅ Definindo copilotResult...');
       setCopilotResult(result);
+      console.log('✅ copilotResult definido com sucesso');
       
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
@@ -245,7 +263,7 @@ const Index = () => {
           alerts_count: result.alertas.length,
           suggestions_count: result.sugestoes.length,
           user_id: user.id,
-          document_group_id: documentGroupId || undefined, // Se houver group_id, usa; senão será criado automaticamente
+          document_group_id: documentGroupId || undefined,
         });
       
       toast.dismiss("saving");
@@ -257,9 +275,11 @@ const Index = () => {
         toast.success("✅ Documento processado e salvo com sucesso!");
       }
     } catch (error) {
-      console.error('Erro ao processar documento:', error);
+      console.error('❌ Erro ao processar documento:', error);
       toast.error("❌ Erro ao processar documento. Tente novamente.");
+      setCopilotResult(null);
     } finally {
+      console.log('🏁 Finalizando processamento...');
       setIsProcessing(false);
     }
   };
