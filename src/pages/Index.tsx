@@ -26,6 +26,7 @@ const Index = () => {
 
   // Carregar documento se vier do sessionStorage
   useEffect(() => {
+    console.log('=== useEffect Index chamado ===');
     const copilotData = sessionStorage.getItem('copilot_doc');
     console.log('Dados do copilot no sessionStorage:', copilotData);
     
@@ -33,6 +34,11 @@ const Index = () => {
       try {
         const data = JSON.parse(copilotData);
         console.log('Dados parseados:', data);
+        console.log('Tipo de dados:', data.type);
+        console.log('Content length:', data.content?.length);
+        console.log('TemplateId:', data.templateId);
+        console.log('TemplateName:', data.templateName);
+        
         sessionStorage.removeItem('copilot_doc'); // Limpar após ler
         
         if (data.type === 'processed') {
@@ -40,18 +46,26 @@ const Index = () => {
           loadDocumentFromId(data.id, data.document_group_id);
         } else if (data.type === 'file') {
           console.log('Carregando arquivo:', data.filename);
+          console.log('Verificando templateId e templateName:', data.templateId, data.templateName);
+          
           // Se templateId foi fornecido, usar ele; senão buscar o mais recente
           if (data.templateId && data.templateName) {
+            console.log('Template fornecido, chamando loadFromFileContent com template');
             loadFromFileContent(data.content, data.filename, data.document_group_id, data.templateId, data.templateName);
           } else {
+            console.log('Sem template, chamando loadFromFileContent sem template');
             loadFromFileContent(data.content, data.filename, data.document_group_id);
           }
+        } else {
+          console.error('Tipo de dados desconhecido:', data.type);
         }
       } catch (error) {
         console.error('Erro ao processar dados do copilot:', error);
         toast.error('Erro ao carregar documento');
         setIsProcessing(false);
       }
+    } else {
+      console.log('Nenhum dado do copilot no sessionStorage');
     }
   }, []);
 
