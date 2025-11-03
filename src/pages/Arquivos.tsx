@@ -1691,7 +1691,7 @@ const Arquivos = () => {
                     id="document-content"
                     value={editedDocumentContent}
                     onChange={(e) => setEditedDocumentContent(e.target.value)}
-                    className="flex-1 font-mono text-sm resize-none min-h-[400px]"
+                    className="flex-1 font-mono text-sm resize-none h-full"
                     placeholder="Digite o conteúdo do documento..."
                   />
                   <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
