@@ -187,11 +187,12 @@ const Index = () => {
   };
 
   const handleFileUpload = async (text: string, templateId: string, templateName: string, filename: string, documentGroupId?: string) => {
-    // Não setar estados de documento aqui pois já foram setados antes
-    // Apenas garantir que isProcessing está true
-    if (!isProcessing) {
-      setIsProcessing(true);
-    }
+    // Setar estados do documento
+    setOriginalText(text);
+    setEditableText(text);
+    setOriginalFilename(filename);
+    setSelectedTemplateId(templateId);
+    setIsProcessing(true);
     
     try {
       console.log('🚀 Iniciando processamento do documento...');
