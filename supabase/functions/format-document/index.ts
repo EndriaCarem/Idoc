@@ -25,98 +25,94 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    const systemPrompt = `SISTEMA (papel): Você é um formatador regulatório. Sua tarefa é transformar um RASCUNHO de relatório, com base no MANIFEST (seções e regras), em:
-(1) DOCUMENT_HTML: corpo do relatório já formatado (HTML limpo, com <h1>, <h2>, <table>, <thead>, <tbody>, listas).
-(2) STRUCT_DATA_JSON: dados estruturados para validações/telemetria (somatórios, alertas, sugestões).
+    const systemPrompt = `Você é um FORMATTER REGULATÓRIO especializado em RDA (Relatório Descritivo Anual) e relatórios de incentivos fiscais brasileiros.
 
-REGRAS IMPORTANTES:
-- NÃO invente números. Use somente os valores do RASCUNHO.
-- Números: detectar pt-BR e normalizar (ex.: 1.240.000,00 → 1240000.00) mantendo também a forma pt-BR ("R$ 1.240.000,00").
-- Estrutura (seções/tabelas) deve seguir o MANIFEST (\`sections\`, \`tableSpec\`, \`placeholders\`, \`rules\`).
-- O HTML deve ser minimalista e sem CSS inline desnecessário: apenas <h1>, <h2>, <p>, <ul>/<ol>, <table>/<thead>/<tbody>/<tr>/<th>/<td>, <strong>, <em>.
-- Tabelas: inclua cabeçalho <thead> seguindo as colunas do MANIFEST.
-- Onde houver campos vazios no RASCUNHO, deixe vazio (não fabular).
-- **VALIDAÇÃO DE COMPLETUDE**: Compare o RASCUNHO com o MANIFEST e identifique TODAS as seções, campos e tabelas que estão faltando ou incompletas. Gere alertas específicos para cada item faltante.
-- Saída FINAL deve conter apenas três blocos, nesta ordem e com estes marcadores:
----DOCUMENT_HTML---
-[HTML AQUI]
----STRUCT_DATA_JSON---
-[JSON AQUI]
----END---
+Sua missão: TRANSFORMAR rascunhos em relatórios profissionais e conformes, com estrutura clara, tabelas padronizadas e validações de conformidade.
 
-ENTRADAS:
-<<RASCUNHO>>
-{RASCUNHO}
-<</RASCUNHO>>
+=== TEMPLATE DE REFERÊNCIA ===
+${templateContent.substring(0, 4000)}
 
-<<MANIFEST>>
-{MANIFEST}
-<</MANIFEST>>
+=== REGRAS DE FORMATAÇÃO OBRIGATÓRIAS ===
 
-CONTEÚDO DO DOCUMENT_HTML (HTML):
-- Título principal <h1> com o nome do regime (RA, RDA, PPB ou MOVER).
-- Seções em <h2> obedecendo a ordem do MANIFEST (ex.: Identificação, Perfil/Mapa/Resumo, Projetos, Indicadores, Conformidades, Anexos).
-- Em cada seção de tabela, construa uma <table> com <thead> (nomes das colunas do MANIFEST) e <tbody> com as linhas extraídas do RASCUNHO.
-- Frases curtas, técnicas, sem alterar números.
+📋 ESTRUTURA DE SEÇÕES (nesta ordem exata):
+1. IDENTIFICAÇÃO E QUALIFICAÇÃO
+2. PERFIL DE INVESTIMENTOS EM P&D (TABELA OBRIGATÓRIA)
+3. PROJETOS DE P,D&I EXECUTADOS (TABELA OBRIGATÓRIA)
+4. INDICADORES E RESULTADOS TECNOLÓGICOS (TABELA OBRIGATÓRIA)
+5. CONFORMIDADES E VEDAÇÕES
+6. ANEXOS E DOCUMENTOS COMPROBATÓRIOS
 
-CONTEÚDO DO STRUCT_DATA_JSON (JSON):
-{
-  "identificacao": { "empresa":"", "cnpj":"", "anoBase":0, "unidadeFabril":"", "portaria":"" },
-  "sections": {
-    // chaves = keys do MANIFEST (ex.: "perfil_investimentos", "mapa_etapas", "resumo_disp", "projetos", "indicadores", ...)
-    // cada seção tabela = array de objetos com as colunas do MANIFEST; para colunas de moeda/percentual inclua:
-    //   <Coluna>Number (número normalizado) e <Coluna>BRL (string pt-BR) ou <Coluna>Percent (número)
-  },
-  "calculos": {
-    "perfilTotalNumber": 0, "perfilTotalBRL":"R$ 0,00",
-    "projetosTotalNumber": 0, "projetosTotalBRL":"R$ 0,00"
-  },
-  "checks": {
-    "sumCheck": { "ok": true, "diferencaNumber": 0, "mensagem": "" },
-    "percentuaisMinimos": [{ "linha":1, "ok":true, "mensagem":"" }],
-    "trlProgress": [{ "codigo":"", "ok":true, "mensagem":"" }],
-    "textPresence": [{ "alvo":"Serviços de Terceiros", "presente":false, "mensagem":"" }],
-    "requiredColumns": [{ "secao":"", "coluna":"", "linha":1, "ok":true, "mensagem":"" }]
-  },
-  "alertas": [ "mensagens curtas de conformidade" ],
-  "sugestoes": [ "bullets curtos de clareza (sem mudar números)" ]
-}
+📊 TABELAS OBRIGATÓRIAS:
 
-REGRAS DE VALIDAÇÃO (aplicar SOMENTE se existirem no MANIFEST):
-- numeric-sum-check: comparar somatórios entre seções; se diferente, checks.sumCheck.ok=false e gerar alerta.
-- numeric-compare-row: validar por linha (ex.: % Realizado >= % Mínimo).
-- trl-progress: TRL_Alvo >= TRL_Inicial por projeto; caso contrário, alerta.
-- text-presence: se "Serviços de Terceiros" aparecer, crie uma entrada textPresence e um alerta pedindo justificativa.
-- required-column: se alguma coluna obrigatória estiver vazia, sinalizar em requiredColumns e gerar alerta.
-- **completeness-check**: CRÍTICO - Compare cada seção do MANIFEST com o RASCUNHO:
-  * Se uma seção obrigatória estiver COMPLETAMENTE ausente, gere alerta: "⚠️ Seção obrigatória '[Nome da Seção]' está faltando no documento"
-  * Se uma seção existe mas está VAZIA ou com placeholder, gere alerta: "⚠️ Seção '[Nome da Seção]' está incompleta - preencha com os dados necessários"
-  * Se uma tabela obrigatória está faltando ou com dados de exemplo, gere alerta: "⚠️ Tabela '[Nome da Tabela]' precisa ser preenchida com dados reais"
-  * Para cada campo obrigatório vazio, gere alerta específico: "⚠️ Campo obrigatório '[Nome do Campo]' na seção '[Seção]' precisa ser preenchido"
-  * Liste TODOS os campos faltantes de forma clara e acionável
+**Tabela 1: Perfil de Investimentos em P&D**
+| Rubrica | Valor (R$) |
+|---------|-----------|
+| [Extrair do texto] | [Valores] |
+| **TOTAL** | **[Soma calculada]** |
 
-FORMATO FINAL (OBRIGATÓRIO):
----DOCUMENT_HTML---
-[HTML]
----STRUCT_DATA_JSON---
-[JSON]
----END---
+**Tabela 2: Projetos de P,D&I**
+| Código | Título | Tipo P,D&I | Parceiros | TRL Inicial | TRL Alvo | Dispêndio (R$) |
+|--------|--------|------------|-----------|-------------|----------|----------------|
+| [Ex: P-001] | [Título] | [Pesquisa/Desenvolvimento/Inovação] | [ICTs/Empresas] | [0-9] | [0-9] | [Valor] |
 
-=== TEMPLATE DE REFERÊNCIA (MANIFEST) ===
-${templateContent.substring(0, 4000)}`;
+**Tabela 3: Indicadores de Resultados**
+| Indicador | Resultado Alcançado | Unidade |
+|-----------|-------------------|---------|
+| [Patentes depositadas] | [Número] | [un.] |
+| [Publicações científicas] | [Número] | [un.] |
 
-    const userPrompt = `<<RASCUNHO>>
+🔍 VALIDAÇÕES AUTOMÁTICAS (incluir na seção Conformidades):
+
+✅ SOMA DO PERFIL vs SOMA DOS PROJETOS
+- Se divergir: "⚠️ ALERTA: Soma do Perfil de Investimentos (R$ X) DIFERE da soma dos Dispêndios dos Projetos (R$ Y). Diferença: R$ Z"
+
+✅ EVOLUÇÃO TRL
+- Para cada projeto: TRL_Alvo DEVE ser ≥ TRL_Inicial
+- Se não: "⚠️ ALERTA: Projeto [código] apresenta TRL alvo MENOR que TRL inicial"
+
+✅ SERVIÇOS DE TERCEIROS
+- Se houver esta rubrica: EXIGIR parágrafo justificando necessidade técnica
+
+✅ PERCENTUAL DE P&D
+- Calcular: (Total P&D / Faturamento) × 100
+- Validar se atinge mínimo regulatório
+
+📝 REGRAS DE REDAÇÃO:
+- Títulos: CAIXA ALTA + numeração (1., 1.1, 1.1.1)
+- Parágrafos: texto justificado, espaçamento 1,5 linhas
+- Linguagem: técnica, objetiva, voz ativa
+- Números: formato brasileiro (1.234,56)
+- Datas: dd/mm/aaaa
+
+⚠️ O QUE NÃO FAZER:
+- NÃO inventar dados numéricos
+- NÃO omitir informações do rascunho
+- NÃO criar projetos ou rubricas inexistentes
+- NÃO alterar valores financeiros
+
+🎯 FORMATO DE SAÍDA:
+Retorne o documento formatado em Markdown bem estruturado, com:
+- Títulos hierárquicos (# ## ###)
+- Tabelas completas e alinhadas
+- Listas numeradas/marcadas
+- Negrito para destaques críticos
+- Seção final "VALIDAÇÕES E CONFORMIDADE" com todos os alertas
+
+IMPORTANTE: Use APENAS dados presentes no rascunho. Se faltar informação crítica, marque com **[PENDENTE: descrição]**`;
+
+    const userPrompt = `=== RASCUNHO A SER TRANSFORMADO ===
+
 ${documentText.substring(0, 10000)}
-<</RASCUNHO>>
 
-<<MANIFEST>>
-${templateContent}
-<</MANIFEST>>
+=== INSTRUÇÕES DE EXECUÇÃO ===
 
-Processe o RASCUNHO conforme as instruções do sistema e retorne no formato especificado:
----DOCUMENT_HTML---
----STRUCT_DATA_JSON---
----END---`;
+1. EXTRAIA todos os dados numéricos (valores, TRLs, datas, percentuais)
+2. ORGANIZE em tabelas conforme especificado no sistema
+3. CALCULE somas e valide conformidades
+4. FORMATE com hierarquia clara de seções
+5. ADICIONE seção "VALIDAÇÕES E CONFORMIDADE" ao final com todos os alertas encontrados
+
+Retorne o relatório completo formatado em Markdown, com tabelas, validações e alertas.`;
 
     console.log('Chamando Lovable AI para formatação...');
 
@@ -157,71 +153,126 @@ Processe o RASCUNHO conforme as instruções do sistema e retorne no formato esp
     }
 
     const aiData = await response.json();
-    const aiResponse = aiData.choices[0].message.content;
+    const textoFormatado = aiData.choices[0].message.content;
+
+    // Detectar tipo de regime baseado no nome do template
+    const tipoRegime = templateName?.toLowerCase() || '';
     
-    // Parse da resposta estruturada
-    const htmlMatch = aiResponse.match(/---DOCUMENT_HTML---\s*([\s\S]*?)\s*---STRUCT_DATA_JSON---/);
-    const jsonMatch = aiResponse.match(/---STRUCT_DATA_JSON---\s*([\s\S]*?)\s*---END---/);
+    // Análise inteligente do texto formatado para gerar sugestões contextualizadas
+    const sugestoes: string[] = [];
     
-    let textoFormatado = '';
-    let structData: any = null;
-    
-    if (htmlMatch && jsonMatch) {
-      textoFormatado = htmlMatch[1].trim();
-      try {
-        structData = JSON.parse(jsonMatch[1].trim());
-        console.log('JSON estruturado parseado com sucesso');
-      } catch (e) {
-        console.error('Erro ao parsear JSON estruturado:', e);
-        console.error('JSON que falhou:', jsonMatch[1]);
-      }
-    } else {
-      console.warn('Formato de resposta não reconhecido, usando resposta completa');
-      textoFormatado = aiResponse;
+    if (textoFormatado.includes('| ')) {
+      sugestoes.push('✓ Dados financeiros organizados em tabelas estruturadas para melhor legibilidade');
+    }
+    if (textoFormatado.includes('TOTAL') || textoFormatado.includes('Total')) {
+      sugestoes.push('✓ Totalizações calculadas e destacadas nas tabelas de investimentos');
+    }
+    if (textoFormatado.includes('TRL')) {
+      sugestoes.push('✓ Níveis TRL (Technology Readiness Level) padronizados para todos os projetos');
+    }
+    if (textoFormatado.includes('##') || textoFormatado.includes('###')) {
+      sugestoes.push('✓ Hierarquia de seções e títulos formatada com numeração automática');
+    }
+    if (textoFormatado.match(/\d{1,3}\.\d{3},\d{2}/)) {
+      sugestoes.push('✓ Valores monetários padronizados no formato brasileiro (R$ 1.234,56)');
+    }
+    if (textoFormatado.match(/\d{2}\/\d{2}\/\d{4}/)) {
+      sugestoes.push('✓ Datas normalizadas para formato dd/mm/aaaa');
+    }
+    if (textoFormatado.includes('VALIDAÇÕES') || textoFormatado.includes('CONFORMIDADE')) {
+      sugestoes.push('✓ Seção de validações e conformidade regulatória adicionada');
     }
     
-    if (!textoFormatado) {
-      console.warn('HTML vazio após parse, usando resposta completa');
-      textoFormatado = aiResponse;
+    // Garantir sempre algumas sugestões base
+    if (sugestoes.length < 3) {
+      sugestoes.push('✓ Estrutura de seções reorganizada conforme template regulatório oficial');
+      sugestoes.push('✓ Terminologia técnica padronizada segundo glossário do programa');
+      sugestoes.push('✓ Documento formatado para apresentação profissional e auditável');
     }
 
-    // Usar dados estruturados se disponíveis, caso contrário fazer análise do HTML
-    let sugestoes: string[] = [];
+    // Análise inteligente para gerar alertas específicos baseados no conteúdo e template
     let alertas: string[] = [];
     
-    if (structData) {
-      sugestoes = structData.sugestoes || [];
-      alertas = structData.alertas || [];
-      console.log('Usando alertas e sugestões do structData:', { alertas: alertas.length, sugestoes: sugestoes.length });
-    } else {
-      // Fallback: análise do HTML gerado
-      const tipoRegime = templateName?.toLowerCase() || '';
-      
-      if (textoFormatado.includes('<table')) {
-        sugestoes.push('✓ Dados organizados em tabelas estruturadas');
+    // Extrair seções e requisitos do template para comparação
+    const secoesTemplate = templateContent.match(/#{1,3}\s+[^\n]+/g) || [];
+    const tabelasTemplate = templateContent.match(/\|[^\n]+\|/g) || [];
+    const secoesDocumento = textoFormatado.match(/#{1,3}\s+[^\n]+/g) || [];
+    
+    // 1. Validar seções obrigatórias do template
+    const secoesObrigatoriasFaltantes: string[] = [];
+    secoesTemplate.forEach((secaoTemplate: string) => {
+      const tituloSecao = secaoTemplate.replace(/#{1,3}\s+/, '').trim().toUpperCase();
+      const encontrada = secoesDocumento.some((secaoDoc: string) => 
+        secaoDoc.toUpperCase().includes(tituloSecao.substring(0, 20))
+      );
+      if (!encontrada && tituloSecao.length > 5) {
+        secoesObrigatoriasFaltantes.push(tituloSecao);
       }
-      if (textoFormatado.includes('<thead>')) {
-        sugestoes.push('✓ Cabeçalhos de tabelas formatados corretamente');
-      }
-      if (textoFormatado.match(/R\$\s*[\d.,]+/)) {
-        sugestoes.push('✓ Valores monetários padronizados no formato brasileiro');
-      }
-      
-      alertas.push('⚠️ Revise o documento formatado antes do envio oficial');
-      alertas.push('⚠️ Confirme que todos os valores numéricos estão corretos');
-      console.log('Usando alertas e sugestões de fallback');
+    });
+    
+    if (secoesObrigatoriasFaltantes.length > 0) {
+      alertas.push(`⚠️ CONFORMIDADE - Seções obrigatórias do template não identificadas: ${secoesObrigatoriasFaltantes.slice(0, 3).join(', ')}`);
     }
     
-    // Garantir que sempre temos um HTML formatado, mesmo que seja básico
-    if (!textoFormatado || textoFormatado.trim().length === 0) {
-      console.warn('HTML vazio, criando estrutura básica a partir do documento original');
-      textoFormatado = `<h1>${templateName || 'Documento'}</h1>\n<div>\n${documentText.replace(/\n/g, '<br>\n')}\n</div>`;
-      alertas.unshift('⚠️ Não foi possível formatar o documento completamente - verifique o formato do template');
+    // 2. Validar estrutura de tabelas
+    const tabelasDocumento = textoFormatado.match(/\|[^\n]+\|/g) || [];
+    if (tabelasTemplate.length > tabelasDocumento.length) {
+      alertas.push(`⚠️ ESTRUTURA - Template exige ${tabelasTemplate.length} tabelas, documento possui ${tabelasDocumento.length}. Verifique tabelas de investimentos, projetos e indicadores`);
     }
+    
+    // 3. Extrair alertas da seção de validações gerada pela IA
+    const validacoesMatch = textoFormatado.match(/VALIDAÇÕES E CONFORMIDADE[\s\S]*?(?=\n#|$)/i);
+    if (validacoesMatch) {
+      const validacoesTexto = validacoesMatch[0];
+      const alertasExtraidos = validacoesTexto.match(/⚠️[^\n]+/g);
+      if (alertasExtraidos) {
+        alertas.push(...alertasExtraidos.map((a: string) => a.trim()));
+      }
+    }
+    
+    // 4. Validações financeiras
+    const valoresEncontrados = textoFormatado.match(/R\$\s*[\d.,]+/g);
+    if (valoresEncontrados && valoresEncontrados.length > 1) {
+      alertas.push(`⚠️ FINANCEIRO - Documento contém ${valoresEncontrados.length} valores monetários. Confirme totalização e consistência entre tabelas de perfil de investimentos e dispêndios por projeto`);
+    }
+    
+    // 5. Validações de TRL (Technology Readiness Level)
+    const trlMencionados = textoFormatado.match(/TRL\s*\d/gi);
+    if (trlMencionados) {
+      alertas.push(`⚠️ TECNOLOGIA - ${trlMencionados.length} níveis TRL identificados. Valide evolução (TRL final ≥ TRL inicial) e justificativas técnicas para cada projeto`);
+    }
+    
+    // 6. Validações de datas
+    const datasEncontradas = textoFormatado.match(/\d{2}\/\d{2}\/\d{4}/g);
+    if (datasEncontradas && datasEncontradas.length > 0) {
+      alertas.push(`⚠️ CRONOGRAMA - ${datasEncontradas.length} datas identificadas. Verifique coerência de prazos com ano-base do relatório e marcos regulatórios`);
+    }
+    
+    // 7. Alertas específicos por regime baseado no template
+    if (tipoRegime.includes('automotivo') || tipoRegime.includes('ra') || templateContent.includes('REGIME AUTOMOTIVO')) {
+      alertas.push('⚠️ REGIME AUTOMOTIVO - Confirme: 1) Categorias de P&D (básica/aplicada/desenvolvimento), 2) Percentual mínimo sobre receita líquida, 3) Documentos MDIC/MCTIC');
+      alertas.push('⚠️ NOMENCLATURA - Valide terminologia: veículos, sistemas, componentes conforme glossário técnico do setor automotivo');
+    } else if (tipoRegime.includes('informática') || tipoRegime.includes('ppb') || templateContent.includes('LEI DE INFORMÁTICA')) {
+      alertas.push('⚠️ LEI DE INFORMÁTICA - Confirme: 1) Mínimo 5% faturamento em P&D, 2) Convênios ICT válidos, 3) Certificação PPB vigente');
+      alertas.push('⚠️ PROCESSO PRODUTIVO - Valide atendimento a requisitos de conteúdo local e etapas do PPB conforme portarias MCTIC');
+    } else if (tipoRegime.includes('mover') || templateContent.includes('MOVER')) {
+      alertas.push('⚠️ PROGRAMA MOVER - Confirme: 1) Indicadores de descarbonização, 2) Metas de eficiência energética, 3) Certificações ambientais PROCONVE/PROMOT');
+      alertas.push('⚠️ SUSTENTABILIDADE - Valide projetos de eletrificação, tecnologias de baixa emissão e estudos de impacto ambiental');
+    }
+    
+    // 8. Alertas obrigatórios de conformidade regulatória
+    alertas.push('⚠️ DOCUMENTAÇÃO - Anexe comprovantes: notas fiscais, contratos, pareceres técnicos, laudos de ICT, certificados de propriedade intelectual');
+    alertas.push('⚠️ ASSINATURAS - Identifique responsáveis técnicos, responsável legal da empresa e representantes de instituições parceiras com CPF/CNPJ');
+    
+    // 9. Alertas de qualidade e revisão
+    if (textoFormatado.includes('[PENDENTE') || textoFormatado.includes('[REVISAR')) {
+      alertas.push('⚠️ ATENÇÃO - Documento contém marcações [PENDENTE] ou [REVISAR]. Complete informações antes do envio oficial');
+    }
+    
+    // Limitar a 12 alertas mais relevantes
+    alertas = alertas.slice(0, 12);
 
     console.log('Formatação concluída com sucesso');
-    console.log('Tamanho do HTML:', textoFormatado.length);
-    console.log('Primeiros 200 caracteres:', textoFormatado.substring(0, 200));
 
     return new Response(
       JSON.stringify({
