@@ -220,6 +220,7 @@ const Index = () => {
       }
       
       setCopilotResult(result);
+      console.log('CopilotResult setado:', result);
       
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
@@ -320,59 +321,74 @@ const Index = () => {
             {isProcessing ? (
               <LoadingRobot message="Processando documento com IA..." />
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-                  {/* Editor de Texto */}
-                  <Card className="backdrop-blur-xl bg-white/40 dark:bg-card/40 border-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span>Editar Documento Original</span>
-                        <Button 
-                          onClick={handleReprocess}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          Reprocessar
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <Label>Documento Original (editável)</Label>
-                        <Textarea
-                          value={editableText}
-                          onChange={(e) => setEditableText(e.target.value)}
-                          rows={12}
-                          className="font-mono text-sm resize-none backdrop-blur-sm bg-white/60 dark:bg-background/60"
-                          placeholder="O conteúdo do documento aparecerá aqui..."
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
+              <>
+                {console.log('Renderizando com copilotResult:', copilotResult)}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                  <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                    {/* Editor de Texto */}
+                    <Card className="backdrop-blur-xl bg-white/40 dark:bg-card/40 border-2">
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span>Editar Documento Original</span>
+                          <Button 
+                            onClick={handleReprocess}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                            Reprocessar
+                          </Button>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <Label>Documento Original (editável)</Label>
+                          <Textarea
+                            value={editableText}
+                            onChange={(e) => setEditableText(e.target.value)}
+                            rows={12}
+                            className="font-mono text-sm resize-none backdrop-blur-sm bg-white/60 dark:bg-background/60"
+                            placeholder="O conteúdo do documento aparecerá aqui..."
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  {copilotResult && (
-                    <DocumentPreview 
-                      originalText={originalText}
-                      formattedText={copilotResult.textoFormatado}
-                      templateName={selectedTemplateId || ''}
-                      alertsCount={copilotResult.alertas.length}
-                      suggestionsCount={copilotResult.sugestoes.length}
-                    />
-                  )}
+                    {copilotResult ? (
+                      <DocumentPreview 
+                        originalText={originalText}
+                        formattedText={copilotResult.textoFormatado}
+                        templateName={selectedTemplateId || ''}
+                        alertsCount={copilotResult.alertas.length}
+                        suggestionsCount={copilotResult.sugestoes.length}
+                      />
+                    ) : (
+                      <Card className="shadow-lg border-2">
+                        <CardContent className="p-6 text-center text-muted-foreground">
+                          Aguardando processamento...
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                  
+                  <div className="lg:col-span-1">
+                    {copilotResult ? (
+                      <CopilotPanel 
+                        sugestoes={copilotResult.sugestoes}
+                        alertas={copilotResult.alertas}
+                        documentoOriginal={editableText}
+                        documentoFormatado={copilotResult.textoFormatado}
+                      />
+                    ) : (
+                      <Card className="shadow-lg border-2">
+                        <CardContent className="p-6 text-center text-muted-foreground">
+                          Aguardando processamento...
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="lg:col-span-1">
-                  {copilotResult && (
-                    <CopilotPanel 
-                      sugestoes={copilotResult.sugestoes}
-                      alertas={copilotResult.alertas}
-                      documentoOriginal={editableText}
-                      documentoFormatado={copilotResult.textoFormatado}
-                    />
-                  )}
-                </div>
-              </div>
+              </>
             )}
           </>
         )}
