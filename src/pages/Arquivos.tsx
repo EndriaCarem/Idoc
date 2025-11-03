@@ -635,33 +635,15 @@ const Arquivos = () => {
         // Buscar nome do template selecionado
         const selectedTemplate = availableTemplates.find(t => t.id === selectedTemplateForCopilot);
         
-        // Para documentos salvos, sempre usar o texto original se disponível
-        let textToSend = selectedDocForAction.original_text;
-        
-        // Se não houver original_text, tentar extrair do formatted_text
-        if (!textToSend || textToSend.trim() === '') {
-          console.warn('original_text vazio, extraindo de formatted_text');
-          const tmp = document.createElement('div');
-          tmp.innerHTML = selectedDocForAction.formatted_text;
-          textToSend = tmp.textContent || tmp.innerText || '';
-        }
-        
-        // Verificar se há conteúdo válido
-        if (!textToSend || textToSend.trim() === '') {
-          toast.error('Documento sem conteúdo válido para processar');
-          setIsProcessingCopilot(false);
-          return;
-        }
-        
+        // Para documentos salvos, passamos o texto diretamente
         const dataToStore = {
           type: 'file',
-          content: textToSend,
+          content: selectedDocForAction.original_text || selectedDocForAction.formatted_text,
           filename: selectedDocForAction.name,
           templateId: selectedTemplateForCopilot,
           templateName: selectedTemplate?.name
         };
         console.log('Salvando no sessionStorage:', dataToStore);
-        console.log('Tamanho do conteúdo:', textToSend.length);
         sessionStorage.setItem('copilot_doc', JSON.stringify(dataToStore));
         window.location.href = '/';
         return;
