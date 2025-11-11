@@ -482,17 +482,26 @@ const Arquivos = () => {
 
   const handleShareDocument = async () => {
     if (!shareEmail.trim()) {
-      toast.error('Digite um email válido');
+      toast.error('Digite um email ou nome válido');
       return;
     }
 
+    // Buscar usuário por nome ou email na tabela profiles
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('user_id')
-      .ilike('full_name', `%${shareEmail}%`)
-      .limit(1);
+      .select('user_id, full_name')
+      .or(`full_name.ilike.%${shareEmail}%`)
+      .limit(10);
 
     if (profileError || !profiles || profiles.length === 0) {
+      toast.error('Usuário não encontrado. Verifique o email ou nome.');
+      console.error('Erro ao buscar usuário:', profileError);
+      return;
+    }
+
+    const targetUserId = profiles[0].user_id;
+
+    if (!targetUserId) {
       toast.error('Usuário não encontrado');
       return;
     }
@@ -509,7 +518,7 @@ const Arquivos = () => {
         .insert({
           document_id: selectedDocId,
           shared_by_user_id: user.id,
-          shared_with_user_id: profiles[0].user_id,
+          shared_with_user_id: targetUserId,
           permission: 'view',
           tag_id: selectedTagId || null,
           tag_name: selectedTag?.name,
@@ -517,8 +526,8 @@ const Arquivos = () => {
         });
 
       if (error) {
-        console.error('Erro ao compartilhar:', error);
-        toast.error('Erro ao compartilhar documento');
+        console.error('Erro ao compartilhar documento:', error);
+        toast.error(`Erro ao compartilhar: ${error.message}`);
         return;
       }
     } else if (selectedFileId) {
@@ -528,7 +537,7 @@ const Arquivos = () => {
         .insert({
           file_id: selectedFileId,
           shared_by_user_id: user.id,
-          shared_with_user_id: profiles[0].user_id,
+          shared_with_user_id: targetUserId,
           permission: 'view',
           tag_id: selectedTagId || null,
           tag_name: selectedTag?.name,
@@ -536,8 +545,8 @@ const Arquivos = () => {
         });
 
       if (error) {
-        console.error('Erro ao compartilhar:', error);
-        toast.error('Erro ao compartilhar arquivo');
+        console.error('Erro ao compartilhar arquivo:', error);
+        toast.error(`Erro ao compartilhar: ${error.message}`);
         return;
       }
     }
