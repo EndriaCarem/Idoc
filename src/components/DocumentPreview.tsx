@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download, Copy, Save } from 'lucide-react';
+import { Download, Copy, Save, Maximize2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SaveDocumentDialog } from './SaveDocumentDialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface DocumentPreviewProps {
   originalText: string;
@@ -23,6 +24,7 @@ const DocumentPreview = ({
   suggestionsCount = 0,
 }: DocumentPreviewProps) => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showFullscreen, setShowFullscreen] = useState(false);
 
   const extractTextFromHTML = (html: string): string => {
     // Criar um elemento temporário para parsear o HTML
@@ -73,6 +75,15 @@ const DocumentPreview = ({
         <CardTitle className="flex items-center justify-between">
           <span>Visualização do Documento</span>
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFullscreen(true)}
+              title="Expandir visualização"
+            >
+              <Maximize2 className="w-4 h-4 mr-2" />
+              Expandir
+            </Button>
             <Button
               variant="default"
               size="sm"
@@ -185,6 +196,105 @@ const DocumentPreview = ({
           suggestionsCount,
         }}
       />
+
+      <Dialog open={showFullscreen} onOpenChange={setShowFullscreen}>
+        <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl">Visualização em Tela Cheia</DialogTitle>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopy(formattedText)}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleDownload(formattedText, 'relatorio-formatado.txt')}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Baixar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowFullscreen(false)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            <Tabs defaultValue="formatted" className="w-full h-full flex flex-col">
+              <div className="px-6">
+                <TabsList className="w-full">
+                  <TabsTrigger value="formatted" className="flex-1">
+                    Documento Formatado
+                  </TabsTrigger>
+                  <TabsTrigger value="original" className="flex-1">
+                    Documento Original
+                  </TabsTrigger>
+                  <TabsTrigger value="comparison" className="flex-1">
+                    Comparação
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="formatted" className="flex-1 m-0 mt-4">
+                <ScrollArea className="h-full px-6">
+                  <div 
+                    className="prose prose-base max-w-none dark:prose-invert pb-8"
+                    dangerouslySetInnerHTML={{ __html: formattedText }}
+                  />
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="original" className="flex-1 m-0 mt-4">
+                <ScrollArea className="h-full px-6">
+                  <div className="prose prose-base max-w-none pb-8">
+                    <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-muted-foreground">
+                      {originalText}
+                    </pre>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+
+              <TabsContent value="comparison" className="flex-1 m-0 mt-4">
+                <ScrollArea className="h-full px-6">
+                  <div className="grid grid-cols-2 gap-6 pb-8">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <div className="w-3 h-3 rounded-full bg-muted-foreground/30"></div>
+                        <h4 className="font-semibold text-base text-muted-foreground">Documento Original</h4>
+                      </div>
+                      <div className="bg-muted/30 rounded-lg p-4 border">
+                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-muted-foreground">
+                          {originalText}
+                        </pre>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 pb-2 border-b border-primary/30">
+                        <div className="w-3 h-3 rounded-full bg-primary"></div>
+                        <h4 className="font-semibold text-base text-primary">Documento Formatado ✓</h4>
+                      </div>
+                      <div 
+                        className="bg-primary/5 rounded-lg p-4 border border-primary/20 prose prose-sm max-w-none dark:prose-invert"
+                        dangerouslySetInnerHTML={{ __html: formattedText }}
+                      />
+                    </div>
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
