@@ -24,11 +24,23 @@ const DocumentPreview = ({
 }: DocumentPreviewProps) => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
 
-  const handleCopy = async (text: string) => {
+  const extractTextFromHTML = (html: string): string => {
+    // Criar um elemento temporário para parsear o HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Extrair o texto formatado mantendo quebras de linha
+    const textContent = tempDiv.innerText || tempDiv.textContent || '';
+    return textContent;
+  };
+
+  const handleCopy = async (html: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      // Extrair texto formatado do HTML
+      const textContent = extractTextFromHTML(html);
+      await navigator.clipboard.writeText(textContent);
       toast.success('Texto copiado', {
-        description: 'O texto foi copiado para a área de transferência'
+        description: 'O texto formatado foi copiado para a área de transferência'
       });
     } catch (error) {
       toast.error('Erro ao copiar', {
@@ -37,8 +49,10 @@ const DocumentPreview = ({
     }
   };
 
-  const handleDownload = (text: string, filename: string) => {
-    const blob = new Blob([text], { type: 'text/plain' });
+  const handleDownload = (html: string, filename: string) => {
+    // Extrair texto formatado do HTML
+    const textContent = extractTextFromHTML(html);
+    const blob = new Blob([textContent], { type: 'text/plain; charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
