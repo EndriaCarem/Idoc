@@ -1565,16 +1565,121 @@ const Arquivos = () => {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 flex flex-col gap-2 py-4 px-6 overflow-hidden">
-            <Textarea
-              value={editedDocumentContent}
-              onChange={(e) => setEditedDocumentContent(e.target.value)}
-              className="flex-1 font-mono text-sm resize-none"
-              placeholder="Digite o conteúdo do documento..."
-            />
-            <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
-              <span>{editedDocumentContent.length} caracteres</span>
-              <span>{editedDocumentContent.split('\n').length} linhas</span>
+          <div className="flex-1 flex flex-col gap-4 py-4 px-6 overflow-hidden">
+            {/* Barra de ferramentas de formatação */}
+            <div className="flex flex-wrap gap-1 p-3 bg-muted/30 rounded-lg border">
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBold}
+                  title="Negrito (Ctrl+B)"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Bold className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleItalic}
+                  title="Itálico (Ctrl+I)"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Italic className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleUnderline}
+                  title="Sublinhado (Ctrl+U)"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Underline className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="w-px h-9 bg-border" />
+              
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleHeading1}
+                  title="Título 1"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Heading1 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleHeading2}
+                  title="Título 2"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Heading2 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="w-px h-9 bg-border" />
+              
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleList}
+                  title="Lista com marcadores"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleOrderedList}
+                  title="Lista numerada"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <ListOrdered className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="w-px h-9 bg-border" />
+              
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCode}
+                  title="Código inline"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Code className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleQuote}
+                  title="Citação"
+                  className="h-9 w-9 p-0 hover:bg-background"
+                >
+                  <Quote className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex flex-col gap-2 min-h-0">
+              <Textarea
+                id="document-content"
+                value={editedDocumentContent}
+                onChange={(e) => setEditedDocumentContent(e.target.value)}
+                className="flex-1 font-mono text-sm resize-none h-full"
+                placeholder="Digite o conteúdo do documento..."
+              />
+              <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
+                <span>{editedDocumentContent.length} caracteres</span>
+                <span>{editedDocumentContent.split('\n').length} linhas</span>
+              </div>
             </div>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2 px-6 pb-6">
