@@ -50,14 +50,22 @@ const DocumentGapsPanel = ({
     setProcessingGapIndex(index);
     
     try {
-      const promptMessage = `Por favor, preencha o seguinte campo do documento:
+      const promptMessage = `TAREFA: Preencher automaticamente um campo faltante no documento HTML.
 
-Seção: ${gap.secao}
-Campo: ${gap.campo}
-Descrição: ${gap.descricao}
-${gap.exemplo ? `Exemplo: ${gap.exemplo}` : ''}
+INFORMAÇÕES DO CAMPO:
+- Seção: ${gap.secao}
+- Campo: ${gap.campo}
+- Descrição: ${gap.descricao}
+${gap.exemplo ? `- Exemplo de preenchimento: ${gap.exemplo}` : ''}
 
-Analise o documento atual e preencha este campo de forma apropriada, seguindo fielmente o template e mantendo a conformidade técnica. Retorne o documento completo atualizado.`;
+INSTRUÇÕES CRÍTICAS:
+1. Analise o documento HTML atual fornecido
+2. Identifique onde o campo "${gap.campo}" deve ser inserido dentro da seção "${gap.secao}"
+3. Preencha o campo com informações apropriadas e tecnicamente corretas
+4. Se não houver dados suficientes, use marcadores [PENDENTE] ou valores genéricos apropriados
+5. Retorne o documento HTML COMPLETO e ATUALIZADO
+
+IMPORTANTE: Retorne APENAS o HTML completo atualizado, sem explicações adicionais. O HTML deve começar com <h1> e incluir todas as seções do documento original.`;
 
       const { data, error } = await supabase.functions.invoke('chat-copilot', {
         body: {
@@ -65,12 +73,41 @@ Analise o documento atual e preencha este campo de forma apropriada, seguindo fi
           documentoOriginal,
           documentoFormatado,
           templateContent,
-          documentId
+          documentId,
+          autoUpdate: true
         }
       });
 
       if (error) throw error;
 
+      console.log('Resposta da IA:', data);
+
+      // Verificar se a resposta contém HTML diretamente
+      if (data.response && typeof data.response === 'string') {
+        const htmlContent = data.response.trim();
+        
+        // Se a resposta começa com HTML, é o documento atualizado
+        if (htmlContent.startsWith('<') || htmlContent.includes('<h1>')) {
+          if (onDocumentUpdate) {
+            onDocumentUpdate(htmlContent);
+            toast({
+              title: "Campo preenchido!",
+              description: `O campo "${gap.campo}" foi preenchido automaticamente.`,
+            });
+            
+            // Scroll automático para a seção alterada
+            setTimeout(() => {
+              const documentPreview = document.querySelector('[data-document-preview]');
+              if (documentPreview) {
+                documentPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }, 500);
+          }
+          return;
+        }
+      }
+
+      // Fallback: verificar formato antigo com type
       if (data.type === 'update_document' && data.updates?.documentoAtualizado) {
         if (onDocumentUpdate) {
           onDocumentUpdate(data.updates.documentoAtualizado);
@@ -79,23 +116,10 @@ Analise o documento atual e preencha este campo de forma apropriada, seguindo fi
             description: `O campo "${gap.campo}" foi preenchido automaticamente.`,
           });
           
-          // Scroll automático para a seção alterada após um pequeno delay
           setTimeout(() => {
             const documentPreview = document.querySelector('[data-document-preview]');
             if (documentPreview) {
-              // Procurar pela seção no documento
-              const sectionHeading = documentPreview.querySelector(`h2:contains("${gap.secao}"), h3:contains("${gap.secao}")`);
-              if (sectionHeading) {
-                sectionHeading.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Highlight temporário
-                sectionHeading.classList.add('highlight-section');
-                setTimeout(() => {
-                  sectionHeading.classList.remove('highlight-section');
-                }, 3000);
-              } else {
-                // Se não encontrar pelo título, rolar para o topo do preview
-                documentPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
+              documentPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
           }, 500);
         }

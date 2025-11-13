@@ -14,11 +14,12 @@ interface RequestBody {
   messages: Message[];
   documentoOriginal: string;
   documentoFormatado: string;
-  sugestoes: string[];
-  alertas: string[];
+  sugestoes?: string[];
+  alertas?: string[];
   templateContent?: string;
   documentId?: string;
   onUpdateDocument?: boolean;
+  autoUpdate?: boolean;
 }
 
 
@@ -35,7 +36,8 @@ serve(async (req) => {
       sugestoes = [], 
       alertas = [],
       templateContent,
-      documentId
+      documentId,
+      autoUpdate = false
     }: RequestBody = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -43,8 +45,29 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY não configurada');
     }
 
-    // Construir contexto do sistema com informações do documento
-    const systemPrompt = `Você é um COPILOTO TÉCNICO INTELIGENTE especializado em relatórios de incentivos fiscais brasileiros (Regime Automotivo, Lei de Informática, PPB, MOVER).
+    // Se for uma requisição de auto-atualização, usar prompt simplificado
+    let systemPrompt: string;
+    
+    if (autoUpdate) {
+      systemPrompt = `Você é um assistente especializado em atualizar documentos HTML de relatórios técnicos.
+
+SEU TRABALHO: Quando o usuário solicitar o preenchimento de um campo específico:
+1. Analise o documento HTML fornecido
+2. Localize a seção e o campo mencionados
+3. Preencha o campo com informações apropriadas
+4. Retorne APENAS o HTML completo atualizado
+
+IMPORTANTE: 
+- Retorne SOMENTE o código HTML, sem explicações
+- Mantenha toda a estrutura e formatação do documento original
+- Apenas adicione/modifique o campo solicitado
+- O HTML deve começar com <h1> e conter todas as seções
+
+DOCUMENTO ATUAL:
+${documentoFormatado}`;
+    } else {
+      // Prompt original para chat interativo
+      systemPrompt = `Você é um COPILOTO TÉCNICO INTELIGENTE especializado em relatórios de incentivos fiscais brasileiros (Regime Automotivo, Lei de Informática, PPB, MOVER).
 
 EXPERTISE:
 - Formatação e padronização de documentos regulatórios
@@ -67,7 +90,6 @@ ${sugestoes?.length > 0 ? sugestoes.map((s, i) => `${i + 1}. ${s}`).join('\n') :
 
 ⚠️ ALERTAS DE CONFORMIDADE IDENTIFICADOS (${alertas?.length || 0} itens):
 ${alertas?.length > 0 ? alertas.map((a, i) => `${i + 1}. ${a}`).join('\n') : 'Nenhum alerta identificado'}
-
 COMO VOCÊ PODE AJUDAR:
 1. **Identificar Informações Faltantes**: Quando o usuário fornece dados faltantes, reconheça e PERGUNTE se ele quer que você atualize o documento
 2. **Atualizar Documento**: Se o usuário confirmar, retorne um JSON especial para atualizar o documento
@@ -75,31 +97,14 @@ COMO VOCÊ PODE AJUDAR:
 4. **Análise de Conformidade**: Validar se trechos atendem aos requisitos regulatórios
 5. **Correções Específicas**: Revisar seções, tabelas, nomenclaturas e referências normativas
 
-FLUXO DE ATUALIZAÇÃO DO DOCUMENTO:
-1. Usuário fornece informação faltante (ex: "O valor do investimento foi R$ 500.000")
-2. Você pergunta: "Você gostaria que eu atualizasse essa informação no documento? Em qual seção devo inserir?"
-3. Se usuário confirmar, retorne este JSON:
-
-{
-  "type": "update_document",
-  "message": "Atualizando o documento...",
-  "updates": {
-    "secao": "Nome da Seção",
-    "campo": "Nome do campo",
-    "novoValor": "Valor a ser inserido",
-    "documentoAtualizado": "HTML completo do documento atualizado"
-  }
-}
-
 DIRETRIZES DE RESPOSTA:
 - Seja OBJETIVO e TÉCNICO, sem prolixidade
 - Priorize CONFORMIDADE REGULATÓRIA sobre preferências estilísticas
 - Cite SEMPRE que possível as normativas aplicáveis (leis, portarias, instruções normativas)
 - Use linguagem profissional adequada para analistas técnicos
 - Forneça respostas ACIONÁVEIS com passos concretos
-- Quando o usuário fornecer dados, SEMPRE pergunte se deve atualizar o documento
-
-IMPORTANTE: Você tem o poder de atualizar o documento automaticamente quando o usuário fornecer informações e confirmar a atualização.`;
+- Quando o usuário fornecer dados, SEMPRE pergunte se deve atualizar o documento`;
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -113,8 +118,7 @@ IMPORTANTE: Você tem o poder de atualizar o documento automaticamente quando o 
           { role: 'system', content: systemPrompt },
           ...messages
         ],
-        temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: autoUpdate ? 4000 : 1000
       }),
     });
 
