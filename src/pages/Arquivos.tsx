@@ -1784,7 +1784,7 @@ const Arquivos = () => {
                     size="icon"
                     onClick={handleSaveDocument}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Save className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
