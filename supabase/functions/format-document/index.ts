@@ -25,95 +25,69 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY não configurada");
     }
 
-    const systemPrompt = `Você é um FORMATTER REGULATÓRIO especializado em RDA (Relatório Descritivo Anual) e relatórios de incentivos fiscais brasileiros.
+const systemPrompt = `Você é um FORMATTER REGULATÓRIO especializado em RDA (Relatório Descritivo Anual) e relatórios de incentivos fiscais brasileiros.
 
-Sua missão: TRANSFORMAR rascunhos em relatórios profissionais e conformes, com estrutura clara, tabelas padronizadas e validações de conformidade.
+REGRA CRÍTICA: Você DEVE seguir FIELMENTE a estrutura, formatação e seções do template fornecido. NÃO invente uma estrutura diferente.
 
-=== TEMPLATE DE REFERÊNCIA ===
-${templateContent.substring(0, 4000)}
+=== TEMPLATE DE REFERÊNCIA (SIGA EXATAMENTE) ===
+${templateContent}
 
-=== REGRAS DE FORMATAÇÃO OBRIGATÓRIAS ===
+=== INSTRUÇÕES DE FORMATAÇÃO ===
 
-📋 ESTRUTURA DE SEÇÕES (nesta ordem exata):
-1. IDENTIFICAÇÃO E QUALIFICAÇÃO
-2. PERFIL DE INVESTIMENTOS EM P&D (TABELA OBRIGATÓRIA)
-3. PROJETOS DE P,D&I EXECUTADOS (TABELA OBRIGATÓRIA)
-4. INDICADORES E RESULTADOS TECNOLÓGICOS (TABELA OBRIGATÓRIA)
-5. CONFORMIDADES E VEDAÇÕES
-6. ANEXOS E DOCUMENTOS COMPROBATÓRIOS
+1. ESTRUTURA: Siga EXATAMENTE a ordem de seções do template acima
+2. TITULAÇÃO: Use os mesmos títulos e hierarquia do template
+3. TABELAS: Se o template tem tabelas, crie tabelas HTML idênticas em estrutura
+4. DADOS: Extraia os dados do rascunho e organize conforme o template
+5. VALIDAÇÕES: Adicione validações de conformidade ao final
 
-📊 TABELAS OBRIGATÓRIAS:
+🎯 FORMATO DE SAÍDA OBRIGATÓRIO:
+- Retorne APENAS HTML limpo, SEM markdown code blocks
+- NÃO use \`\`\`html ou qualquer outro markdown
+- Use tags HTML: <h1>, <h2>, <h3>, <p>, <table>, <strong>, <ul>, <ol>
+- Para tabelas: use <table>, <thead>, <tbody>, <tr>, <th>, <td> com classes adequadas
+- Para listas: use <ul> ou <ol> com <li>
+- Para destaques: use <strong> ou <em>
 
-**Tabela 1: Perfil de Investimentos em P&D**
-| Rubrica | Valor (R$) |
-|---------|-----------|
-| [Extrair do texto] | [Valores] |
-| **TOTAL** | **[Soma calculada]** |
+📊 EXEMPLO DE TABELA HTML:
+<table class="border-collapse border border-gray-300 w-full my-4">
+  <thead>
+    <tr class="bg-gray-100">
+      <th class="border border-gray-300 px-4 py-2">Coluna 1</th>
+      <th class="border border-gray-300 px-4 py-2">Coluna 2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="border border-gray-300 px-4 py-2">Dado 1</td>
+      <td class="border border-gray-300 px-4 py-2">Dado 2</td>
+    </tr>
+  </tbody>
+</table>
 
-**Tabela 2: Projetos de P,D&I**
-| Código | Título | Tipo P,D&I | Parceiros | TRL Inicial | TRL Alvo | Dispêndio (R$) |
-|--------|--------|------------|-----------|-------------|----------|----------------|
-| [Ex: P-001] | [Título] | [Pesquisa/Desenvolvimento/Inovação] | [ICTs/Empresas] | [0-9] | [0-9] | [Valor] |
+⚠️ REGRAS IMPORTANTES:
+- NÃO invente dados que não estão no rascunho
+- NÃO altere a estrutura do template
+- NÃO use markdown, apenas HTML puro
+- Se faltar informação, marque: <strong>[PENDENTE: descrição do que falta]</strong>
+- Mantenha números no formato brasileiro (1.234,56)
+- Use datas no formato dd/mm/aaaa`;
 
-**Tabela 3: Indicadores de Resultados**
-| Indicador | Resultado Alcançado | Unidade |
-|-----------|-------------------|---------|
-| [Patentes depositadas] | [Número] | [un.] |
-| [Publicações científicas] | [Número] | [un.] |
+const userPrompt = `=== RASCUNHO DO DOCUMENTO ===
 
-🔍 VALIDAÇÕES AUTOMÁTICAS (incluir na seção Conformidades):
+${documentText}
 
-✅ SOMA DO PERFIL vs SOMA DOS PROJETOS
-- Se divergir: "⚠️ ALERTA: Soma do Perfil de Investimentos (R$ X) DIFERE da soma dos Dispêndios dos Projetos (R$ Y). Diferença: R$ Z"
+=== SUA TAREFA ===
 
-✅ EVOLUÇÃO TRL
-- Para cada projeto: TRL_Alvo DEVE ser ≥ TRL_Inicial
-- Se não: "⚠️ ALERTA: Projeto [código] apresenta TRL alvo MENOR que TRL inicial"
+1. Leia o TEMPLATE acima e identifique TODAS as seções obrigatórias
+2. Extraia os dados do rascunho (valores, datas, nomes, etc)
+3. Organize os dados EXATAMENTE conforme a estrutura do template
+4. Se o template tem tabelas, crie tabelas HTML com os mesmos cabeçalhos
+5. Adicione validações de conformidade ao final se aplicável
 
-✅ SERVIÇOS DE TERCEIROS
-- Se houver esta rubrica: EXIGIR parágrafo justificando necessidade técnica
-
-✅ PERCENTUAL DE P&D
-- Calcular: (Total P&D / Faturamento) × 100
-- Validar se atinge mínimo regulatório
-
-📝 REGRAS DE REDAÇÃO:
-- Títulos: CAIXA ALTA + numeração (1., 1.1, 1.1.1)
-- Parágrafos: texto justificado, espaçamento 1,5 linhas
-- Linguagem: técnica, objetiva, voz ativa
-- Números: formato brasileiro (1.234,56)
-- Datas: dd/mm/aaaa
-
-⚠️ O QUE NÃO FAZER:
-- NÃO inventar dados numéricos
-- NÃO omitir informações do rascunho
-- NÃO criar projetos ou rubricas inexistentes
-- NÃO alterar valores financeiros
-
-🎯 FORMATO DE SAÍDA:
-Retorne o documento formatado em HTML bem estruturado, com:
-- Títulos hierárquicos (<h1>, <h2>, <h3>)
-- Tabelas completas (<table>, <tr>, <td>)
-- Listas numeradas (<ol>) e com marcadores (<ul>)
-- Negrito (<strong>) para destaques críticos
-- Parágrafos (<p>) para cada bloco de texto
-- Seção final "VALIDAÇÕES E CONFORMIDADE" com todos os alertas
-
-IMPORTANTE: Use APENAS dados presentes no rascunho. Se faltar informação crítica, marque com <strong>[PENDENTE: descrição]</strong>`;
-
-    const userPrompt = `=== RASCUNHO A SER TRANSFORMADO ===
-
-${documentText.substring(0, 10000)}
-
-=== INSTRUÇÕES DE EXECUÇÃO ===
-
-1. EXTRAIA todos os dados numéricos (valores, TRLs, datas, percentuais)
-2. ORGANIZE em tabelas HTML conforme especificado no sistema
-3. CALCULE somas e valide conformidades
-4. FORMATE com hierarquia clara de seções usando tags HTML (<h1>, <h2>, <p>, etc)
-5. ADICIONE seção "VALIDAÇÕES E CONFORMIDADE" ao final com todos os alertas encontrados
-
-Retorne o relatório completo formatado em HTML, com tabelas, validações e alertas.`;
+IMPORTANTE: 
+- Retorne APENAS HTML puro, sem code blocks markdown
+- Siga FIELMENTE a estrutura do template fornecido
+- Use APENAS dados presentes no rascunho`;
 
     console.log('Chamando Lovable AI para formatação...');
 
