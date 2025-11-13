@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Textarea } from '@/components/ui/textarea';
 import LoadingRobot from '@/components/LoadingRobot';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import RichTextEditor from '@/components/RichTextEditor';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -1566,167 +1567,11 @@ const Arquivos = () => {
           </DialogHeader>
           
           <div className="flex-1 flex flex-col gap-4 py-4 px-6 overflow-hidden">
-            {/* Tabs para Edição e Pré-visualização */}
-            <div className="flex gap-2 border-b">
-              <button
-                onClick={() => setShowPreview(false)}
-                className={`px-4 py-2 font-medium transition-colors relative ${
-                  !showPreview 
-                    ? 'text-primary border-b-2 border-primary' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Edit className="h-4 w-4 inline mr-2" />
-                Editar
-              </button>
-              <button
-                onClick={() => setShowPreview(true)}
-                className={`px-4 py-2 font-medium transition-colors relative ${
-                  showPreview 
-                    ? 'text-primary border-b-2 border-primary' 
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Eye className="h-4 w-4 inline mr-2" />
-                Pré-visualização
-              </button>
-            </div>
-
-            {!showPreview ? (
-              <>
-                {/* Barra de ferramentas de formatação */}
-                <div className="flex flex-wrap gap-1 p-3 bg-muted/30 rounded-lg border">
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleBold}
-                      title="Negrito (Ctrl+B)"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Bold className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleItalic}
-                      title="Itálico (Ctrl+I)"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Italic className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleUnderline}
-                      title="Sublinhado"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Underline className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="w-px h-9 bg-border" />
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleHeading1}
-                      title="Título 1"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Heading1 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleHeading2}
-                      title="Título 2"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Heading2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="w-px h-9 bg-border" />
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleList}
-                      title="Lista com marcadores"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleOrderedList}
-                      title="Lista numerada"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <ListOrdered className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="w-px h-9 bg-border" />
-                  
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCode}
-                      title="Código inline"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Code className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleQuote}
-                      title="Citação"
-                      className="h-9 w-9 p-0 hover:bg-background"
-                    >
-                      <Quote className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex-1 flex flex-col gap-2 min-h-0">
-                  <Textarea
-                    id="document-content"
-                    value={editedDocumentContent}
-                    onChange={(e) => setEditedDocumentContent(e.target.value)}
-                    className="flex-1 font-mono text-sm resize-none h-full"
-                    placeholder="Digite o conteúdo do documento..."
-                  />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
-                    <span>{editedDocumentContent.length} caracteres</span>
-                    <span>{editedDocumentContent.split('\n').length} linhas</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 overflow-auto p-6 bg-muted/20 rounded-lg border prose prose-sm max-w-none dark:prose-invert">
-                <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ 
-                  __html: editedDocumentContent
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/<u>(.*?)<\/u>/g, '<u>$1</u>')
-                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                    .replace(/^- (.*$)/gim, '<li>$1</li>')
-                    .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
-                    .replace(/`(.*?)`/g, '<code>$1</code>')
-                    .replace(/\n/g, '<br>')
-                }} />
-              </div>
-            )}
+            <RichTextEditor
+              content={editedDocumentContent}
+              onChange={setEditedDocumentContent}
+              placeholder="Digite o conteúdo do documento..."
+            />
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2 px-6 pb-6">
             <Button 
