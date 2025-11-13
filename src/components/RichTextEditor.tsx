@@ -57,18 +57,21 @@ const RichTextEditor = ({ content, onChange, placeholder = "Digite o conteúdo d
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      // Detectar se é texto plano ou HTML
-      const isPlainText = !content.includes('<') || content.trim().startsWith('empresa:') || content.trim().startsWith('#');
+      // Detectar se é HTML ou texto plano
+      const isHTML = content.includes('<p>') || content.includes('<h1>') || content.includes('<h2>') || 
+                     content.includes('<strong>') || content.includes('<em>') || content.includes('<ul>') || 
+                     content.includes('<ol>') || content.includes('<li>');
       
-      if (isPlainText) {
-        // Converter texto plano para HTML básico mantendo quebras de linha
+      if (isHTML) {
+        // É HTML, carregar diretamente
+        editor.commands.setContent(content);
+      } else {
+        // É texto plano, converter para HTML mantendo quebras de linha
         const htmlContent = content
           .split('\n')
           .map(line => line.trim() ? `<p>${line}</p>` : '<p></p>')
           .join('');
-        editor.commands.setContent(htmlContent);
-      } else {
-        editor.commands.setContent(content);
+        editor.commands.setContent(htmlContent || '<p></p>');
       }
     }
   }, [content, editor]);
