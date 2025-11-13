@@ -198,8 +198,8 @@ const DocumentPreview = ({
       />
 
       <Dialog open={showFullscreen} onOpenChange={setShowFullscreen}>
-        <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+        <DialogContent className="max-w-[98vw] w-full h-[98vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl">Visualização em Tela Cheia</DialogTitle>
               <div className="flex gap-2">
@@ -229,9 +229,9 @@ const DocumentPreview = ({
               </div>
             </div>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             <Tabs defaultValue="formatted" className="w-full h-full flex flex-col">
-              <div className="px-6">
+              <div className="px-6 flex-shrink-0">
                 <TabsList className="w-full">
                   <TabsTrigger value="formatted" className="flex-1">
                     Documento Formatado
@@ -245,51 +245,51 @@ const DocumentPreview = ({
                 </TabsList>
               </div>
 
-              <TabsContent value="formatted" className="flex-1 m-0 mt-4">
-                <ScrollArea className="h-full px-6">
+              <TabsContent value="formatted" className="flex-1 m-0 mt-4 overflow-auto">
+                <div className="px-6 pb-8 overflow-x-auto">
                   <div 
-                    className="prose prose-base max-w-none dark:prose-invert pb-8"
+                    className="prose prose-base max-w-none dark:prose-invert prose-table:table-auto prose-table:w-auto prose-table:min-w-full"
                     dangerouslySetInnerHTML={{ __html: formattedText }}
                   />
-                </ScrollArea>
+                </div>
               </TabsContent>
 
-              <TabsContent value="original" className="flex-1 m-0 mt-4">
-                <ScrollArea className="h-full px-6">
-                  <div className="prose prose-base max-w-none pb-8">
+              <TabsContent value="original" className="flex-1 m-0 mt-4 overflow-auto">
+                <div className="px-6 pb-8">
+                  <div className="prose prose-base max-w-none">
                     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-muted-foreground">
                       {originalText}
                     </pre>
                   </div>
-                </ScrollArea>
+                </div>
               </TabsContent>
 
-              <TabsContent value="comparison" className="flex-1 m-0 mt-4">
-                <ScrollArea className="h-full px-6">
-                  <div className="grid grid-cols-2 gap-6 pb-8">
+              <TabsContent value="comparison" className="flex-1 m-0 mt-4 overflow-auto">
+                <div className="px-6 pb-8">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 pb-2 border-b">
+                      <div className="flex items-center gap-2 pb-2 border-b sticky top-0 bg-background">
                         <div className="w-3 h-3 rounded-full bg-muted-foreground/30"></div>
                         <h4 className="font-semibold text-base text-muted-foreground">Documento Original</h4>
                       </div>
-                      <div className="bg-muted/30 rounded-lg p-4 border">
+                      <div className="bg-muted/30 rounded-lg p-4 border overflow-x-auto">
                         <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-muted-foreground">
                           {originalText}
                         </pre>
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 pb-2 border-b border-primary/30">
+                      <div className="flex items-center gap-2 pb-2 border-b border-primary/30 sticky top-0 bg-background">
                         <div className="w-3 h-3 rounded-full bg-primary"></div>
                         <h4 className="font-semibold text-base text-primary">Documento Formatado ✓</h4>
                       </div>
                       <div 
-                        className="bg-primary/5 rounded-lg p-4 border border-primary/20 prose prose-sm max-w-none dark:prose-invert"
+                        className="bg-primary/5 rounded-lg p-4 border border-primary/20 prose prose-sm max-w-none dark:prose-invert overflow-x-auto"
                         dangerouslySetInnerHTML={{ __html: formattedText }}
                       />
                     </div>
                   </div>
-                </ScrollArea>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
