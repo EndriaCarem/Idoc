@@ -105,11 +105,10 @@ const DocumentPreview = ({
           <TabsContent value="formatted" className="m-0">
             <ScrollArea className="h-[600px]">
               <div className="p-6">
-                <div className="prose prose-sm max-w-none">
-                  <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
-                    {formattedText}
-                  </pre>
-                </div>
+                <div 
+                  className="prose prose-sm max-w-none dark:prose-invert"
+                  dangerouslySetInnerHTML={{ __html: formattedText }}
+                />
               </div>
             </ScrollArea>
           </TabsContent>
@@ -146,12 +145,14 @@ const DocumentPreview = ({
                     <div className="w-3 h-3 rounded-full bg-primary"></div>
                     <h4 className="font-semibold text-sm text-primary">Documento Formatado ✓</h4>
                   </div>
-                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
-                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-foreground">
-                      {formattedText.substring(0, 1500)}
-                      {formattedText.length > 1500 && '\n\n[...continuação do documento...]'}
-                    </pre>
-                  </div>
+                  <div 
+                    className="bg-primary/5 rounded-lg p-4 border border-primary/20 prose prose-xs max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{ 
+                      __html: formattedText.length > 3000 
+                        ? formattedText.substring(0, 3000) + '<p><em>[...continuação do documento...]</em></p>'
+                        : formattedText
+                    }}
+                  />
                 </div>
               </div>
             </ScrollArea>
