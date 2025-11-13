@@ -20,13 +20,19 @@ interface CopilotPanelProps {
   alertas: string[];
   documentoOriginal: string;
   documentoFormatado: string;
+  templateContent?: string;
+  documentId?: string;
+  onDocumentUpdate?: (newContent: string) => void;
 }
 
 const CopilotPanel = ({ 
   sugestoes, 
   alertas,
   documentoOriginal,
-  documentoFormatado 
+  documentoFormatado,
+  templateContent,
+  documentId,
+  onDocumentUpdate
 }: CopilotPanelProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -57,11 +63,25 @@ const CopilotPanel = ({
           documentoOriginal,
           documentoFormatado,
           sugestoes,
-          alertas
+          alertas,
+          templateContent,
+          documentId
         }
       });
 
       if (error) throw error;
+
+      // Verificar se a resposta contém uma atualização de documento
+      if (data.type === 'update_document' && data.updates?.documentoAtualizado) {
+        // Notificar o componente pai para atualizar o documento
+        if (onDocumentUpdate) {
+          onDocumentUpdate(data.updates.documentoAtualizado);
+          toast({
+            title: "Documento atualizado!",
+            description: "O documento foi atualizado com as informações fornecidas.",
+          });
+        }
+      }
 
       const assistantMessage: Message = { 
         role: "assistant", 

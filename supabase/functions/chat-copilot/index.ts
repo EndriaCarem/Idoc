@@ -16,7 +16,11 @@ interface RequestBody {
   documentoFormatado: string;
   sugestoes: string[];
   alertas: string[];
+  templateContent?: string;
+  documentId?: string;
+  onUpdateDocument?: boolean;
 }
+
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -29,7 +33,9 @@ serve(async (req) => {
       documentoOriginal, 
       documentoFormatado, 
       sugestoes, 
-      alertas 
+      alertas,
+      templateContent,
+      documentId
     }: RequestBody = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -38,7 +44,7 @@ serve(async (req) => {
     }
 
     // Construir contexto do sistema com informações do documento
-    const systemPrompt = `Você é um COPILOTO TÉCNICO especializado em relatórios de incentivos fiscais brasileiros (Regime Automotivo, Lei de Informática, PPB, MOVER).
+    const systemPrompt = `Você é um COPILOTO TÉCNICO INTELIGENTE especializado em relatórios de incentivos fiscais brasileiros (Regime Automotivo, Lei de Informática, PPB, MOVER).
 
 EXPERTISE:
 - Formatação e padronização de documentos regulatórios
@@ -63,11 +69,27 @@ ${sugestoes.map((s, i) => `${i + 1}. ${s}`).join('\n')}
 ${alertas.map((a, i) => `${i + 1}. ${a}`).join('\n')}
 
 COMO VOCÊ PODE AJUDAR:
-1. **Melhorias de Texto**: Sugerir reformulações para clareza, precisão técnica e conformidade
-2. **Análise de Conformidade**: Validar se trechos atendem aos requisitos regulatórios
-3. **Correções Específicas**: Revisar seções, tabelas, nomenclaturas e referências normativas
-4. **Esclarecimentos**: Explicar alertas, requisitos e melhores práticas
-5. **Sugestões Contextuais**: Recomendar melhorias baseadas no tipo de regime fiscal
+1. **Identificar Informações Faltantes**: Quando o usuário fornece dados faltantes, reconheça e PERGUNTE se ele quer que você atualize o documento
+2. **Atualizar Documento**: Se o usuário confirmar, retorne um JSON especial para atualizar o documento
+3. **Melhorias de Texto**: Sugerir reformulações para clareza, precisão técnica e conformidade
+4. **Análise de Conformidade**: Validar se trechos atendem aos requisitos regulatórios
+5. **Correções Específicas**: Revisar seções, tabelas, nomenclaturas e referências normativas
+
+FLUXO DE ATUALIZAÇÃO DO DOCUMENTO:
+1. Usuário fornece informação faltante (ex: "O valor do investimento foi R$ 500.000")
+2. Você pergunta: "Você gostaria que eu atualizasse essa informação no documento? Em qual seção devo inserir?"
+3. Se usuário confirmar, retorne este JSON:
+
+{
+  "type": "update_document",
+  "message": "Atualizando o documento...",
+  "updates": {
+    "secao": "Nome da Seção",
+    "campo": "Nome do campo",
+    "novoValor": "Valor a ser inserido",
+    "documentoAtualizado": "HTML completo do documento atualizado"
+  }
+}
 
 DIRETRIZES DE RESPOSTA:
 - Seja OBJETIVO e TÉCNICO, sem prolixidade
@@ -75,9 +97,9 @@ DIRETRIZES DE RESPOSTA:
 - Cite SEMPRE que possível as normativas aplicáveis (leis, portarias, instruções normativas)
 - Use linguagem profissional adequada para analistas técnicos
 - Forneça respostas ACIONÁVEIS com passos concretos
-- Quando aplicável, sugira texto formatado pronto para uso
+- Quando o usuário fornecer dados, SEMPRE pergunte se deve atualizar o documento
 
-IMPORTANTE: Você está auxiliando profissionais qualificados. Suas respostas devem ser precisas, fundamentadas e diretamente aplicáveis ao contexto regulatório brasileiro.`;
+IMPORTANTE: Você tem o poder de atualizar o documento automaticamente quando o usuário fornecer informações e confirmar a atualização.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -133,8 +155,28 @@ IMPORTANTE: Você está auxiliando profissionais qualificados. Suas respostas de
       throw new Error('Resposta inválida da IA');
     }
 
+    // Verificar se é uma resposta de atualização de documento
+    let responseData: any = { response: assistantResponse };
+    
+    // Tentar detectar se a resposta contém JSON de atualização
+    try {
+      if (assistantResponse.includes('"type": "update_document"')) {
+        const jsonMatch = assistantResponse.match(/\{[\s\S]*"type":\s*"update_document"[\s\S]*\}/);
+        if (jsonMatch) {
+          const updateData = JSON.parse(jsonMatch[0]);
+          responseData = {
+            ...updateData,
+            response: updateData.message || assistantResponse
+          };
+        }
+      }
+    } catch (e) {
+      // Se não for JSON válido, continua com resposta normal
+      console.log('Resposta não contém JSON de atualização');
+    }
+
     return new Response(
-      JSON.stringify({ response: assistantResponse }),
+      JSON.stringify(responseData),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }

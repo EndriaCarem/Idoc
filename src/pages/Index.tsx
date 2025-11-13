@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DocumentInput from '@/components/DocumentInput';
 import CopilotPanel from '@/components/CopilotPanel';
 import DocumentPreview from '@/components/DocumentPreview';
+import DocumentGapsPanel from '@/components/DocumentGapsPanel';
 import LoadingRobot from '@/components/LoadingRobot';
 import { formatarComCopilot } from '@/services/geminiService';
 import { RefreshCw, FileUp } from 'lucide-react';
@@ -23,6 +24,10 @@ const Index = () => {
   const [copilotResult, setCopilotResult] = useState<CopilotResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(hasCopilotData); // Iniciar como true se houver dados
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [templateContent, setTemplateContent] = useState<string>('');
+  const [gaps, setGaps] = useState<any[]>([]);
+  const [percentualCompleto, setPercentualCompleto] = useState<number>(0);
+  const [isAnalyzingGaps, setIsAnalyzingGaps] = useState(false);
 
   // Carregar documento se vier do sessionStorage
   useEffect(() => {
@@ -240,6 +245,11 @@ const Index = () => {
       setCopilotResult(result);
       console.log('✅ copilotResult definido com sucesso');
       
+      // Analisar gaps após processar documento
+      if (templateId) {
+        analyzeDocumentGaps(result.textoFormatado, templateId);
+      }
+      
       // Salvar no histórico
       toast.loading("💾 Salvando no histórico...", { id: "saving" });
       
@@ -287,6 +297,70 @@ const Index = () => {
 
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplateId(templateId);
+    loadTemplateContent(templateId);
+  };
+
+  const loadTemplateContent = async (templateId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('templates')
+        .select('content')
+        .eq('id', templateId)
+        .single();
+
+      if (!error && data) {
+        setTemplateContent(data.content);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar template:', error);
+    }
+  };
+
+  const analyzeDocumentGaps = async (documentoFormatado: string, templateId: string) => {
+    setIsAnalyzingGaps(true);
+    try {
+      // Buscar o conteúdo do template
+      const { data: template, error } = await supabase
+        .from('templates')
+        .select('content, name')
+        .eq('id', templateId)
+        .single();
+
+      if (error || !template) {
+        console.error('Erro ao buscar template:', error);
+        return;
+      }
+
+      const { data, error: gapsError } = await supabase.functions.invoke('analyze-document-gaps', {
+        body: {
+          documentoFormatado,
+          templateContent: template.content,
+          templateName: template.name
+        }
+      });
+
+      if (gapsError) {
+        console.error('Erro ao analisar gaps:', gapsError);
+        return;
+      }
+
+      setGaps(data.gaps || []);
+      setPercentualCompleto(data.percentualCompleto || 0);
+    } catch (error) {
+      console.error('Erro ao analisar gaps:', error);
+    } finally {
+      setIsAnalyzingGaps(false);
+    }
+  };
+
+  const handleDocumentUpdate = (newContent: string) => {
+    // Atualizar o documento formatado
+    setCopilotResult(prev => prev ? { ...prev, textoFormatado: newContent } : null);
+    
+    // Re-analisar gaps após atualização
+    if (selectedTemplateId) {
+      analyzeDocumentGaps(newContent, selectedTemplateId);
+    }
   };
 
   const handleReprocess = async () => {
@@ -401,14 +475,23 @@ const Index = () => {
                   />
                 </div>
                 
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 space-y-4">
                   {copilotResult && (
-                    <CopilotPanel 
-                      sugestoes={copilotResult.sugestoes}
-                      alertas={copilotResult.alertas}
-                      documentoOriginal={editableText}
-                      documentoFormatado={copilotResult.textoFormatado}
-                    />
+                    <>
+                      <DocumentGapsPanel
+                        gaps={gaps}
+                        percentualCompleto={percentualCompleto}
+                        isLoading={isAnalyzingGaps}
+                      />
+                      <CopilotPanel 
+                        sugestoes={copilotResult.sugestoes}
+                        alertas={copilotResult.alertas}
+                        documentoOriginal={editableText}
+                        documentoFormatado={copilotResult.textoFormatado}
+                        templateContent={templateContent}
+                        onDocumentUpdate={handleDocumentUpdate}
+                      />
+                    </>
                   )}
                 </div>
               </div>
