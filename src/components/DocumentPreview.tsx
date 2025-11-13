@@ -117,7 +117,7 @@ const DocumentPreview = ({
           </div>
 
           <TabsContent value="formatted" className="m-0">
-            <ScrollArea className="h-[600px]">
+            <ScrollArea className="h-[600px]" data-document-preview>
               <div className="p-6">
                 <div 
                   className="prose prose-sm max-w-none dark:prose-invert"

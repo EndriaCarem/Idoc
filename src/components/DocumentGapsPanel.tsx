@@ -78,6 +78,26 @@ Analise o documento atual e preencha este campo de forma apropriada, seguindo fi
             title: "Campo preenchido!",
             description: `O campo "${gap.campo}" foi preenchido automaticamente.`,
           });
+          
+          // Scroll automático para a seção alterada após um pequeno delay
+          setTimeout(() => {
+            const documentPreview = document.querySelector('[data-document-preview]');
+            if (documentPreview) {
+              // Procurar pela seção no documento
+              const sectionHeading = documentPreview.querySelector(`h2:contains("${gap.secao}"), h3:contains("${gap.secao}")`);
+              if (sectionHeading) {
+                sectionHeading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Highlight temporário
+                sectionHeading.classList.add('highlight-section');
+                setTimeout(() => {
+                  sectionHeading.classList.remove('highlight-section');
+                }, 3000);
+              } else {
+                // Se não encontrar pelo título, rolar para o topo do preview
+                documentPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          }, 500);
         }
       } else {
         toast({

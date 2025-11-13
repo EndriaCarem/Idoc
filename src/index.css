@@ -6,6 +6,23 @@
 All colors MUST be HSL.
 */
 
+/* Highlight animation for updated sections */
+@keyframes highlight-pulse {
+  0%, 100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: hsl(217 91% 60% / 0.15);
+  }
+}
+
+.highlight-section {
+  animation: highlight-pulse 1.5s ease-in-out 2;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
 @layer base {
   :root {
     --background: 210 20% 98%;

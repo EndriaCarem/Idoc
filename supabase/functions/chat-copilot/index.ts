@@ -32,8 +32,8 @@ serve(async (req) => {
       messages, 
       documentoOriginal, 
       documentoFormatado, 
-      sugestoes, 
-      alertas,
+      sugestoes = [], 
+      alertas = [],
       templateContent,
       documentId
     }: RequestBody = await req.json();
@@ -55,18 +55,18 @@ EXPERTISE:
 CONTEXTO DO DOCUMENTO EM ANÁLISE:
 
 📄 DOCUMENTO ORIGINAL (amostra):
-${documentoOriginal.substring(0, 1200)}
+${documentoOriginal?.substring(0, 1200) || 'Não fornecido'}
 [...]
 
 📝 DOCUMENTO FORMATADO (amostra):
-${documentoFormatado.substring(0, 1200)}
+${documentoFormatado?.substring(0, 1200) || 'Não fornecido'}
 [...]
 
-✅ FORMATAÇÕES APLICADAS (${sugestoes.length} itens):
-${sugestoes.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+✅ FORMATAÇÕES APLICADAS (${sugestoes?.length || 0} itens):
+${sugestoes?.length > 0 ? sugestoes.map((s, i) => `${i + 1}. ${s}`).join('\n') : 'Nenhuma formatação aplicada ainda'}
 
-⚠️ ALERTAS DE CONFORMIDADE IDENTIFICADOS (${alertas.length} itens):
-${alertas.map((a, i) => `${i + 1}. ${a}`).join('\n')}
+⚠️ ALERTAS DE CONFORMIDADE IDENTIFICADOS (${alertas?.length || 0} itens):
+${alertas?.length > 0 ? alertas.map((a, i) => `${i + 1}. ${a}`).join('\n') : 'Nenhum alerta identificado'}
 
 COMO VOCÊ PODE AJUDAR:
 1. **Identificar Informações Faltantes**: Quando o usuário fornece dados faltantes, reconheça e PERGUNTE se ele quer que você atualize o documento
