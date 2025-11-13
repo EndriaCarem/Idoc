@@ -102,7 +102,7 @@ const CopilotPanel = ({
 
   return (
     <div className="space-y-4">
-      <Card className="shadow-lg border-2 sticky top-24">
+      <Card className="shadow-lg border-2">
         <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -137,41 +137,43 @@ const CopilotPanel = ({
                     </p>
                   </div>
                 ) : (
-                  <ScrollArea className="h-[300px]">
-                    <div ref={scrollRef} className="space-y-2 pr-4">
-                      {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`p-3 rounded-lg text-sm ${
-                            msg.role === "user"
-                              ? "bg-primary/10 ml-4"
-                              : "bg-muted mr-4"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            {msg.role === "assistant" && <Bot className="w-3.5 h-3.5 text-primary" />}
-                            <p className="font-semibold text-xs">
-                              {msg.role === "user" ? "Você" : "Copilot"}
-                            </p>
+                  <div className="border rounded-lg bg-muted/30">
+                    <ScrollArea className="h-[400px] p-4">
+                      <div ref={scrollRef} className="space-y-3">
+                        {messages.map((msg, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-3 rounded-lg text-sm ${
+                              msg.role === "user"
+                                ? "bg-primary/10 ml-8"
+                                : "bg-background mr-8 border"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              {msg.role === "assistant" && <Bot className="w-3.5 h-3.5 text-primary" />}
+                              <p className="font-semibold text-xs">
+                                {msg.role === "user" ? "Você" : "Copilot"}
+                              </p>
+                            </div>
+                            <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.content}</p>
                           </div>
-                          <p className="whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.content}</p>
-                        </div>
-                      ))}
-                      {isLoading && (
-                        <div className="p-3 rounded-lg text-sm bg-muted mr-4">
-                          <div className="flex items-center gap-2">
-                            <Bot className="w-3.5 h-3.5 text-primary animate-pulse" />
-                            <p className="font-semibold text-xs">Copilot está pensando...</p>
-                            <div className="flex gap-1 ml-2">
-                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        ))}
+                        {isLoading && (
+                          <div className="p-3 rounded-lg text-sm bg-background mr-8 border">
+                            <div className="flex items-center gap-2">
+                              <Bot className="w-3.5 h-3.5 text-primary animate-pulse" />
+                              <p className="font-semibold text-xs">Copilot está pensando...</p>
+                              <div className="flex gap-1 ml-2">
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </ScrollArea>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </div>
                 )}
 
                 <div className="flex gap-2 pt-2">
