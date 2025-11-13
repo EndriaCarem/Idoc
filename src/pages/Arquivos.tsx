@@ -17,7 +17,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { Textarea } from '@/components/ui/textarea';
 import LoadingRobot from '@/components/LoadingRobot';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import RichTextEditor from '@/components/RichTextEditor';
 
 const COMMON_EMOJIS = ['📄', '📁', '📊', '📈', '📉', '📋', '📝', '📌', '📎', '🔖', '💼', '📦', '🗂️', '📑', '📃', '📜', '📰', '🗞️', '📚', '📖', '📕', '📗', '📘', '📙'];
 
@@ -1566,12 +1565,17 @@ const Arquivos = () => {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 flex flex-col gap-4 py-4 px-6 overflow-hidden">
-            <RichTextEditor
-              content={editedDocumentContent}
-              onChange={setEditedDocumentContent}
+          <div className="flex-1 flex flex-col gap-2 py-4 px-6 overflow-hidden">
+            <Textarea
+              value={editedDocumentContent}
+              onChange={(e) => setEditedDocumentContent(e.target.value)}
+              className="flex-1 font-mono text-sm resize-none"
               placeholder="Digite o conteúdo do documento..."
             />
+            <div className="flex items-center justify-between text-xs text-muted-foreground px-2">
+              <span>{editedDocumentContent.length} caracteres</span>
+              <span>{editedDocumentContent.split('\n').length} linhas</span>
+            </div>
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2 px-6 pb-6">
             <Button 
