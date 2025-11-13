@@ -482,6 +482,11 @@ const Index = () => {
                         gaps={gaps}
                         percentualCompleto={percentualCompleto}
                         isLoading={isAnalyzingGaps}
+                        documentoOriginal={editableText}
+                        documentoFormatado={copilotResult.textoFormatado}
+                        templateContent={templateContent}
+                        documentId={selectedTemplateId || undefined}
+                        onDocumentUpdate={handleDocumentUpdate}
                       />
                       <CopilotPanel 
                         sugestoes={copilotResult.sugestoes}
