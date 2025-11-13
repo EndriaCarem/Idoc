@@ -91,14 +91,15 @@ ${templateContent.substring(0, 4000)}
 - NÃO alterar valores financeiros
 
 🎯 FORMATO DE SAÍDA:
-Retorne o documento formatado em Markdown bem estruturado, com:
-- Títulos hierárquicos (# ## ###)
-- Tabelas completas e alinhadas
-- Listas numeradas/marcadas
-- Negrito para destaques críticos
+Retorne o documento formatado em HTML bem estruturado, com:
+- Títulos hierárquicos (<h1>, <h2>, <h3>)
+- Tabelas completas (<table>, <tr>, <td>)
+- Listas numeradas (<ol>) e com marcadores (<ul>)
+- Negrito (<strong>) para destaques críticos
+- Parágrafos (<p>) para cada bloco de texto
 - Seção final "VALIDAÇÕES E CONFORMIDADE" com todos os alertas
 
-IMPORTANTE: Use APENAS dados presentes no rascunho. Se faltar informação crítica, marque com **[PENDENTE: descrição]**`;
+IMPORTANTE: Use APENAS dados presentes no rascunho. Se faltar informação crítica, marque com <strong>[PENDENTE: descrição]</strong>`;
 
     const userPrompt = `=== RASCUNHO A SER TRANSFORMADO ===
 
@@ -107,12 +108,12 @@ ${documentText.substring(0, 10000)}
 === INSTRUÇÕES DE EXECUÇÃO ===
 
 1. EXTRAIA todos os dados numéricos (valores, TRLs, datas, percentuais)
-2. ORGANIZE em tabelas conforme especificado no sistema
+2. ORGANIZE em tabelas HTML conforme especificado no sistema
 3. CALCULE somas e valide conformidades
-4. FORMATE com hierarquia clara de seções
+4. FORMATE com hierarquia clara de seções usando tags HTML (<h1>, <h2>, <p>, etc)
 5. ADICIONE seção "VALIDAÇÕES E CONFORMIDADE" ao final com todos os alertas encontrados
 
-Retorne o relatório completo formatado em Markdown, com tabelas, validações e alertas.`;
+Retorne o relatório completo formatado em HTML, com tabelas, validações e alertas.`;
 
     console.log('Chamando Lovable AI para formatação...');
 
